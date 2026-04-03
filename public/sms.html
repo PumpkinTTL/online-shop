@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>接码平台 - 工具商店</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="/js/toast.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/sms.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 导航栏 -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <div class="nav-left">
+          <a href="/" class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
+            <span>工具商店</span>
+          </a>
+          <div class="nav-menu">
+            <a href="/" class="nav-link">
+              <i class="fa-solid fa-house"></i> 首页
+            </a>
+            <a href="/sms.html" class="nav-link active">
+              <i class="fa-solid fa-mobile-screen"></i> 接码
+            </a>
+          </div>
+        </div>
+        <div class="nav-links">
+          <!-- 未登录 -->
+          <button class="btn btn-primary" @click="showAuthModal" v-if="!isLoggedIn">
+            <i class="fa-solid fa-user"></i> 登录
+          </button>
+          <!-- 已登录 -->
+          <div class="user-info" v-else>
+            <div class="user-avatar">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <span class="user-name">{{ currentUser?.username || '用户' }}</span>
+            <button class="btn btn-ghost btn-sm" @click="logout" title="退出登录">
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="main-container">
+      <!-- 获取号码 -->
+      <div class="sms-card">
+        <h2 class="card-title"><i class="fa-solid fa-mobile-screen"></i> 获取号码</h2>
+        
+        <label>短信关键词 <span class="required">*</span></label>
+        <input type="text" v-model="keyWord" placeholder="例如：Google、淘宝" class="form-input">
+        <div class="hint">短信【括号】里的名字</div>
+
+        <label>指定号码 <span class="optional">(可选)</span></label>
+        <input type="text" v-model="phoneInput" placeholder="不填则随机获取" class="form-input">
+
+        <!-- 当前号码 -->
+        <div class="phone-box" v-if="currentPhone">
+          <label>当前号码</label>
+          <div class="phone-row">
+            <input type="text" v-model="currentPhone" class="form-input phone-input" readonly>
+            <button class="btn btn-icon" @click="copyPhone" title="复制"><i class="fa-solid fa-copy"></i></button>
+            <button class="btn btn-sm btn-ghost" @click="releasePhone"><i class="fa-solid fa-trash"></i></button>
+            <button class="btn btn-sm btn-danger" @click="blockPhone"><i class="fa-solid fa-ban"></i></button>
+          </div>
+        </div>
+
+        <label>卡类型</label>
+        <select v-model="cardType" class="form-input">
+          <option value="全部">全部</option>
+          <option value="实卡">实卡</option>
+          <option value="虚卡">虚卡</option>
+        </select>
+
+        <button class="btn btn-primary btn-get" @click="getPhone" :disabled="loading">
+          <i class="fa-solid fa-phone" v-if="!loading"></i>
+          <i class="fa-solid fa-spinner fa-spin" v-else></i>
+          {{ loading ? '获取中' : '获取号码' }}
+        </button>
+
+        <!-- 免责声明 -->
+        <div class="disclaimer">
+          <i class="fa-solid fa-exclamation-triangle"></i>
+          <span>本服务仅用于测试用途，严禁用于任何非法用途</span>
+        </div>
+      </div>
+
+      <!-- 短信内容 -->
+      <div class="sms-card">
+        <div class="sms-header">
+          <h2 class="card-title"><i class="fa-solid fa-message"></i> 短信内容</h2>
+          <button class="btn btn-sm btn-primary" @click="getMsg" :disabled="!currentPhone || smsLoading">
+            <i class="fa-solid fa-sync" v-if="!smsLoading"></i>
+            <i class="fa-solid fa-spinner fa-spin" v-else></i>
+            {{ smsLoading ? '获取中' : '获取短信' }}
+          </button>
+        </div>
+
+        <!-- 验证码 -->
+        <div class="code-box" v-if="extractedCode">
+          <label>验证码</label>
+          <div class="code-input-row">
+            <input type="text" v-model="extractedCode" class="form-input code-input" readonly>
+            <button class="btn btn-icon" @click="copyCode" title="复制">
+              <i class="fa-solid fa-copy"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 短信原文 -->
+        <div class="sms-text-box" v-if="smsContent">
+          <label>短信原文</label>
+          <div class="sms-content">{{ smsContent }}</div>
+          <div class="sms-time">{{ smsTime }}</div>
+        </div>
+
+        <div class="empty-state" v-else>
+          <i class="fa-solid fa-inbox"></i>
+          <p>暂无短信</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>© 2026 工具商店 · 精选优质 AI 工具</p>
+    </footer>
+
+    <!-- 登录注册弹窗 -->
+    <div class="modal-overlay" v-if="authModalVisible" @click.self="closeAuthModal">
+      <div class="auth-modal">
+        <div class="auth-header">
+          <h3>{{ isLogin ? '登录' : '注册' }}</h3>
+          <button class="modal-close" @click="closeAuthModal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        
+        <div class="auth-tabs">
+          <button :class="['auth-tab', { active: isLogin }]" @click="isLogin = true">登录</button>
+          <button :class="['auth-tab', { active: !isLogin }]" @click="isLogin = false">注册</button>
+        </div>
+
+        <div class="auth-form">
+          <div class="form-group">
+            <label><i class="fa-solid fa-user"></i> 用户名</label>
+            <input type="text" v-model="authForm.username" placeholder="请输入用户名" class="form-input">
+          </div>
+          <div class="form-group">
+            <label><i class="fa-solid fa-lock"></i> 密码</label>
+            <input type="password" v-model="authForm.password" placeholder="请输入密码" class="form-input">
+          </div>
+          <div class="form-group" v-if="!isLogin">
+            <label><i class="fa-solid fa-lock"></i> 确认密码</label>
+            <input type="password" v-model="authForm.confirmPassword" placeholder="请再次输入密码" class="form-input">
+          </div>
+          
+          <button class="btn btn-primary btn-block" @click="handleAuth" :disabled="authLoading">
+            <i class="fa-solid fa-spinner fa-spin" v-if="authLoading"></i>
+            {{ authLoading ? '处理中...' : (isLogin ? '登录' : '注册') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const loading = ref(false);
+        const smsLoading = ref(false);
+        const keyWord = ref('');
+        const phoneInput = ref('');
+        const cardType = ref('全部');
+        const currentPhone = ref('');
+        const smsContent = ref('');
+        const smsTime = ref('');
+        const isLoggedIn = ref(false);
+        const currentUser = ref(null);
+        
+        // 登录注册相关
+        const authModalVisible = ref(false);
+        const isLogin = ref(true);
+        const authLoading = ref(false);
+        const authForm = ref({
+          username: '',
+          password: '',
+          confirmPassword: ''
+        });
+
+        const extractedCode = computed(() => {
+          if (!smsContent.value) return '';
+          const match = smsContent.value.match(/(\d{4,8})/);
+          return match ? match[1] : '';
+        });
+
+        const getPhone = async () => {
+          if (!keyWord.value.trim()) {
+            Toast.warning('请输入短信关键词');
+            return;
+          }
+
+          loading.value = true;
+          try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (phoneInput.value.trim()) {
+              currentPhone.value = phoneInput.value.trim();
+            } else {
+              const randomPhone = '165' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+              currentPhone.value = randomPhone;
+              phoneInput.value = randomPhone;
+            }
+            smsContent.value = '';
+            smsTime.value = '';
+            Toast.success('获取号码成功');
+          } catch (error) {
+            Toast.error('获取失败：' + error.message);
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        const getMsg = async () => {
+          if (!currentPhone.value || !keyWord.value) {
+            Toast.warning('请先获取号码');
+            return;
+          }
+
+          smsLoading.value = true;
+          try {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const codes = ['123456', '654321', '888888', '666666', '999999'];
+            smsContent.value = `【${keyWord.value}】验证码${codes[Math.floor(Math.random() * codes.length)]}，有效期5分钟，请勿泄露。`;
+            smsTime.value = new Date().toLocaleString('zh-CN');
+            Toast.success('获取短信成功');
+          } catch (error) {
+            Toast.error('获取失败：' + error.message);
+          } finally {
+            smsLoading.value = false;
+          }
+        };
+
+        const releasePhone = async () => {
+          if (confirm('确定要释放该号码吗？')) {
+            currentPhone.value = '';
+            smsContent.value = '';
+            Toast.info('已释放号码');
+          }
+        };
+
+        const blockPhone = async () => {
+          if (confirm('确定要拉黑该号码吗？')) {
+            currentPhone.value = '';
+            smsContent.value = '';
+            Toast.info('已拉黑号码');
+          }
+        };
+
+        const copyToClipboard = (text) => {
+          const input = document.createElement('input');
+          input.value = text;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          document.body.removeChild(input);
+        };
+
+        const copyPhone = () => {
+          copyToClipboard(currentPhone.value);
+          Toast.success('已复制号码');
+        };
+
+        const copyCode = () => {
+          copyToClipboard(extractedCode.value);
+          Toast.success('已复制验证码');
+        };
+        
+        // 登录注册相关方法
+        const showAuthModal = () => {
+          authModalVisible.value = true;
+          authForm.value = { username: '', password: '', confirmPassword: '' };
+        };
+        
+        const closeAuthModal = () => {
+          authModalVisible.value = false;
+          authForm.value = { username: '', password: '', confirmPassword: '' };
+        };
+        
+        const handleAuth = async () => {
+          if (!authForm.value.username.trim()) {
+            Toast.warning('请输入用户名');
+            return;
+          }
+          if (!authForm.value.password.trim()) {
+            Toast.warning('请输入密码');
+            return;
+          }
+          if (!isLogin.value && authForm.value.password !== authForm.value.confirmPassword) {
+            Toast.warning('两次密码不一致');
+            return;
+          }
+          
+          authLoading.value = true;
+          try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            currentUser.value = { username: authForm.value.username };
+            isLoggedIn.value = true;
+            localStorage.setItem('token', 'mock-token');
+            localStorage.setItem('user', JSON.stringify(currentUser.value));
+            Toast.success(isLogin.value ? '登录成功' : '注册成功');
+            closeAuthModal();
+          } catch (error) {
+            Toast.error('操作失败：' + error.message);
+          } finally {
+            authLoading.value = false;
+          }
+        };
+        
+        const logout = () => {
+          localStorage.clear();
+          isLoggedIn.value = false;
+          currentUser.value = null;
+          Toast.info('已退出登录');
+        };
+        
+        const checkLogin = () => {
+          const token = localStorage.getItem('token');
+          const user = JSON.parse(localStorage.getItem('user') || 'null');
+          isLoggedIn.value = !!(token && user);
+          currentUser.value = user;
+          
+          // ===== 演示：模拟已登录状态 =====
+          isLoggedIn.value = true;
+          currentUser.value = { username: 'DemoUser' };
+        };
+
+        onMounted(() => {
+          checkLogin();
+        });
+
+        return {
+          loading, smsLoading, keyWord, phoneInput, cardType,
+          currentPhone, smsContent, smsTime, extractedCode,
+          isLoggedIn, currentUser, authModalVisible, isLogin, authLoading, authForm,
+          getPhone, getMsg, releasePhone, blockPhone, copyPhone, copyCode,
+          showAuthModal, closeAuthModal, handleAuth, logout
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
