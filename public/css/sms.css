@@ -122,7 +122,7 @@ label {
 }
 
 .btn-danger:hover {
-  background: #e11d48;
+  background: var(--accent-light);
 }
 
 /* 号码区域 */

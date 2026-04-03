@@ -11,6 +11,13 @@
   gap: 20px;
 }
 
+/* PC端固定高度 */
+@media (min-width: 769px) {
+  .main-container {
+    overflow: hidden;
+  }
+}
+
 /* 侧边栏 */
 .sidebar {
   width: 220px;
@@ -22,8 +29,28 @@
   border-radius: 12px;
   padding: 16px;
   border: 1px solid var(--border);
-  position: sticky;
-  top: 70px;
+  box-shadow: var(--shadow);
+  height: 100%;
+}
+
+/* 内容区 */
+.content {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* PC端内容区flex布局 */
+@media (min-width: 769px) {
+  .content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 }
 
 .filter-title {
@@ -110,12 +137,7 @@
   text-align: center;
 }
 
-/* 内容区 */
-.content {
-  flex: 1;
-  min-width: 0;
-}
-
+/* 内容区头部 */
 .content-header {
   display: flex;
   align-items: center;
@@ -153,6 +175,16 @@
   gap: 16px;
 }
 
+/* PC端商品网格可滚动 */
+@media (min-width: 769px) {
+  .products-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+    align-content: start;
+  }
+}
+
 /* 商品卡片 */
 .product-card {
   background: var(--surface);
@@ -167,7 +199,7 @@
 .product-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
-  border-color: rgba(99, 102, 241, 0.15);
+  border-color: var(--primary-bg);
 }
 
 .product-image {
@@ -227,13 +259,13 @@
 .price-currency {
   font-size: 12px;
   font-weight: 600;
-  color: var(--primary);
+  color: var(--price);
 }
 
 .price-amount {
   font-size: 18px;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--price);
 }
 
 .price-period {
