@@ -153,15 +153,15 @@
         <div class="auth-form">
           <div class="form-group">
             <label><i class="fa-solid fa-user"></i> 用户名</label>
-            <input type="text" v-model="authForm.username" placeholder="请输入用户名" class="form-input">
+            <input type="text" v-model="authForm.username" placeholder="3-20位英文、数字、下划线" class="form-input">
           </div>
           <div class="form-group">
             <label><i class="fa-solid fa-lock"></i> 密码</label>
-            <input type="password" v-model="authForm.password" placeholder="请输入密码" class="form-input">
+            <input type="password" v-model="authForm.password" placeholder="至少6位" class="form-input">
           </div>
           <div class="form-group" v-if="!isLogin">
             <label><i class="fa-solid fa-lock"></i> 确认密码</label>
-            <input type="password" v-model="authForm.confirmPassword" placeholder="请再次输入密码" class="form-input">
+            <input type="password" v-model="authForm.confirmPassword" placeholder="再次输入密码" class="form-input">
           </div>
           
           <button class="btn btn-primary btn-block" @click="handleAuth" :disabled="authLoading">
@@ -297,52 +297,98 @@
           authForm.value = { username: '', password: '', confirmPassword: '' };
         };
         
+        // 用户名验证：只能包含英文、数字、下划线，长度3-20
+        const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
+        
         const handleAuth = async () => {
+          // 验证用户名
           if (!authForm.value.username.trim()) {
             Toast.warning('请输入用户名');
             return;
           }
-          if (!authForm.value.password.trim()) {
+          if (!USERNAME_REGEX.test(authForm.value.username)) {
+            Toast.warning('用户名只能包含英文、数字、下划线，长度3-20位');
+            return;
+          }
+          
+          // 验证密码
+          if (!authForm.value.password) {
             Toast.warning('请输入密码');
             return;
           }
-          if (!isLogin.value && authForm.value.password !== authForm.value.confirmPassword) {
-            Toast.warning('两次密码不一致');
+          if (authForm.value.password.length < 6) {
+            Toast.warning('密码长度至少6位');
             return;
+          }
+          
+          // 注册时验证确认密码
+          if (!isLogin.value) {
+            if (!authForm.value.confirmPassword) {
+              Toast.warning('请确认密码');
+              return;
+            }
+            if (authForm.value.password !== authForm.value.confirmPassword) {
+              Toast.warning('两次密码不一致');
+              return;
+            }
           }
           
           authLoading.value = true;
           try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            currentUser.value = { username: authForm.value.username };
+            const url = isLogin.value ? '/api/users/login' : '/api/users/register';
+            const response = await axios.post(url, {
+              username: authForm.value.username,
+              password: authForm.value.password
+            });
+            
+            const { user } = response.data;
+            
+            // Cookie 已由后端设置，前端只需保存用户信息到 localStorage
+            currentUser.value = user;
             isLoggedIn.value = true;
-            localStorage.setItem('token', 'mock-token');
-            localStorage.setItem('user', JSON.stringify(currentUser.value));
+            localStorage.setItem('user', JSON.stringify(user));
+            
             Toast.success(isLogin.value ? '登录成功' : '注册成功');
             closeAuthModal();
           } catch (error) {
-            Toast.error('操作失败：' + error.message);
+            console.error('认证错误:', error);
+            Toast.error(error.response?.data?.error || error.message || '操作失败');
           } finally {
             authLoading.value = false;
           }
         };
         
-        const logout = () => {
-          localStorage.clear();
+        const logout = async () => {
+          try {
+            await axios.post('/api/users/logout');
+          } catch (e) {
+            // 忽略错误
+          }
+          localStorage.removeItem('user');
           isLoggedIn.value = false;
           currentUser.value = null;
           Toast.info('已退出登录');
         };
         
-        const checkLogin = () => {
-          const token = localStorage.getItem('token');
+        const checkLogin = async () => {
+          // 先检查 localStorage
           const user = JSON.parse(localStorage.getItem('user') || 'null');
-          isLoggedIn.value = !!(token && user);
-          currentUser.value = user;
-          
-          // ===== 演示：模拟已登录状态 =====
-          isLoggedIn.value = true;
-          currentUser.value = { username: 'DemoUser' };
+          if (user) {
+            currentUser.value = user;
+            isLoggedIn.value = true;
+            
+            // 验证 Cookie 中的 token 是否有效
+            try {
+              const response = await axios.get('/api/users/me');
+              currentUser.value = response.data;
+              localStorage.setItem('user', JSON.stringify(response.data));
+            } catch (error) {
+              // Token 无效或过期
+              localStorage.removeItem('user');
+              isLoggedIn.value = false;
+              currentUser.value = null;
+            }
+          }
         };
 
         onMounted(() => {

@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const dataSource = require('./config/database');
 const productsRouter = require('./routes/products');
 const usersRouter = require('./routes/users');
@@ -10,6 +11,7 @@ const PORT = 5100;
 // 中间件
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // 解析 Cookie
 
 // 静态文件
 app.use(express.static(path.join(__dirname, 'public')));

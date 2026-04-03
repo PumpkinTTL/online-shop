@@ -5,7 +5,7 @@ module.exports = new EntitySchema({
   tableName: 'users',
   columns: {
     id: { type: 'int', primary: true, generated: true },
-    email: { type: 'varchar', length: 100, unique: true },
+    username: { type: 'varchar', length: 50, unique: true },
     password: { type: 'varchar', length: 255 },
     nickname: { type: 'varchar', length: 50, nullable: true },
     avatar: { type: 'varchar', length: 500, nullable: true },

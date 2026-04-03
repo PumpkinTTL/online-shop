@@ -27,18 +27,48 @@ class UserService {
     return this.getRepository().findOne({ where: { id } });
   }
 
-  async findByEmail(email) {
-    return this.getRepository().findOne({ where: { email } });
+  async findByUsername(username) {
+    return this.getRepository().findOne({ where: { username } });
+  }
+
+  // 注册用户
+  async register(username, password) {
+    // 检查用户名是否已存在
+    const existingUser = await this.findByUsername(username);
+    if (existingUser) {
+      throw new Error('用户名已存在');
+    }
+    
+    // 加密密码并创建用户
+    const hash = await this.hashPassword(password);
+    const user = this.getRepository().create({
+      username,
+      password: hash,
+      nickname: username // 默认昵称等于用户名
+    });
+    return this.getRepository().save(user);
+  }
+
+  // 登录验证
+  async login(username, password) {
+    const user = await this.findByUsername(username);
+    if (!user) {
+      throw new Error('用户名或密码错误');
+    }
+    
+    const isValid = await this.comparePassword(password, user.password);
+    if (!isValid) {
+      throw new Error('用户名或密码错误');
+    }
+    
+    // 返回用户信息（不包含密码）
+    const { password: _, ...userInfo } = user;
+    return userInfo;
   }
 
   async create(data) {
     const entity = this.getRepository().create(data);
     return this.getRepository().save(entity);
-  }
-
-  async createWithPassword(email, password, nickname) {
-    const hash = await this.hashPassword(password);
-    return this.create({ email, password: hash, nickname });
   }
 
   async update(id, data) {
