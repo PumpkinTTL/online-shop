@@ -1,6 +1,6 @@
 /* 接码页面样式 */
 
-/* iframe 模式下全屏 */
+/* ===== sms.html 独立页面布局 ===== */
 body.is-iframe {
   background: transparent;
 }
@@ -15,6 +15,7 @@ body.is-iframe #app {
   height: 100%;
 }
 
+/* sms.html 独立页面的网格布局 */
 .main-container {
   flex: 1;
   max-width: 800px;
@@ -26,6 +27,21 @@ body.is-iframe #app {
   gap: 12px;
 }
 
+/* ===== index.html 内嵌接码区域的布局覆盖 ===== */
+.sms-content-area .main-container,
+.sms-content-area {
+  display: block;
+  max-width: none;
+  padding: 0;
+}
+
+.sms-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* ===== 通用接码组件样式 ===== */
 .sms-card {
   background: var(--surface);
   border-radius: 8px;
@@ -48,6 +64,50 @@ body.is-iframe #app {
   font-size: 13px;
 }
 
+.sms-card label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 10px 0 4px;
+  color: var(--text);
+}
+
+.sms-card .required {
+  color: var(--accent);
+}
+
+.sms-card .optional {
+  color: var(--text-light);
+  font-weight: normal;
+  font-size: 11px;
+}
+
+.sms-card .form-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.sms-card .form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.sms-card .form-input::placeholder {
+  color: var(--text-light);
+}
+
+.sms-card .hint {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
 .sms-header {
   display: flex;
   align-items: center;
@@ -59,48 +119,33 @@ body.is-iframe #app {
   margin-bottom: 0;
 }
 
-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  margin: 10px 0 4px;
-  color: var(--text);
-}
-
-.required {
-  color: var(--accent);
-}
-
-.optional {
-  color: var(--text-light);
-  font-weight: normal;
-  font-size: 11px;
-}
-
-.form-input {
-  width: 100%;
-  padding: 6px 10px;
-  font-size: 13px;
-  border: 1px solid var(--border);
+/* 号码区域 */
+.phone-box {
+  margin-top: 8px;
+  padding: 10px;
+  background: #f8fafc;
   border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  transition: all 0.2s;
+  border: 1px solid var(--border);
 }
 
-.form-input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.form-input::placeholder {
+.phone-box label {
+  margin-bottom: 8px;
+  font-size: 12px;
   color: var(--text-light);
 }
 
-.hint {
-  font-size: 11px;
-  color: var(--text-light);
-  margin-top: 2px;
+.phone-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.phone-input {
+  flex: 1;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: 1px;
 }
 
 /* 紧凑按钮 */
@@ -110,11 +155,6 @@ label {
   font-size: 12px;
   margin-top: 10px;
   justify-content: center;
-}
-
-.btn-sm {
-  padding: 4px 10px;
-  font-size: 11px;
 }
 
 .btn-icon {
@@ -138,29 +178,6 @@ label {
 
 .btn-danger:hover {
   background: var(--accent-light);
-}
-
-/* 号码区域 */
-.phone-box {
-  margin-top: 8px;
-  padding: 10px;
-  background: #f8fafc;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-}
-
-.phone-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-top: 4px;
-}
-
-.phone-input {
-  flex: 1;
-  font-weight: 600;
-  color: var(--primary);
-  letter-spacing: 1px;
 }
 
 /* 验证码区域 */
@@ -280,8 +297,8 @@ label {
     padding: 14px;
   }
 
-  .nav-menu {
-    display: none;
+  .sms-cards {
+    grid-template-columns: 1fr;
   }
 
   .code-input {
