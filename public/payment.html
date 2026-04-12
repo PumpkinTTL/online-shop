@@ -7,7 +7,7 @@
   <title>支付宝支付 - 工具商店</title>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/components/app-header.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -77,13 +77,7 @@
       margin-bottom: 16px;
     }
 
-    .qr-canvas-wrap #qrcode-container {
-      display: flex;
-      justify-content: center;
-    }
-
-    .qr-canvas-wrap #qrcode-container img,
-    .qr-canvas-wrap #qrcode-container canvas {
+    .qr-canvas-wrap canvas {
       display: block;
     }
 
@@ -334,7 +328,7 @@
               <i class="fa-brands fa-alipay"></i> 请使用支付宝扫码支付
             </div>
             <div class="qr-canvas-wrap">
-              <div id="qrcode-container"></div>
+              <canvas id="qrcode-canvas"></canvas>
             </div>
             <div class="pay-qr-tip">二维码30分钟内有效，请尽快支付</div>
             <div class="pay-countdown" :class="{ expired: countdown <= 0 }">
@@ -424,17 +418,13 @@
         // 生成二维码
         const generateQR = async (text) => {
           await nextTick();
-          const container = document.getElementById('qrcode-container');
-          if (container && text) {
+          const canvas = document.getElementById('qrcode-canvas');
+          if (canvas && text) {
             try {
-              container.innerHTML = '';
-              new QRCode(container, {
-                text: text,
+              await QRCode.toCanvas(canvas, text, {
                 width: 200,
-                height: 200,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M,
+                margin: 1,
+                color: { dark: '#000000', light: '#ffffff' }
               });
             } catch (e) {
               console.error('二维码生成失败:', e);
