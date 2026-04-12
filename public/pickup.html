@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品提货 - 工具商店</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="/js/toast.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/pickup.css">
+</head>
+
+<body>
+  <div id="app">
+    <!-- 导航栏 -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <div class="nav-left">
+          <a href="/" class="brand" @click.prevent="goHome">
+            <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
+            <span>工具商店</span>
+          </a>
+          <div class="nav-menu">
+            <a href="/" class="nav-link">
+              <i class="fa-solid fa-house"></i> 首页
+            </a>
+            <a href="/pickup.html" class="nav-link active">
+              <i class="fa-solid fa-box"></i> 提货
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main">
+      <div class="pickup-container">
+
+        <!-- 步骤条 -->
+        <div class="steps">
+          <div :class="['step', { active: step === 1, done: step > 1 }]">
+            <div class="step-dot"><i class="fa-solid fa-key" v-if="step <= 1" style="font-size:11px"></i><i class="fa-solid fa-check" v-else style="font-size:11px"></i></div>
+            <span class="step-label">输入卡密</span>
+          </div>
+          <div :class="['step-line', { done: step > 1 }]"></div>
+          <div :class="['step', { active: step === 2, done: step > 2 }]">
+            <div class="step-dot"><i class="fa-solid fa-mobile-screen" v-if="step <= 2" style="font-size:11px"></i><i class="fa-solid fa-check" v-else style="font-size:11px"></i></div>
+            <span class="step-label">获取手机号</span>
+          </div>
+          <div :class="['step-line', { done: step > 2 }]"></div>
+          <div :class="['step', { active: step === 3, done: step > 3 }]">
+            <div class="step-dot"><i class="fa-solid fa-comment-sms" v-if="step <= 3" style="font-size:11px"></i><i class="fa-solid fa-check" v-else style="font-size:11px"></i></div>
+            <span class="step-label">接收验证码</span>
+          </div>
+          <div :class="['step-line', { done: step > 3 }]"></div>
+          <div :class="['step', { active: step === 4, done: step > 4 }]">
+            <div class="step-dot"><i class="fa-solid fa-circle-check" style="font-size:11px"></i></div>
+            <span class="step-label">提货完成</span>
+          </div>
+        </div>
+
+        <!-- Step 1: 输入卡密 -->
+        <div class="pickup-card" v-if="step === 1">
+          <div class="card-header">
+            <i class="fa-solid fa-key"></i>
+            <span>输入卡密</span>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label><i class="fa-solid fa-hashtag"></i> 卡密</label>
+              <div class="input-row">
+                <input type="text" class="form-input" v-model="cardCode" placeholder="请输入您的卡密"
+                  @keyup.enter="verifyCard" :disabled="verifying">
+                <button class="btn btn-primary" @click="verifyCard" :disabled="verifying">
+                  <i class="fa-solid fa-spinner fa-spin" v-if="verifying"></i>
+                  <i class="fa-solid fa-arrow-right" v-else></i>
+                  {{ verifying ? '验证中' : '下一步' }}
+                </button>
+              </div>
+            </div>
+            <a href="https://68n.cn/xZSmW" target="_blank" class="buy-link" style="margin-top:12px">
+              <i class="fa-solid fa-shopping-cart"></i>
+              没有卡密？点击购买
+            </a>
+          </div>
+        </div>
+
+        <!-- Step 2: 获取手机号 -->
+        <div class="pickup-card" v-if="step === 2">
+          <div class="card-header">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span>获取手机号</span>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label><i class="fa-solid fa-tag"></i> 短信关键词（可选）</label>
+              <input type="text" class="form-input" v-model="keyword" placeholder="用于匹配短信，如品牌名">
+              <div class="hint-text">关键词帮助精准匹配短信验证码，如不确定可留空</div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center" @click="getPhone" :disabled="gettingPhone">
+              <i class="fa-solid fa-spinner fa-spin" v-if="gettingPhone"></i>
+              <i class="fa-solid fa-phone" v-else></i>
+              {{ gettingPhone ? '获取中...' : '获取手机号' }}
+            </button>
+            <div style="margin-top:12px;text-align:center">
+              <button class="btn btn-ghost" @click="step = 1" style="font-size:12px">
+                <i class="fa-solid fa-arrow-left"></i> 返回上一步
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: 接收验证码 -->
+        <div class="pickup-card" v-if="step === 3">
+          <div class="card-header">
+            <i class="fa-solid fa-comment-sms"></i>
+            <span>接收验证码</span>
+          </div>
+          <div class="card-body">
+            <!-- 手机号展示 -->
+            <div class="phone-display">
+              <div class="phone-icon"><i class="fa-solid fa-phone"></i></div>
+              <div class="phone-number">{{ phone }}</div>
+              <div class="phone-status"><i class="fa-solid fa-signal"></i> 接收中</div>
+            </div>
+
+            <!-- 轮询状态 -->
+            <div class="poll-status" v-if="polling">
+              <i class="fa-solid fa-circle-notch"></i>
+              正在等待短信验证码... ({{ pollCount }}/{{ maxPoll }})
+            </div>
+
+            <div style="margin-top:16px">
+              <button class="btn btn-primary" style="width:100%;justify-content:center" @click="startPolling" :disabled="polling">
+                <i class="fa-solid fa-spinner fa-spin" v-if="polling"></i>
+                <i class="fa-solid fa-rotate" v-else></i>
+                {{ polling ? '获取中...' : '开始获取验证码' }}
+              </button>
+            </div>
+
+            <!-- 验证码输入 -->
+            <div class="form-group" style="margin-top:16px">
+              <label><i class="fa-solid fa-shield-halved"></i> 验证码</label>
+              <div class="input-row">
+                <input type="text" class="form-input" v-model="verifyCode" placeholder="输入收到的验证码"
+                  @keyup.enter="goToConfirm">
+                <button class="btn btn-primary" @click="goToConfirm" :disabled="!verifyCode.trim()">
+                  <i class="fa-solid fa-arrow-right"></i>
+                  下一步
+                </button>
+              </div>
+            </div>
+
+            <!-- 联系方式 -->
+            <div class="form-group" style="margin-top:12px">
+              <label><i class="fa-solid fa-address-card"></i> 联系方式</label>
+              <input type="text" class="form-input" v-model="contact" placeholder="手机号/QQ/邮箱，用于查询订单">
+              <div class="hint-text">留下联系方式，方便后续查询提货记录</div>
+            </div>
+
+            <div style="margin-top:12px;display:flex;justify-content:space-between">
+              <button class="btn btn-ghost" @click="cancelPickup" style="font-size:12px;color:#ef4444">
+                <i class="fa-solid fa-xmark"></i> 取消提货
+              </button>
+              <button class="btn btn-ghost" @click="step = 2" style="font-size:12px">
+                <i class="fa-solid fa-arrow-left"></i> 返回
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: 提货完成 -->
+        <div class="pickup-card" v-if="step === 4">
+          <div class="result-card" v-if="resultSuccess">
+            <div class="result-icon success">
+              <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="result-title">提货成功</div>
+            <div class="result-desc">您的商品已成功提取，请妥善保存订单号</div>
+            <div class="result-order">订单号：{{ orderNo }}</div>
+            <button class="btn btn-primary" @click="reset">
+              <i class="fa-solid fa-rotate"></i> 继续提货
+            </button>
+          </div>
+          <div class="result-card" v-else>
+            <div class="result-icon error">
+              <i class="fa-solid fa-xmark"></i>
+            </div>
+            <div class="result-title">提货失败</div>
+            <div class="result-desc">{{ resultError || '操作失败，请重试' }}</div>
+            <button class="btn btn-primary" @click="reset">
+              <i class="fa-solid fa-rotate"></i> 重新开始
+            </button>
+          </div>
+        </div>
+
+        <!-- 订单查询区 -->
+        <div class="pickup-card" v-if="step !== 4">
+          <div class="card-header">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>查询提货记录</span>
+          </div>
+          <div class="card-body">
+            <div class="query-section-title">
+              <i class="fa-solid fa-info-circle"></i> 输入您留下的联系方式查询历史订单
+            </div>
+            <div class="input-row">
+              <input type="text" class="form-input" v-model="queryContact" placeholder="输入联系方式"
+                @keyup.enter="queryOrders">
+              <button class="btn btn-ghost" @click="queryOrders" :disabled="queryingOrders" style="border:1px solid var(--border)">
+                <i class="fa-solid fa-spinner fa-spin" v-if="queryingOrders"></i>
+                <i class="fa-solid fa-search" v-else></i>
+                查询
+              </button>
+            </div>
+            <div class="order-list" v-if="orders.length > 0">
+              <div class="order-item" v-for="order in orders" :key="order.id">
+                <div class="order-item-header">
+                  <span class="order-no">{{ order.orderNo }}</span>
+                  <span :class="['order-status', order.status]">
+                    {{ order.status === 'completed' ? '已完成' : order.status === 'pending' ? '待处理' : '失败' }}
+                  </span>
+                </div>
+                <div class="order-item-body">
+                  <div>联系方式：{{ order.contact }}</div>
+                  <div>创建时间：{{ formatTime(order.createdAt) }}</div>
+                  <div v-if="order.completedAt">完成时间：{{ formatTime(order.completedAt) }}</div>
+                </div>
+              </div>
+            </div>
+            <div v-if="queried && orders.length === 0" style="text-align:center;padding:16px;color:var(--text-light);font-size:13px">
+              <i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:8px;color:#cbd5e1"></i>
+              未找到相关订单
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>© 2026 工具商店 · 精选优质 AI 工具</p>
+    </footer>
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+    createApp({
+      setup() {
+        // 步骤
+        const step = ref(1);
+
+        // Step 1
+        const cardCode = ref('');
+        const verifying = ref(false);
+        const cardKeyId = ref(null);
+        const productId = ref(null);
+
+        // Step 2
+        const keyword = ref('');
+        const gettingPhone = ref(false);
+        const phone = ref('');
+
+        // Step 3
+        const polling = ref(false);
+        const pollCount = ref(0);
+        const maxPoll = ref(24);
+        const verifyCode = ref('');
+        const contact = ref('');
+        let pollTimer = null;
+
+        // Step 4
+        const resultSuccess = ref(false);
+        const resultError = ref('');
+        const orderNo = ref('');
+
+        // 查询
+        const queryContact = ref('');
+        const queryingOrders = ref(false);
+        const orders = ref([]);
+        const queried = ref(false);
+
+        // Step 1: 验证卡密
+        const verifyCard = async () => {
+          if (!cardCode.value.trim()) {
+            Toast.warning('请输入卡密');
+            return;
+          }
+          verifying.value = true;
+          try {
+            const res = await axios.post('/api/pickup/verify-card', {
+              code: cardCode.value.trim()
+            });
+            cardKeyId.value = res.data.id;
+            productId.value = res.data.productId;
+            if (res.data.keyword) keyword.value = res.data.keyword;
+            step.value = 2;
+            Toast.success('卡密验证通过');
+          } catch (err) {
+            Toast.error(err.response?.data?.error || '卡密验证失败');
+          } finally {
+            verifying.value = false;
+          }
+        };
+
+        // Step 2: 获取手机号
+        const getPhone = async () => {
+          gettingPhone.value = true;
+          try {
+            const res = await axios.post('/api/pickup/get-phone', {
+              cardCode: cardCode.value.trim(),
+              keyword: keyword.value.trim()
+            });
+            phone.value = res.data.phone;
+            cardKeyId.value = res.data.cardKeyId;
+            productId.value = res.data.productId;
+            step.value = 3;
+            Toast.success('手机号获取成功');
+          } catch (err) {
+            Toast.error(err.response?.data?.error || '获取手机号失败');
+          } finally {
+            gettingPhone.value = false;
+          }
+        };
+
+        // Step 3: 轮询验证码
+        const startPolling = async () => {
+          if (polling.value) return;
+          polling.value = true;
+          pollCount.value = 0;
+
+          const poll = async () => {
+            if (pollCount.value >= maxPoll.value) {
+              polling.value = false;
+              Toast.warning('验证码获取超时，请手动输入或重试');
+              return;
+            }
+
+            pollCount.value++;
+            try {
+              const res = await axios.post('/api/pickup/get-verify-code', {
+                phone: phone.value,
+                keyword: keyword.value.trim()
+              });
+              if (res.data.received && res.data.code) {
+                verifyCode.value = res.data.code;
+                polling.value = false;
+                Toast.success('验证码已获取');
+                return;
+              }
+            } catch (err) {
+              // 继续轮询
+            }
+
+            pollTimer = setTimeout(poll, 5000);
+          };
+
+          poll();
+        };
+
+        // Step 3: 跳转确认
+        const goToConfirm = () => {
+          if (!verifyCode.value.trim()) {
+            Toast.warning('请输入验证码');
+            return;
+          }
+          if (!contact.value.trim()) {
+            Toast.warning('请留下联系方式');
+            return;
+          }
+          confirmPickup();
+        };
+
+        // 确认提货
+        const confirmPickup = async () => {
+          try {
+            const res = await axios.post('/api/pickup/confirm', {
+              cardKeyId: cardKeyId.value,
+              productId: productId.value,
+              contact: contact.value.trim(),
+              phone: phone.value,
+              verifyCode: verifyCode.value.trim()
+            });
+            orderNo.value = res.data.orderNo;
+            resultSuccess.value = true;
+            step.value = 4;
+            Toast.success('提货成功！');
+          } catch (err) {
+            resultSuccess.value = false;
+            resultError.value = err.response?.data?.error || '提货失败';
+            step.value = 4;
+            Toast.error(resultError.value);
+          }
+        };
+
+        // 取消提货 — 释放号码，回到第一步
+        const cancelPickup = async () => {
+          if (pollTimer) {
+            clearTimeout(pollTimer);
+            pollTimer = null;
+          }
+          polling.value = false;
+
+          if (phone.value) {
+            try {
+              await axios.post('/api/pickup/release-phone', { phone: phone.value });
+            } catch (e) {}
+          }
+          reset();
+          Toast.info('已取消提货');
+        };
+
+        // 查询订单
+        const queryOrders = async () => {
+          if (!queryContact.value.trim()) {
+            Toast.warning('请输入联系方式');
+            return;
+          }
+          queryingOrders.value = true;
+          try {
+            const res = await axios.get('/api/pickup/orders', {
+              params: { contact: queryContact.value.trim() }
+            });
+            orders.value = res.data;
+            queried.value = true;
+          } catch (err) {
+            Toast.error(err.response?.data?.error || '查询失败');
+          } finally {
+            queryingOrders.value = false;
+          }
+        };
+
+        // 重置
+        const reset = () => {
+          if (pollTimer) {
+            clearTimeout(pollTimer);
+            pollTimer = null;
+          }
+          step.value = 1;
+          cardCode.value = '';
+          keyword.value = '';
+          phone.value = '';
+          verifyCode.value = '';
+          contact.value = '';
+          cardKeyId.value = null;
+          productId.value = null;
+          polling.value = false;
+          pollCount.value = 0;
+          resultSuccess.value = false;
+          resultError.value = '';
+          orderNo.value = '';
+        };
+
+        // 格式化时间
+        const formatTime = (t) => {
+          if (!t) return '';
+          const d = new Date(t);
+          return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0') + ' ' +
+            String(d.getHours()).padStart(2, '0') + ':' +
+            String(d.getMinutes()).padStart(2, '0') + ':' +
+            String(d.getSeconds()).padStart(2, '0');
+        };
+
+        const goHome = () => { window.location.href = '/'; };
+
+        onUnmounted(() => {
+          if (pollTimer) clearTimeout(pollTimer);
+        });
+
+        return {
+          step, cardCode, verifying, keyword, gettingPhone, phone,
+          polling, pollCount, maxPoll, verifyCode, contact,
+          resultSuccess, resultError, orderNo,
+          queryContact, queryingOrders, orders, queried,
+          verifyCard, getPhone, startPolling, goToConfirm,
+          cancelPickup, queryOrders, reset, formatTime, goHome
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>

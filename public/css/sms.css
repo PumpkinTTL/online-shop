@@ -1,5 +1,20 @@
 /* 接码页面样式 */
 
+/* iframe 模式下全屏 */
+body.is-iframe {
+  background: transparent;
+}
+
+body.is-iframe .main-container {
+  padding: 12px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+body.is-iframe #app {
+  height: 100%;
+}
+
 .main-container {
   flex: 1;
   max-width: 800px;

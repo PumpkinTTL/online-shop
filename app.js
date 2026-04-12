@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const dataSource = require('./config/database');
 const productsRouter = require('./routes/products');
 const usersRouter = require('./routes/users');
+const pickupRouter = require('./routes/pickup');
 
 const app = express();
 const PORT = 5100;
@@ -20,10 +21,16 @@ app.use('/assets', express.static(path.join(__dirname, 'asset')));
 // 路由
 app.use('/api/products', productsRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/pickup', pickupRouter);
 
 // 主页
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 提货页
+app.get('/pickup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pickup.html'));
 });
 
 // 初始化数据库并启动

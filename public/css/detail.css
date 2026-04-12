@@ -146,7 +146,6 @@
 
 /* 操作卡片 */
 .action-card {
-  border-left: 3px solid var(--primary);
 }
 
 .card-header {
@@ -274,7 +273,136 @@
   padding: 12px;
   background: #fffbeb;
   border-color: #fde68a;
-  border-left: 3px solid #f59e0b;
+}
+
+/* 兑换成功卡片 */
+.success-card {
+  background: var(--surface);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border);
+}
+
+.success-header {
+  text-align: center;
+  padding: 24px 16px 12px;
+}
+
+.success-icon {
+  font-size: 48px;
+  color: #22c55e;
+  margin-bottom: 8px;
+}
+
+.success-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.success-desc {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+.cdk-box {
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.cdk-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cdk-row {
+  display: flex;
+  gap: 8px;
+}
+
+.cdk-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  text-align: center;
+  border: 2px dashed #22c55e;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #15803d;
+  outline: none;
+}
+
+.btn-copy {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.success-actions {
+  padding: 0 16px 20px;
+  text-align: center;
+}
+
+.btn-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  border-radius: 10px;
+}
+
+.success-tip {
+  font-size: 12px;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1.5;
+}
+
+.success-tip i {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+/* 兑换网址框 */
+.redeem-url-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.redeem-url-input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+  color: var(--text);
+  outline: none;
+}
+
+.btn-copy-url {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .notice-icon {
@@ -332,6 +460,24 @@
   }
   
   .input-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cdk-row {
+    flex-direction: column;
+  }
+
+  .btn-copy {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .redeem-url-box {
+    flex-direction: column;
+  }
+
+  .btn-copy-url {
     width: 100%;
     justify-content: center;
   }

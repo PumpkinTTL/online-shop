@@ -47,8 +47,7 @@ body {
 
 /* PC端固定高度，只有商品列表滚动 */
 @media (min-width: 769px) {
-  html, body { overflow: hidden; }
-  #app { height: 100vh; min-height: auto; }
+  #app { min-height: 100vh; }
 }
 
 /* 导航栏 */

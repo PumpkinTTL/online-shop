@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,13 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
+  <script src="/js/sms.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/common.css">
   <link rel="stylesheet" href="/css/index.css">
 </head>
+
 <body>
   <div id="app">
     <!-- 导航栏 -->
@@ -23,11 +26,12 @@
             <span>工具商店</span>
           </a>
           <div class="nav-menu">
-            <a href="/" class="nav-link active" @click.prevent="goHome">
+            <a href="/" class="nav-link" :class="{ active: currentCategory !== 'sms' }"
+              @click.prevent="currentCategory = 'ai'">
               <i class="fa-solid fa-house"></i> 首页
             </a>
-            <a href="/sms.html" class="nav-link">
-              <i class="fa-solid fa-mobile-screen"></i> 接码
+            <a href="/pickup.html" class="nav-link">
+              <i class="fa-solid fa-box-open"></i> 提货
             </a>
           </div>
         </div>
@@ -36,6 +40,10 @@
             <i class="fa-solid fa-search"></i>
             <input type="text" placeholder="搜索商品..." v-model="searchKeyword" @keyup.enter="handleSearch">
           </div>
+          <!-- 订单按钮 -->
+          <button class="btn btn-ghost" @click="goToOrders" title="我的订单">
+            <i class="fa-solid fa-box"></i>
+          </button>
           <!-- 未登录 -->
           <button class="btn btn-primary" @click="showAuthModal" v-if="!isLoggedIn">
             <i class="fa-solid fa-user"></i> 登录
@@ -67,19 +75,14 @@
             </div>
             <i class="fa-solid fa-chevron-down filter-toggle-icon" :class="{ rotated: filterExpanded }"></i>
           </div>
-          
+
           <!-- 筛选内容 -->
           <div class="filter-content" v-show="filterExpanded">
             <div class="filter-group">
               <div class="filter-label">分类</div>
               <div class="filter-options">
-                <div 
-                  class="filter-option" 
-                  :class="{ active: currentCategory === cat.value }"
-                  v-for="cat in categories" 
-                  :key="cat.value"
-                  @click="currentCategory = cat.value"
-                >
+                <div class="filter-option" :class="{ active: currentCategory === cat.value }" v-for="cat in categories"
+                  :key="cat.value" @click="currentCategory = cat.value">
                   <i :class="cat.icon"></i>
                   {{ cat.label }}
                 </div>
@@ -89,13 +92,8 @@
             <div class="filter-group">
               <div class="filter-label">价格区间</div>
               <div class="filter-options">
-                <div 
-                  class="filter-option" 
-                  :class="{ active: currentPriceRange === price.value }"
-                  v-for="price in priceRanges" 
-                  :key="price.value"
-                  @click="currentPriceRange = price.value"
-                >
+                <div class="filter-option" :class="{ active: currentPriceRange === price.value }"
+                  v-for="price in priceRanges" :key="price.value" @click="currentPriceRange = price.value">
                   <i :class="price.icon"></i>
                   {{ price.label }}
                 </div>
@@ -105,8 +103,10 @@
         </div>
       </aside>
 
+
       <!-- 商品列表 -->
-      <main class="content">
+      <main class="content" v-if="currentCategory !== 'sms'">
+        <!-- 商品内容 -->
         <div class="content-header">
           <h1 class="content-title">全部商品<span class="title-count">({{ filteredProducts.length }})</span></h1>
           <select class="sort-select" v-model="currentSort">
@@ -115,7 +115,8 @@
             <option value="price-desc">价格从高到低</option>
           </select>
         </div>
-        
+
+        <!-- 商品列表 -->
         <div class="products-grid">
           <!-- 加载中 -->
           <div class="loading" v-if="loading">
@@ -129,13 +130,8 @@
           </div>
 
           <!-- 商品卡片 -->
-          <div 
-            class="product-card" 
-            v-for="product in filteredProducts" 
-            :key="product.id"
-            @click="goToDetail(product.id)"
-            v-else
-          >
+          <div class="product-card" v-for="product in filteredProducts" :key="product.id"
+            @click="goToDetail(product.id)" v-else>
             <div class="product-image" style="background: url('/assets/bg.png') center/cover no-repeat;">
               <div class="product-badge">
                 <i class="fa-solid fa-fire"></i> 热门
@@ -145,15 +141,102 @@
               <h3 class="product-name">{{ product.name }}</h3>
               <p class="product-desc">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
               <div class="product-footer">
-                <div class="product-price">
-                  <span class="price-currency">¥</span>
-                  <span class="price-amount">{{ product.price }}</span>
-                  <span class="price-period">/月</span>
+                <div class="product-left">
+                  <div class="product-price">
+                    <span class="price-currency">¥</span>
+                    <span class="price-amount">{{ product.price }}</span>
+                  </div>
+                  <div class="product-sales">
+                    <i class="fa-solid fa-chart-line"></i>
+                    {{ formatSales(product.sales) }}
+                  </div>
                 </div>
                 <button class="btn btn-primary btn-buy" @click.stop="goToDetail(product.id)">
-                  <i class="fa-solid fa-cart-shopping"></i> 购买
+                  <i class="fa-solid fa-box-open"></i> 提货
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 接码服务内容 -->
+      <main class="content sms-content-area" v-else>
+        <div class="sms-cards">
+          <!-- 获取号码 -->
+          <div class="sms-card">
+            <h2 class="card-title"><i class="fa-solid fa-mobile-screen"></i> 获取号码</h2>
+
+            <label>短信关键词 <span class="required">*</span></label>
+            <input type="text" v-model="sms.keyWord" placeholder="例如：Google、淘宝" class="form-input">
+            <div class="hint">短信【括号】里的名字</div>
+
+            <label>指定号码 <span class="optional">(可选)</span></label>
+            <input type="text" v-model="sms.phoneInput" placeholder="不填则随机获取" class="form-input">
+
+            <!-- 当前号码 -->
+            <div class="phone-box" v-if="sms.currentPhone">
+              <label>当前号码</label>
+              <div class="phone-row">
+                <input type="text" v-model="sms.currentPhone" class="form-input phone-input" readonly>
+                <button class="btn btn-icon" @click="copyPhone" title="复制"><i class="fa-solid fa-copy"></i></button>
+                <button class="btn btn-sm btn-ghost" @click="releasePhone"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-sm btn-danger" @click="blockPhone"><i class="fa-solid fa-ban"></i></button>
+              </div>
+            </div>
+
+            <label>卡类型</label>
+            <select v-model="sms.cardType" class="form-input">
+              <option value="全部">全部</option>
+              <option value="实卡">实卡</option>
+              <option value="虚卡">虚卡</option>
+            </select>
+
+            <button class="btn btn-primary btn-get" @click="getPhone" :disabled="sms.loading">
+              <i class="fa-solid fa-phone" v-if="!sms.loading"></i>
+              <i class="fa-solid fa-spinner fa-spin" v-else></i>
+              {{ sms.loading ? '获取中' : '获取号码' }}
+            </button>
+
+            <!-- 免责声明 -->
+            <div class="disclaimer">
+              <i class="fa-solid fa-exclamation-triangle"></i>
+              <span>本服务仅用于测试用途，严禁用于任何非法用途</span>
+            </div>
+          </div>
+
+          <!-- 短信内容 -->
+          <div class="sms-card">
+            <div class="sms-header">
+              <h2 class="card-title"><i class="fa-solid fa-message"></i> 短信内容</h2>
+              <button class="btn btn-sm btn-primary" @click="getMsg" :disabled="!sms.currentPhone || sms.smsLoading">
+                <i class="fa-solid fa-sync" v-if="!sms.smsLoading"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-else></i>
+                {{ sms.smsLoading ? '获取中' : '获取短信' }}
+              </button>
+            </div>
+
+            <!-- 验证码 -->
+            <div class="code-box" v-if="sms.extractedCode">
+              <label>验证码</label>
+              <div class="code-input-row">
+                <input type="text" v-model="sms.extractedCode" class="form-input code-input" readonly>
+                <button class="btn btn-icon" @click="copyCode" title="复制">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 短信原文 -->
+            <div class="sms-text-box" v-if="sms.smsContent">
+              <label>短信原文</label>
+              <div class="sms-content">{{ sms.smsContent }}</div>
+              <div class="sms-time">{{ sms.smsTime }}</div>
+            </div>
+
+            <div class="empty-state" v-else>
+              <i class="fa-solid fa-inbox"></i>
+              <p>暂无短信</p>
             </div>
           </div>
         </div>
@@ -174,7 +257,7 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        
+
         <div class="auth-tabs">
           <button :class="['auth-tab', { active: isLogin }]" @click="isLogin = true">登录</button>
           <button :class="['auth-tab', { active: !isLogin }]" @click="isLogin = false">注册</button>
@@ -193,7 +276,7 @@
             <label><i class="fa-solid fa-lock"></i> 确认密码</label>
             <input type="password" v-model="authForm.confirmPassword" placeholder="再次输入密码" class="form-input">
           </div>
-          
+
           <button class="btn btn-primary btn-block" @click="handleAuth" :disabled="authLoading">
             <i class="fa-solid fa-spinner fa-spin" v-if="authLoading"></i>
             {{ authLoading ? '处理中...' : (isLogin ? '登录' : '注册') }}
@@ -202,6 +285,7 @@
       </div>
     </div>
   </div>
+
 
   <script>
     const { createApp, ref, computed, onMounted } = Vue;
@@ -218,7 +302,10 @@
         const isLoggedIn = ref(false);
         const filterExpanded = ref(true);
         const currentUser = ref(null);
-        
+
+        // 接码服务状态（从模块创建）
+        const sms = ref(SmsModule.createState());
+
         // 登录注册相关
         const authModalVisible = ref(false);
         const isLogin = ref(true);
@@ -255,17 +342,17 @@
           const desc = (product.description || '').toLowerCase();
 
           if (name.includes('chatgpt') || name.includes('claude') || name.includes('gemini') ||
-              name.includes('perplexity') || name.includes('midjourney') || name.includes('dall') ||
-              name.includes('notion') || name.includes('cursor ai') || name.includes('gpt') ||
-              desc.includes('ai账号') || desc.includes('chatgpt') || desc.includes('claude')) return 'ai';
+            name.includes('perplexity') || name.includes('midjourney') || name.includes('dall') ||
+            name.includes('notion') || name.includes('cursor ai') || name.includes('gpt') ||
+            desc.includes('ai账号') || desc.includes('chatgpt') || desc.includes('claude')) return 'ai';
 
           if (name.includes('远程') || name.includes('服务器') || name.includes('vps') ||
-              name.includes('桌面') || name.includes('rdp') || name.includes('主机') ||
-              desc.includes('远程') || desc.includes('服务器')) return 'remote';
+            name.includes('桌面') || name.includes('rdp') || name.includes('主机') ||
+            desc.includes('远程') || desc.includes('服务器')) return 'remote';
 
           if (name.includes('接码') || name.includes('短信') || name.includes('sms') ||
-              name.includes('phone') || name.includes('验证码') ||
-              desc.includes('接码') || desc.includes('短信')) return 'sms';
+            name.includes('phone') || name.includes('验证码') ||
+            desc.includes('接码') || desc.includes('短信')) return 'sms';
 
           return 'ai';
         };
@@ -274,7 +361,7 @@
         const filteredProducts = computed(() => {
           let result = allProducts.value.filter(p => {
             if (currentCategory.value !== 'all' && getCategory(p) !== currentCategory.value) return false;
-            
+
             if (currentPriceRange.value !== 'all') {
               const price = parseFloat(p.price);
               if (currentPriceRange.value === '0-50' && price >= 50) return false;
@@ -300,24 +387,40 @@
         });
 
         // 方法
-        const handleSearch = () => {};
+        const handleSearch = () => { };
         const goHome = () => { window.location.href = '/'; };
         const goToDetail = (id) => { window.location.href = '/detail.html?id=' + id; };
-        
+        const goToOrders = () => { window.location.href = '/orders.html'; };
+
+        // 格式化销量显示
+        const formatSales = (sales) => {
+          if (!sales || sales === 0) return '暂无销量';
+          return sales + ' 已售';
+        };
+
+
         // 显示登录注册弹窗
         const showAuthModal = () => {
           authModalVisible.value = true;
           authForm.value = { username: '', password: '', confirmPassword: '' };
         };
-        
+
         const closeAuthModal = () => {
           authModalVisible.value = false;
           authForm.value = { username: '', password: '', confirmPassword: '' };
         };
-        
+
+        // 接码服务方法（代理到模块）
+        const getPhone = () => SmsModule.getPhone(sms, Toast);
+        const getMsg = () => SmsModule.getMsg(sms, Toast);
+        const releasePhone = () => SmsModule.releasePhone(sms, Toast);
+        const blockPhone = () => SmsModule.blockPhone(sms, Toast);
+        const copyPhone = () => SmsModule.copyPhone(sms, Toast);
+        const copyCode = () => SmsModule.copyCode(sms, Toast);
+
         // 用户名验证：只能包含英文、数字、下划线，长度3-20
         const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
-        
+
         // 处理登录注册
         const handleAuth = async () => {
           // 验证用户名
@@ -329,7 +432,7 @@
             Toast.warning('用户名只能包含英文、数字、下划线，长度3-20位');
             return;
           }
-          
+
           // 验证密码
           if (!authForm.value.password) {
             Toast.warning('请输入密码');
@@ -339,7 +442,7 @@
             Toast.warning('密码长度至少6位');
             return;
           }
-          
+
           // 注册时验证确认密码
           if (!isLogin.value) {
             if (!authForm.value.confirmPassword) {
@@ -351,7 +454,7 @@
               return;
             }
           }
-          
+
           authLoading.value = true;
           try {
             const url = isLogin.value ? '/api/users/login' : '/api/users/register';
@@ -359,14 +462,14 @@
               username: authForm.value.username,
               password: authForm.value.password
             });
-            
+
             const { user } = response.data;
-            
+
             // Cookie 已由后端设置，前端只需保存用户信息到 localStorage
             currentUser.value = user;
             isLoggedIn.value = true;
             localStorage.setItem('user', JSON.stringify(user));
-            
+
             Toast.success(isLogin.value ? '登录成功' : '注册成功');
             closeAuthModal();
           } catch (error) {
@@ -376,7 +479,7 @@
             authLoading.value = false;
           }
         };
-        
+
         const logout = async () => {
           try {
             await axios.post('/api/users/logout');
@@ -395,7 +498,7 @@
           if (user) {
             currentUser.value = user;
             isLoggedIn.value = true;
-            
+
             // 验证 Cookie 中的 token 是否有效
             try {
               const response = await axios.get('/api/users/me');
@@ -429,11 +532,13 @@
         return {
           allProducts, loading, searchKeyword, currentCategory, currentPriceRange, currentSort, isLoggedIn, filterExpanded,
           categories, priceRanges, filteredProducts, currentUser,
-          authModalVisible, isLogin, authLoading, authForm,
-          handleSearch, goHome, goToDetail, showAuthModal, closeAuthModal, handleAuth, logout, toggleFilter
+          authModalVisible, isLogin, authLoading, authForm, sms,
+          handleSearch, goHome, goToDetail, goToOrders, showAuthModal, closeAuthModal, handleAuth, logout, toggleFilter, formatSales,
+          getPhone, getMsg, releasePhone, blockPhone, copyPhone, copyCode
         };
       }
     }).mount('#app');
   </script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
   <link rel="stylesheet" href="/css/common.css">
   <link rel="stylesheet" href="/css/detail.css">
 </head>
+
 <body>
   <div id="app">
     <!-- 导航栏 -->
@@ -25,6 +27,9 @@
           <div class="nav-menu">
             <a href="/" class="nav-link">
               <i class="fa-solid fa-house"></i> 首页
+            </a>
+            <a href="/pickup.html" class="nav-link">
+              <i class="fa-solid fa-box-open"></i> 提货
             </a>
           </div>
         </div>
@@ -75,12 +80,12 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 商品信息 -->
             <div class="product-info">
               <h1 class="product-name">{{ product.name }}</h1>
               <p class="product-desc">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
-              
+
               <!-- 价格标签 -->
               <div class="price-tag">
                 <span class="price-currency">¥</span>
@@ -91,20 +96,15 @@
           </div>
 
           <!-- 兑换卡片 -->
-          <div class="action-card">
+          <div class="action-card" v-if="!redeemResult">
             <div class="card-header">
               <i class="fa-solid fa-key"></i>
               <span>卡密兑换</span>
             </div>
             <div class="card-body">
               <div class="input-group">
-                <input 
-                  type="text" 
-                  class="form-input" 
-                  v-model="redeemCode" 
-                  placeholder="请输入卡密"
-                  @keyup.enter="handleRedeem"
-                >
+                <input type="text" class="form-input" v-model="redeemCode" placeholder="请输入卡密"
+                  @keyup.enter="handleRedeem">
                 <button class="btn btn-primary" @click="handleRedeem" :disabled="redeeming">
                   <i class="fa-solid fa-check" v-if="!redeeming"></i>
                   <i class="fa-solid fa-spinner fa-spin" v-else></i>
@@ -115,6 +115,41 @@
                 <i class="fa-solid fa-shopping-cart"></i>
                 没有卡密？点击购买
               </a>
+            </div>
+          </div>
+
+          <!-- 兑换成功卡片 -->
+          <div class="success-card" v-if="redeemResult">
+            <div class="success-header">
+              <div class="success-icon">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+              <h3 class="success-title">兑换成功</h3>
+              <p class="success-desc">请复制兑换码前往网站完成兑换</p>
+            </div>
+            <div class="cdk-box">
+              <div class="cdk-label">兑换码 (CDK)</div>
+              <div class="cdk-row">
+                <input type="text" class="cdk-input" :value="redeemResult.CDK" readonly>
+                <button class="btn btn-primary btn-copy" @click="copyCDK">
+                  <i class="fa-solid fa-copy"></i> 复制
+                </button>
+              </div>
+            </div>
+            <div class="success-actions">
+              <button class="btn btn-primary btn-go" @click="goToRedeem">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> 前往兑换
+              </button>
+              <div class="redeem-url-box">
+                <input type="text" class="redeem-url-input" value="https://aisub.vip/" readonly>
+                <button class="btn btn-ghost btn-copy-url" @click="copyRedeemUrl">
+                  <i class="fa-solid fa-copy"></i> 复制网址
+                </button>
+              </div>
+              <p class="success-tip">
+                <i class="fa-solid fa-info-circle"></i>
+                若无法跳转，请复制网址到浏览器打开，兑换码仅可使用一次
+              </p>
             </div>
           </div>
 
@@ -201,7 +236,7 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        
+
         <div class="auth-tabs">
           <button :class="['auth-tab', { active: isLogin }]" @click="isLogin = true">登录</button>
           <button :class="['auth-tab', { active: !isLogin }]" @click="isLogin = false">注册</button>
@@ -220,7 +255,7 @@
             <label><i class="fa-solid fa-lock"></i> 确认密码</label>
             <input type="password" v-model="authForm.confirmPassword" placeholder="再次输入密码" class="form-input">
           </div>
-          
+
           <button class="btn btn-primary btn-block" @click="handleAuth" :disabled="authLoading">
             <i class="fa-solid fa-spinner fa-spin" v-if="authLoading"></i>
             {{ authLoading ? '处理中...' : (isLogin ? '登录' : '注册') }}
@@ -241,9 +276,10 @@
         const error = ref('');
         const redeemCode = ref('');
         const redeeming = ref(false);
+        const redeemResult = ref(null);
         const isLoggedIn = ref(false);
         const currentUser = ref(null);
-        
+
         // 登录注册相关
         const authModalVisible = ref(false);
         const isLogin = ref(true);
@@ -266,7 +302,7 @@
         // 加载商品
         const loadProduct = async () => {
           const productId = getUrlParam('id');
-          
+
           if (!productId) {
             error.value = '产品不存在';
             loading.value = false;
@@ -276,7 +312,7 @@
           try {
             const response = await axios.get(`/api/products/${productId}`);
             product.value = response.data;
-            
+
             if (!product.value) {
               error.value = '产品不存在';
             } else {
@@ -297,12 +333,54 @@
           }
 
           redeeming.value = true;
-          
-          // TODO: 调用后端验证卡密
-          setTimeout(() => {
-            Toast.info('卡密兑换功能开发中...');
+          try {
+            const productId = getUrlParam('id');
+            const response = await axios.post('/api/pickup/redeem', {
+              code: redeemCode.value.trim(),
+              productId: productId,
+            });
+            redeemResult.value = response.data;
+            Toast.success('兑换成功！请复制兑换码前往兑换');
+          } catch (err) {
+            Toast.error(err.response?.data?.error || err.message || '兑换失败');
+          } finally {
             redeeming.value = false;
-          }, 1000);
+          }
+        };
+
+        // 复制CDK
+        const copyCDK = () => {
+          if (redeemResult.value && redeemResult.value.CDK) {
+            navigator.clipboard.writeText(redeemResult.value.CDK).then(() => {
+              Toast.success('兑换码已复制到剪贴板');
+            }).catch(() => {
+              const input = document.querySelector('.cdk-input');
+              if (input) {
+                input.select();
+                document.execCommand('copy');
+                Toast.success('兑换码已复制到剪贴板');
+              }
+            });
+          }
+        };
+
+        // 前往兑换网站
+        const goToRedeem = () => {
+          window.open('https://aisub.vip/', '_blank');
+        };
+
+        // 复制兑换网址
+        const copyRedeemUrl = () => {
+          navigator.clipboard.writeText('https://aisub.vip/').then(() => {
+            Toast.success('网址已复制到剪贴板');
+          }).catch(() => {
+            const input = document.querySelector('.redeem-url-input');
+            if (input) {
+              input.select();
+              document.execCommand('copy');
+              Toast.success('网址已复制到剪贴板');
+            }
+          });
         };
 
         // 登录注册相关方法
@@ -310,12 +388,12 @@
           authModalVisible.value = true;
           authForm.value = { username: '', password: '', confirmPassword: '' };
         };
-        
+
         const closeAuthModal = () => {
           authModalVisible.value = false;
           authForm.value = { username: '', password: '', confirmPassword: '' };
         };
-        
+
         const handleAuth = async () => {
           if (!authForm.value.username.trim()) {
             Toast.warning('请输入用户名');
@@ -343,7 +421,7 @@
               return;
             }
           }
-          
+
           authLoading.value = true;
           try {
             const url = isLogin.value ? '/api/users/login' : '/api/users/register';
@@ -351,12 +429,12 @@
               username: authForm.value.username,
               password: authForm.value.password
             });
-            
+
             const { user } = response.data;
             currentUser.value = user;
             isLoggedIn.value = true;
             localStorage.setItem('user', JSON.stringify(user));
-            
+
             Toast.success(isLogin.value ? '登录成功' : '注册成功');
             closeAuthModal();
           } catch (error) {
@@ -366,17 +444,17 @@
             authLoading.value = false;
           }
         };
-        
+
         const logout = async () => {
           try {
             await axios.post('/api/users/logout');
-          } catch (e) {}
+          } catch (e) { }
           localStorage.removeItem('user');
           isLoggedIn.value = false;
           currentUser.value = null;
           Toast.info('已退出登录');
         };
-        
+
         const checkLogin = async () => {
           const user = JSON.parse(localStorage.getItem('user') || 'null');
           if (user) {
@@ -402,12 +480,13 @@
         });
 
         return {
-          product, loading, error, redeemCode, redeeming,
+          product, loading, error, redeemCode, redeeming, redeemResult,
           isLoggedIn, currentUser, authModalVisible, isLogin, authLoading, authForm,
-          handleRedeem, goHome, showAuthModal, closeAuthModal, handleAuth, logout
+          handleRedeem, copyCDK, goToRedeem, copyRedeemUrl, goHome, showAuthModal, closeAuthModal, handleAuth, logout
         };
       }
     }).mount('#app');
   </script>
 </body>
+
 </html>

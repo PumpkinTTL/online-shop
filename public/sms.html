@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,10 +13,11 @@
   <link rel="stylesheet" href="/css/common.css">
   <link rel="stylesheet" href="/css/sms.css">
 </head>
-<body>
+
+<body :class="{ 'is-iframe': isInIframe }">
   <div id="app">
-    <!-- 导航栏 -->
-    <nav class="nav">
+    <!-- 导航栏（独立访问时显示） -->
+    <nav class="nav" v-if="!isInIframe">
       <div class="nav-inner">
         <div class="nav-left">
           <a href="/" class="brand">
@@ -55,7 +57,7 @@
       <!-- 获取号码 -->
       <div class="sms-card">
         <h2 class="card-title"><i class="fa-solid fa-mobile-screen"></i> 获取号码</h2>
-        
+
         <label>短信关键词 <span class="required">*</span></label>
         <input type="text" v-model="keyWord" placeholder="例如：Google、淘宝" class="form-input">
         <div class="hint">短信【括号】里的名字</div>
@@ -131,7 +133,7 @@
     </div>
 
     <!-- 页脚 -->
-    <footer class="footer">
+    <footer class="footer" v-if="!isInIframe">
       <p>© 2026 工具商店 · 精选优质 AI 工具</p>
     </footer>
 
@@ -144,7 +146,7 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        
+
         <div class="auth-tabs">
           <button :class="['auth-tab', { active: isLogin }]" @click="isLogin = true">登录</button>
           <button :class="['auth-tab', { active: !isLogin }]" @click="isLogin = false">注册</button>
@@ -163,7 +165,7 @@
             <label><i class="fa-solid fa-lock"></i> 确认密码</label>
             <input type="password" v-model="authForm.confirmPassword" placeholder="再次输入密码" class="form-input">
           </div>
-          
+
           <button class="btn btn-primary btn-block" @click="handleAuth" :disabled="authLoading">
             <i class="fa-solid fa-spinner fa-spin" v-if="authLoading"></i>
             {{ authLoading ? '处理中...' : (isLogin ? '登录' : '注册') }}
@@ -178,6 +180,9 @@
 
     createApp({
       setup() {
+        // 检测是否在 iframe 中
+        const isInIframe = ref(window.self !== window.top);
+
         const loading = ref(false);
         const smsLoading = ref(false);
         const keyWord = ref('');
@@ -188,7 +193,7 @@
         const smsTime = ref('');
         const isLoggedIn = ref(false);
         const currentUser = ref(null);
-        
+
         // 登录注册相关
         const authModalVisible = ref(false);
         const isLogin = ref(true);
@@ -285,21 +290,21 @@
           copyToClipboard(extractedCode.value);
           Toast.success('已复制验证码');
         };
-        
+
         // 登录注册相关方法
         const showAuthModal = () => {
           authModalVisible.value = true;
           authForm.value = { username: '', password: '', confirmPassword: '' };
         };
-        
+
         const closeAuthModal = () => {
           authModalVisible.value = false;
           authForm.value = { username: '', password: '', confirmPassword: '' };
         };
-        
+
         // 用户名验证：只能包含英文、数字、下划线，长度3-20
         const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
-        
+
         const handleAuth = async () => {
           // 验证用户名
           if (!authForm.value.username.trim()) {
@@ -310,7 +315,7 @@
             Toast.warning('用户名只能包含英文、数字、下划线，长度3-20位');
             return;
           }
-          
+
           // 验证密码
           if (!authForm.value.password) {
             Toast.warning('请输入密码');
@@ -320,7 +325,7 @@
             Toast.warning('密码长度至少6位');
             return;
           }
-          
+
           // 注册时验证确认密码
           if (!isLogin.value) {
             if (!authForm.value.confirmPassword) {
@@ -332,7 +337,7 @@
               return;
             }
           }
-          
+
           authLoading.value = true;
           try {
             const url = isLogin.value ? '/api/users/login' : '/api/users/register';
@@ -340,14 +345,14 @@
               username: authForm.value.username,
               password: authForm.value.password
             });
-            
+
             const { user } = response.data;
-            
+
             // Cookie 已由后端设置，前端只需保存用户信息到 localStorage
             currentUser.value = user;
             isLoggedIn.value = true;
             localStorage.setItem('user', JSON.stringify(user));
-            
+
             Toast.success(isLogin.value ? '登录成功' : '注册成功');
             closeAuthModal();
           } catch (error) {
@@ -357,7 +362,7 @@
             authLoading.value = false;
           }
         };
-        
+
         const logout = async () => {
           try {
             await axios.post('/api/users/logout');
@@ -369,14 +374,14 @@
           currentUser.value = null;
           Toast.info('已退出登录');
         };
-        
+
         const checkLogin = async () => {
           // 先检查 localStorage
           const user = JSON.parse(localStorage.getItem('user') || 'null');
           if (user) {
             currentUser.value = user;
             isLoggedIn.value = true;
-            
+
             // 验证 Cookie 中的 token 是否有效
             try {
               const response = await axios.get('/api/users/me');
@@ -396,6 +401,7 @@
         });
 
         return {
+          isInIframe,
           loading, smsLoading, keyWord, phoneInput, cardType,
           currentPhone, smsContent, smsTime, extractedCode,
           isLoggedIn, currentUser, authModalVisible, isLogin, authLoading, authForm,
@@ -406,4 +412,5 @@
     }).mount('#app');
   </script>
 </body>
+
 </html>

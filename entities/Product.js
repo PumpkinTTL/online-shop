@@ -10,6 +10,7 @@ module.exports = new EntitySchema({
     description: { type: 'varchar', length: 500, nullable: true },
     image: { type: 'varchar', length: 500, nullable: true },
     stock: { type: 'int', default: 0 },
+    sales: { type: 'int', default: 0 },
     createdAt: { type: 'datetime', createDate: true },
     updatedAt: { type: 'datetime', updateDate: true },
   },
