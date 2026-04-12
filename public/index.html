@@ -27,7 +27,7 @@
           </a>
           <div class="nav-menu">
             <a href="/" class="nav-link" :class="{ active: currentCategory !== 'sms' }"
-              @click.prevent="currentCategory = 'ai'">
+              @click.prevent="currentCategory = 'all'">
               <i class="fa-solid fa-house"></i> 首页
             </a>
             <a href="/pickup.html" class="nav-link">
@@ -296,7 +296,7 @@
         const allProducts = ref([]);
         const loading = ref(true);
         const searchKeyword = ref('');
-        const currentCategory = ref('ai');
+        const currentCategory = ref('all');
         const currentPriceRange = ref('all');
         const currentSort = ref('default');
         const isLoggedIn = ref(false);
@@ -336,31 +336,10 @@
           { label: '¥100 以上', value: '100+', icon: 'fa-solid fa-crown' },
         ];
 
-        // 获取商品分类
-        const getCategory = (product) => {
-          const name = product.name.toLowerCase();
-          const desc = (product.description || '').toLowerCase();
-
-          if (name.includes('chatgpt') || name.includes('claude') || name.includes('gemini') ||
-            name.includes('perplexity') || name.includes('midjourney') || name.includes('dall') ||
-            name.includes('notion') || name.includes('cursor ai') || name.includes('gpt') ||
-            desc.includes('ai账号') || desc.includes('chatgpt') || desc.includes('claude')) return 'ai';
-
-          if (name.includes('远程') || name.includes('服务器') || name.includes('vps') ||
-            name.includes('桌面') || name.includes('rdp') || name.includes('主机') ||
-            desc.includes('远程') || desc.includes('服务器')) return 'remote';
-
-          if (name.includes('接码') || name.includes('短信') || name.includes('sms') ||
-            name.includes('phone') || name.includes('验证码') ||
-            desc.includes('接码') || desc.includes('短信')) return 'sms';
-
-          return 'ai';
-        };
-
         // 筛选后的商品
         const filteredProducts = computed(() => {
           let result = allProducts.value.filter(p => {
-            if (currentCategory.value !== 'all' && getCategory(p) !== currentCategory.value) return false;
+            if (currentCategory.value !== 'all' && p.type !== currentCategory.value) return false;
 
             if (currentPriceRange.value !== 'all') {
               const price = parseFloat(p.price);

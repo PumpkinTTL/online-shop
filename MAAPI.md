@@ -1,5 +1,5 @@
 API说明
-基础地址：http://api./zc/data.php
+基础地址：http://api.ejiema.com/zc/data.php
 
 编码：UTF-8
 
@@ -25,12 +25,12 @@ API支持以下功能：
 创建Token的最新方法：点击这里登录网页版，进入【个人中心】->【创建 API Token】菜单进行创建。
 已废弃的创建方法：老版本创建Token的方法已废弃，请勿使用。请点击这里查看。
 查询余额[leftAmount]
-调用实例：http://api./zc/data.php?code=leftAmount&token=登录获取的token
+调用实例：http://api.ejiema.com/zc/data.php?code=leftAmount&token=登录获取的token
 成功返回值：余额
 失败返回值：ERROR:错误信息
 备注：无
 获取号码[getPhone]
-调用实例：http://api./zc/data.php?code=getPhone&token=登录获取的token&keyWord=URL编码的项目关键词&phone=130xxxxxxxx&province=省份&cardType=全部
+调用实例：http://api.ejiema.com/zc/data.php?code=getPhone&token=登录获取的token&keyWord=URL编码的项目关键词&phone=130xxxxxxxx&province=省份&cardType=全部
 参数：
 keyWord：可选，建议填写。短信关键词，传入关键词可大大提高使用效率。如果不传入关键词，获取号码后，在收取短信时可能会收到被屏蔽的短信；
 phone：可选，指定的号码，不填的话表示随机获取号码；
@@ -40,7 +40,7 @@ cardType：可选，选值范围：[实卡,虚卡,全部]。
 失败返回值：ERROR:错误信息
 备注：短信关键词一般是短信黑括号里的名字，比如【毛竹】验证码9876，keyWord是“毛竹”二字。如果没有黑括号，可以使用短信里任意一个关键的字词。
 获取短信[getMsg]
-调用实例：http://api./zc/data.php?code=getMsg&token=登录获取的token&phone=165xxxxxxxx&keyWord=URL编码的项目关键词
+调用实例：http://api.ejiema.com/zc/data.php?code=getMsg&token=登录获取的token&phone=165xxxxxxxx&keyWord=URL编码的项目关键词
 参数：
 phone：获取/指定的手机号，必填；
 keyWord：短信关键词。设置不正确收不到短信，必填。
@@ -49,21 +49,21 @@ keyWord：短信关键词。设置不正确收不到短信，必填。
 失败返回值：ERROR:错误信息
 备注：短信关键词一般是短信黑括号里的名字，比如【毛竹】验证码9876，keyWord是“毛竹”二字。如果没有黑括号，可以使用短信里任意一个关键的字词。系统查询短信是查询包含这个词的短信，否则查不到。
 释放号码[release]
-调用实例：http://api./zc/data.php?code=release&token=登录获取的token&phone=162xxxxxxxx
+调用实例：http://api.ejiema.com/zc/data.php?code=release&token=登录获取的token&phone=162xxxxxxxx
 参数：
 phone：获取/指定的手机号；
 成功返回值：释放结果
 失败返回值：ERROR:错误信息
 备注：如果释放失败，跳过就行，无需一直重复释放。
 拉黑号码[block]
-调用实例：http://api./zc/data.php?code=block&token=登录获取的token&phone=162xxxxxxxx
+调用实例：http://api.ejiema.com/zc/data.php?code=block&token=登录获取的token&phone=162xxxxxxxx
 参数：
 phone：获取/指定的手机号；
 成功返回值：拉黑结果
 失败返回值：ERROR:错误信息
 备注：如果拉黑失败无需一直重复拉黑。
 发送短信[send]
-调用实例：http://api./zc/data.php?code=send&token=登录获取的token&phone=162xxxxxxxx&toPhone=1069xxxxxxxx&content=xxxx
+调用实例：http://api.ejiema.com/zc/data.php?code=send&token=登录获取的token&phone=162xxxxxxxx&toPhone=1069xxxxxxxx&content=xxxx
 参数：
 phone：获取/指定的手机号，用于发送短信；
 toPhone：要发送到的号码；
@@ -74,7 +74,7 @@ content：发送内容；
 备注：不能向个人手机号发送信息，发送垃圾信息会被封号。
 查询历史记录[queryUsed]
 说明：每分钟调用次数不能超过一次，否则系统会封禁账号的API调用。
-调用实例：http://api./zc/data.php?code=queryUsed&token=登录获取的token
+调用实例：http://api.ejiema.com/zc/data.php?code=queryUsed&token=登录获取的token
 参数：token：登录获取的token
 成功返回值：历史记录，每条以换行符(\n)分割。
 失败返回值：ERROR:错误信息

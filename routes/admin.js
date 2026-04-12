@@ -13,9 +13,12 @@ const generateAdminToken = (adminId) => {
   return jwt.sign({ adminId, type: 'admin' }, ADMIN_JWT_SECRET, { expiresIn: ADMIN_JWT_EXPIRES });
 };
 
+const dataSource = require('../config/database');
+const Admin = require('../entities/Admin');
+
 // ==================== 鉴权中间件 ====================
 
-const requireAuth = async (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -25,20 +28,22 @@ const requireAuth = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
 
-    // 确认是 admin 类型的 token
+    // 确认是 admin 类型的 token（防止前台用户 token 越权）
     if (decoded.type !== 'admin') {
       return res.status(403).json({ error: '无权限访问' });
     }
 
-    // 查询管理员是否存在且有效
-    const admin = await adminService.findByUsername(
-      (await dataSource.getRepository(require('../entities/Admin')).findOne({ where: { id: decoded.adminId } }))?.username
-    );
-    if (!admin || !admin.isActive) {
+    // 检查管理员是否存在且未被禁用
+    const adminRepo = dataSource.getRepository(Admin);
+    const admin = await adminRepo.findOne({ where: { id: decoded.adminId } });
+    if (!admin) {
+      return res.status(401).json({ error: '管理员不存在' });
+    }
+    if (!admin.isActive) {
       return res.status(403).json({ error: '账号已被禁用' });
     }
 
-    req.admin = { id: decoded.adminId };
+    req.admin = { id: decoded.adminId, role: admin.role };
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -47,28 +52,6 @@ const requireAuth = async (req, res, next) => {
     return res.status(401).json({ error: '无效的认证信息' });
   }
 };
-
-// 更简洁的鉴权中间件
-const auth = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: '未登录' });
-    }
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
-    if (decoded.type !== 'admin') {
-      return res.status(403).json({ error: '无权限' });
-    }
-    req.admin = { id: decoded.adminId };
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: '登录已过期，请重新登录' });
-  }
-};
-
-const dataSource = require('../config/database');
-const Admin = require('../entities/Admin');
 
 // ==================== 登录（不需要鉴权） ====================
 
@@ -101,9 +84,9 @@ router.post('/init', async (req, res) => {
   try {
     const result = await adminService.initDefaultAdmin();
     if (!result) {
-      return res.status(400).json({ error: '管理员已存在，无需初始化' });
+      return res.status(400).json({ error: '管理员已存在' });
     }
-    res.json({ message: '初始化成功', username: 'admin', password: 'admin123' });
+    res.json({ message: '初始化成功' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -345,7 +328,12 @@ router.post('/admins', auth, async (req, res) => {
 
 router.delete('/admins/:id', auth, async (req, res) => {
   try {
-    await adminService.deleteAdmin(parseInt(req.params.id));
+    const targetId = parseInt(req.params.id);
+    // 不允许删除自己
+    if (targetId === req.admin.id) {
+      return res.status(400).json({ error: '不能删除自己的账号' });
+    }
+    await adminService.deleteAdmin(targetId);
     res.json({ message: '删除成功' });
   } catch (error) {
     res.status(400).json({ error: error.message });

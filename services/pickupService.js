@@ -4,8 +4,8 @@ const Order = require('../entities/Order');
 const axios = require('axios');
 
 // MAAPI 配置
-const MAAPI_BASE = 'http://api./zc/data.php';
-const MAAPI_TOKEN = process.env.MAAPI_TOKEN || '';
+const MAAPI_BASE = 'http://api.ejiema.com/zc/data.php';
+const MAAPI_TOKEN = process.env.MAAPI_TOKEN || '3a6cf615a7524b218f116eb3c1df5728';
 
 class PickupService {
   getCardKeyRepo() {
@@ -54,8 +54,14 @@ class PickupService {
   }
 
   // 获取手机号（调用 MAAPI）
-  async getPhone(keyword) {
-    const url = `${MAAPI_BASE}?code=getPhone&token=${MAAPI_TOKEN}&keyWord=${encodeURIComponent(keyword || '')}`;
+  async getPhone(keyword, phone, cardType) {
+    let url = `${MAAPI_BASE}?code=getPhone&token=${MAAPI_TOKEN}`;
+    if (keyword) url += `&keyWord=${encodeURIComponent(keyword)}`;
+    if (phone) url += `&phone=${encodeURIComponent(phone)}`;
+    if (cardType) url += `&cardType=${encodeURIComponent(cardType)}`;
+
+    if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置，请设置环境变量 MAAPI_TOKEN');
+
     const res = await axios.get(url, { timeout: 15000 });
     const data = res.data;
     if (typeof data === 'string' && data.startsWith('ERROR:')) {
@@ -64,51 +70,71 @@ class PickupService {
     return data; // 返回手机号
   }
 
-  // 获取验证码（轮询 MAAPI）
-  async getVerifyCode(phone, keyword, maxRetry = 12, interval = 5000) {
-    for (let i = 0; i < maxRetry; i++) {
-      const url = `${MAAPI_BASE}?code=getMsg&token=${MAAPI_TOKEN}&phone=${phone}&keyWord=${encodeURIComponent(keyword || '')}`;
-      const res = await axios.get(url, { timeout: 15000 });
-      const data = res.data;
+  // 获取验证码（单次查询 MAAPI，由前端轮询调用）
+  async getVerifyCode(phone, keyword) {
+    if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置');
 
-      if (typeof data === 'string' && data.startsWith('ERROR:')) {
-        throw new Error(data.replace('ERROR:', '').trim());
-      }
+    const url = `${MAAPI_BASE}?code=getMsg&token=${MAAPI_TOKEN}&phone=${phone}&keyWord=${encodeURIComponent(keyword || '')}`;
+    const res = await axios.get(url, { timeout: 15000 });
+    const data = res.data;
 
-      // 如果包含"尚未收到"，继续等待
-      if (typeof data === 'string' && data.includes('[尚未收到]')) {
-        await new Promise(resolve => setTimeout(resolve, interval));
-        continue;
-      }
-
-      // 提取验证码（4-6位数字）
-      const codeMatch = data.match(/验证码[：:\s]*(\d{4,6})/);
-      if (codeMatch) {
-        return { code: codeMatch[1], content: data };
-      }
-
-      // 尝试直接匹配4-6位纯数字
-      const numMatch = data.match(/\b(\d{4,6})\b/);
-      if (numMatch) {
-        return { code: numMatch[1], content: data };
-      }
-
-      // 有短信内容但无法提取验证码，返回原始内容
-      return { code: '', content: data };
+    if (typeof data === 'string' && data.startsWith('ERROR:')) {
+      throw new Error(data.replace('ERROR:', '').trim());
     }
 
-    throw new Error('获取验证码超时，请稍后重试');
+    // 尚未收到短信
+    if (typeof data === 'string' && data.includes('[尚未收到]')) {
+      return { received: false, code: '', content: '' };
+    }
+
+    // 提取验证码（4-6位数字）
+    const codeMatch = (typeof data === 'string') && data.match(/验证码[：:\s]*(\d{4,6})/);
+    if (codeMatch) {
+      return { received: true, code: codeMatch[1], content: data };
+    }
+
+    // 尝试直接匹配4-6位纯数字
+    const numMatch = (typeof data === 'string') && data.match(/\b(\d{4,6})\b/);
+    if (numMatch) {
+      return { received: true, code: numMatch[1], content: data };
+    }
+
+    // 有短信内容但无法提取验证码，返回原始内容
+    return { received: true, code: '', content: typeof data === 'string' ? data : JSON.stringify(data) };
   }
 
   // 释放号码
   async releasePhone(phone) {
+    if (!MAAPI_TOKEN) return;
     try {
       const url = `${MAAPI_BASE}?code=release&token=${MAAPI_TOKEN}&phone=${phone}`;
       await axios.get(url, { timeout: 10000 });
     } catch (e) {
-      // 释放失败不影响流程
       console.warn('释放号码失败:', e.message);
     }
+  }
+
+  // 拉黑号码
+  async blockPhone(phone) {
+    if (!MAAPI_TOKEN) return;
+    try {
+      const url = `${MAAPI_BASE}?code=block&token=${MAAPI_TOKEN}&phone=${phone}`;
+      await axios.get(url, { timeout: 10000 });
+    } catch (e) {
+      console.warn('拉黑号码失败:', e.message);
+    }
+  }
+
+  // 查询余额
+  async getBalance() {
+    if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置');
+    const url = `${MAAPI_BASE}?code=leftAmount&token=${MAAPI_TOKEN}`;
+    const res = await axios.get(url, { timeout: 10000 });
+    const data = res.data;
+    if (typeof data === 'string' && data.startsWith('ERROR:')) {
+      throw new Error(data.replace('ERROR:', '').trim());
+    }
+    return data;
   }
 
   // 生成订单号

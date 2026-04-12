@@ -77,8 +77,14 @@
         </div>
 
         <div class="content-body">
+          <!-- 全局加载 -->
+          <div v-if="pageLoading" class="loading-state">
+            <i class="fa-solid fa-circle-notch"></i>
+            <p>加载中...</p>
+          </div>
+
           <!-- ========== 仪表盘 ========== -->
-          <div v-if="currentPage === 'dashboard'">
+          <div v-else-if="currentPage === 'dashboard'">
             <div class="stats-grid">
               <div class="stat-card stat-blue">
                 <div class="stat-icon"><i class="fa-solid fa-box"></i></div>
@@ -125,12 +131,17 @@
               </button>
             </div>
             <div class="card">
-              <div class="table-wrapper">
+              <div class="loading-state" v-if="productsLoading">
+                <i class="fa-solid fa-circle-notch"></i>
+                <p>加载中...</p>
+              </div>
+              <div class="table-wrapper" v-else>
                 <table>
                   <thead>
                     <tr>
                       <th>ID</th>
                       <th>商品名称</th>
+                      <th>分类</th>
                       <th>价格</th>
                       <th>库存</th>
                       <th>销量</th>
@@ -142,6 +153,7 @@
                     <tr v-for="p in products" :key="p.id">
                       <td>{{ p.id }}</td>
                       <td><strong>{{ p.name }}</strong></td>
+                      <td><span class="tag tag-blue">{{ productTypeLabel(p.type) }}</span></td>
                       <td>¥{{ p.price }}</td>
                       <td>{{ p.stock }}</td>
                       <td>{{ p.sales }}</td>
@@ -157,7 +169,7 @@
             </div>
 
             <!-- 商品编辑弹窗 -->
-            <div class="modal-overlay" v-if="productModalVisible" @click.self="productModalVisible = false">
+            <div class="modal-overlay" v-if="productModalVisible">
               <div class="modal">
                 <div class="modal-header">
                   <h3>{{ editingProduct.id ? '编辑商品' : '添加商品' }}</h3>
@@ -177,8 +189,20 @@
                     <input type="text" class="form-input" v-model="editingProduct.description" placeholder="商品描述（可选）">
                   </div>
                   <div class="form-group">
+                    <label>分类</label>
+                    <select class="form-select" v-model="editingProduct.type">
+                      <option value="ai">AI账号</option>
+                      <option value="remote">远程服务</option>
+                      <option value="sms">接码服务</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
                     <label>库存</label>
                     <input type="number" class="form-input" v-model="editingProduct.stock" placeholder="库存数量">
+                  </div>
+                  <div class="form-group">
+                    <label>销量</label>
+                    <input type="number" class="form-input" v-model="editingProduct.sales" placeholder="销量">
                   </div>
                 </div>
                 <div class="modal-footer">
@@ -215,7 +239,11 @@
             </div>
 
             <div class="card">
-              <div class="table-wrapper">
+              <div class="loading-state" v-if="cardKeysLoading">
+                <i class="fa-solid fa-circle-notch"></i>
+                <p>加载中...</p>
+              </div>
+              <div class="table-wrapper" v-else>
                 <table>
                   <thead>
                     <tr>
@@ -255,7 +283,7 @@
             </div>
 
             <!-- 生成卡密弹窗 -->
-            <div class="modal-overlay" v-if="cardKeyModalVisible" @click.self="cardKeyModalVisible = false">
+            <div class="modal-overlay" v-if="cardKeyModalVisible">
               <div class="modal" style="max-width:560px;">
                 <div class="modal-header">
                   <h3>批量生成卡密</h3>
@@ -302,7 +330,7 @@
             </div>
 
             <!-- 编辑CDK弹窗 -->
-            <div class="modal-overlay" v-if="editCDKModalVisible" @click.self="editCDKModalVisible = false">
+            <div class="modal-overlay" v-if="editCDKModalVisible">
               <div class="modal" style="max-width:420px;">
                 <div class="modal-header">
                   <h3>编辑 CDK</h3>
@@ -352,7 +380,11 @@
               </button>
             </div>
             <div class="card">
-              <div class="table-wrapper">
+              <div class="loading-state" v-if="ordersLoading">
+                <i class="fa-solid fa-circle-notch"></i>
+                <p>加载中...</p>
+              </div>
+              <div class="table-wrapper" v-else>
                 <table>
                   <thead>
                     <tr>
@@ -402,7 +434,11 @@
               </button>
             </div>
             <div class="card">
-              <div class="table-wrapper">
+              <div class="loading-state" v-if="usersLoading">
+                <i class="fa-solid fa-circle-notch"></i>
+                <p>加载中...</p>
+              </div>
+              <div class="table-wrapper" v-else>
                 <table>
                   <thead>
                     <tr>
@@ -449,7 +485,11 @@
               </button>
             </div>
             <div class="card">
-              <div class="table-wrapper">
+              <div class="loading-state" v-if="adminsLoading">
+                <i class="fa-solid fa-circle-notch"></i>
+                <p>加载中...</p>
+              </div>
+              <div class="table-wrapper" v-else>
                 <table>
                   <thead>
                     <tr>
@@ -488,7 +528,7 @@
             </div>
 
             <!-- 添加管理员弹窗 -->
-            <div class="modal-overlay" v-if="adminModalVisible" @click.self="adminModalVisible = false">
+            <div class="modal-overlay" v-if="adminModalVisible">
               <div class="modal" style="max-width:420px;">
                 <div class="modal-header">
                   <h3>添加管理员</h3>
@@ -530,7 +570,7 @@
     </div>
 
     <!-- 修改密码弹窗 -->
-    <div class="modal-overlay" v-if="showPasswordModal" @click.self="showPasswordModal = false">
+    <div class="modal-overlay" v-if="showPasswordModal">
       <div class="modal" style="max-width:420px;">
         <div class="modal-header">
           <h3>修改密码</h3>
@@ -571,6 +611,7 @@
         const currentPage = ref('dashboard');
         const adminInfo = ref(AdminAPI.getAdminInfo());
         const saving = ref(false);
+        const pageLoading = ref(true);
 
         // 页面标题
         const pageTitle = computed(() => {
@@ -597,19 +638,23 @@
 
         // ===== 商品管理 =====
         const products = ref([]);
+        const productsLoading = ref(false);
         const productModalVisible = ref(false);
         const editingProduct = ref({});
 
         const loadProducts = async () => {
+          productsLoading.value = true;
           try {
             products.value = await AdminAPI.getProducts();
           } catch (e) {
             AdminToast.error('加载商品失败');
+          } finally {
+            productsLoading.value = false;
           }
         };
 
         const openProductModal = (product = null) => {
-          editingProduct.value = product ? { ...product } : { name: '', price: '', description: '', stock: 0 };
+          editingProduct.value = product ? { ...product } : { name: '', price: '', description: '', type: 'ai', stock: 0, sales: 0 };
           productModalVisible.value = true;
         };
 
@@ -651,6 +696,7 @@
 
         // ===== 卡密管理 =====
         const cardKeys = ref([]);
+        const cardKeysLoading = ref(false);
         const cardKeyTotal = ref(0);
         const cardKeyFilter = ref({ productId: '', status: '', page: 1, pageSize: 20 });
         const cardKeyModalVisible = ref(false);
@@ -660,12 +706,15 @@
         const editingCDK = ref({});
 
         const loadCardKeys = async () => {
+          cardKeysLoading.value = true;
           try {
             const result = await AdminAPI.getCardKeys(cardKeyFilter.value);
             cardKeys.value = result.items;
             cardKeyTotal.value = result.total;
           } catch (e) {
             AdminToast.error('加载卡密失败');
+          } finally {
+            cardKeysLoading.value = false;
           }
         };
 
@@ -746,16 +795,20 @@
 
         // ===== 订单管理 =====
         const orders = ref([]);
+        const ordersLoading = ref(false);
         const orderTotal = ref(0);
         const orderFilter = ref({ status: '', page: 1, pageSize: 20 });
 
         const loadOrders = async () => {
+          ordersLoading.value = true;
           try {
             const result = await AdminAPI.getOrders(orderFilter.value);
             orders.value = result.items;
             orderTotal.value = result.total;
           } catch (e) {
             AdminToast.error('加载订单失败');
+          } finally {
+            ordersLoading.value = false;
           }
         };
 
@@ -773,12 +826,16 @@
 
         // ===== 用户管理 =====
         const users = ref([]);
+        const usersLoading = ref(false);
 
         const loadUsers = async () => {
+          usersLoading.value = true;
           try {
             users.value = await AdminAPI.getUsers();
           } catch (e) {
             AdminToast.error('加载用户失败');
+          } finally {
+            usersLoading.value = false;
           }
         };
 
@@ -806,14 +863,18 @@
 
         // ===== 管理员管理 =====
         const admins = ref([]);
+        const adminsLoading = ref(false);
         const adminModalVisible = ref(false);
         const adminForm = ref({ username: '', password: '', nickname: '', role: 'admin' });
 
         const loadAdmins = async () => {
+          adminsLoading.value = true;
           try {
             admins.value = await AdminAPI.getAdmins();
           } catch (e) {
             AdminToast.error('加载管理员列表失败');
+          } finally {
+            adminsLoading.value = false;
           }
         };
 
@@ -894,29 +955,36 @@
           const ok = await AdminAuth.check();
           if (!ok) return;
           adminInfo.value = AdminAPI.getAdminInfo();
-          loadStats();
+          await loadStats();
+          pageLoading.value = false;
         });
 
+        // 商品分类标签
+        const productTypeLabel = (type) => {
+          const map = { ai: 'AI账号', remote: '远程服务', sms: '接码服务' };
+          return map[type] || type || '未分类';
+        };
+
         return {
-          currentPage, adminInfo, saving, pageTitle,
-          formatDate, statusTag, logout,
+          currentPage, adminInfo, saving, pageLoading, pageTitle,
+          formatDate, statusTag, productTypeLabel, logout,
           // 仪表盘
           stats,
           // 商品
-          products, productModalVisible, editingProduct,
+          products, productsLoading, productModalVisible, editingProduct,
           loadProducts, openProductModal, handleSaveProduct, handleDeleteProduct,
           // 卡密
-          cardKeys, cardKeyTotal, cardKeyFilter, cardKeyModalVisible, cardKeyForm,
+          cardKeys, cardKeysLoading, cardKeyTotal, cardKeyFilter, cardKeyModalVisible, cardKeyForm,
           cardPrefixes, editCDKModalVisible, editingCDK,
           loadCardKeys, openCardKeyModal, openEditCDKModal,
           handleGenerateCardKeys, handleSaveCDK, handleDeleteCardKey,
           // 订单
-          orders, orderTotal, orderFilter,
+          orders, ordersLoading, orderTotal, orderFilter,
           loadOrders, handleDeleteOrder,
           // 用户
-          users, loadUsers, handleToggleUser, handleDeleteUser,
+          users, usersLoading, loadUsers, handleToggleUser, handleDeleteUser,
           // 管理员
-          admins, adminModalVisible, adminForm,
+          admins, adminsLoading, adminModalVisible, adminForm,
           loadAdmins, openAdminModal, handleCreateAdmin, handleDeleteAdmin,
           // 修改密码
           showPasswordModal, passwordForm, handleChangePassword,

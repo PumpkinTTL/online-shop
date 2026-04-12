@@ -41,31 +41,37 @@ router.post('/redeem', async (req, res) => {
   }
 });
 
-// 获取手机号
+// 获取手机号（MAAPI）
 router.post('/get-phone', async (req, res) => {
   try {
-    const { cardCode, keyword } = req.body;
-    if (!cardCode || !cardCode.trim()) {
-      return res.status(400).json({ error: '卡密不能为空' });
+    const { cardCode, keyword, phone, cardType } = req.body;
+
+    // 卡密模式下验证卡密，免费接码模式跳过
+    let cardKey = null;
+    if (cardCode && cardCode !== 'FREE_SMS') {
+      cardKey = await pickupService.verifyCardKey(cardCode.trim());
     }
 
-    // 先验证卡密
-    const cardKey = await pickupService.verifyCardKey(cardCode.trim());
-
     // 调用 MAAPI 获取手机号
-    const phone = await pickupService.getPhone(keyword || cardKey.keyword);
+    const result = await pickupService.getPhone(
+      keyword || (cardKey ? cardKey.keyword : ''),
+      phone || '',
+      cardType || '全部'
+    );
 
-    // 把手机号暂存到卡密记录
-    const cardKeyRepo = pickupService.getCardKeyRepo();
-    await cardKeyRepo.update(cardKey.id, { phone });
+    // 卡密模式下把手机号暂存到卡密记录
+    if (cardKey) {
+      const cardKeyRepo = pickupService.getCardKeyRepo();
+      await cardKeyRepo.update(cardKey.id, { phone: result });
+    }
 
-    res.json({ phone, cardKeyId: cardKey.id, productId: cardKey.productId });
+    res.json({ phone: result, cardKeyId: cardKey ? cardKey.id : null, productId: cardKey ? cardKey.productId : null });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// 获取验证码（长轮询，前端可多次调用）
+// 获取验证码（MAAPI，单次查询，前端轮询调用）
 router.post('/get-verify-code', async (req, res) => {
   try {
     const { phone, keyword } = req.body;
@@ -73,12 +79,8 @@ router.post('/get-verify-code', async (req, res) => {
       return res.status(400).json({ error: '手机号不能为空' });
     }
 
-    const result = await pickupService.getVerifyCode(phone, keyword, 1, 0);
-    if (!result.code) {
-      return res.json({ received: false, content: result.content });
-    }
-
-    res.json({ received: true, code: result.code, content: result.content });
+    const result = await pickupService.getVerifyCode(phone, keyword);
+    res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -126,7 +128,7 @@ router.post('/confirm', async (req, res) => {
   }
 });
 
-// 释放号码
+// 释放号码（MAAPI）
 router.post('/release-phone', async (req, res) => {
   try {
     const { phone } = req.body;
@@ -135,6 +137,30 @@ router.post('/release-phone', async (req, res) => {
     }
     await pickupService.releasePhone(phone);
     res.json({ message: '号码已释放' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 拉黑号码（MAAPI）
+router.post('/block-phone', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ error: '手机号不能为空' });
+    }
+    await pickupService.blockPhone(phone);
+    res.json({ message: '号码已拉黑' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 查询余额（MAAPI）
+router.get('/balance', async (req, res) => {
+  try {
+    const balance = await pickupService.getBalance();
+    res.json({ balance });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
