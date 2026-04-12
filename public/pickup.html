@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
+  <script src="/js/components/app-header.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/common.css">
@@ -17,24 +18,7 @@
 <body>
   <div id="app">
     <!-- 导航栏 -->
-    <nav class="nav">
-      <div class="nav-inner">
-        <div class="nav-left">
-          <a href="/" class="brand" @click.prevent="goHome">
-            <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
-            <span>工具商店</span>
-          </a>
-          <div class="nav-menu">
-            <a href="/" class="nav-link">
-              <i class="fa-solid fa-house"></i> 首页
-            </a>
-            <a href="/pickup.html" class="nav-link active">
-              <i class="fa-solid fa-box"></i> 提货
-            </a>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <app-header active-page="pickup"></app-header>
 
     <!-- 主内容 -->
     <main class="main">
@@ -251,7 +235,7 @@
   <script>
     const { createApp, ref, onMounted, onUnmounted } = Vue;
 
-    createApp({
+    const app = createApp({
       setup() {
         // 步骤
         const step = ref(1);
@@ -484,7 +468,10 @@
           cancelPickup, queryOrders, reset, formatTime, goHome
         };
       }
-    }).mount('#app');
+    });
+
+    registerAppHeader(app);
+    app.mount('#app');
   </script>
 </body>
 

@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
+  <script src="/js/components/app-header.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/common.css">
@@ -17,40 +18,7 @@
 <body>
   <div id="app">
     <!-- 导航栏 -->
-    <nav class="nav">
-      <div class="nav-inner">
-        <div class="nav-left">
-          <a href="/" class="brand" @click.prevent="goHome">
-            <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
-            <span>工具商店</span>
-          </a>
-          <div class="nav-menu">
-            <a href="/" class="nav-link">
-              <i class="fa-solid fa-house"></i> 首页
-            </a>
-            <a href="/pickup.html" class="nav-link">
-              <i class="fa-solid fa-box-open"></i> 提货
-            </a>
-          </div>
-        </div>
-        <div class="nav-links">
-          <!-- 未登录 -->
-          <button class="btn btn-primary" @click="showAuthModal" v-if="!isLoggedIn">
-            <i class="fa-solid fa-user"></i> 登录
-          </button>
-          <!-- 已登录 -->
-          <div class="user-info" v-else>
-            <div class="user-avatar">
-              <i class="fa-solid fa-user"></i>
-            </div>
-            <span class="user-name">{{ currentUser?.username || '用户' }}</span>
-            <button class="btn btn-ghost btn-sm" @click="logout" title="退出登录">
-              <i class="fa-solid fa-right-from-bracket"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <app-header active-page="home" show-auth></app-header>
 
     <!-- 主内容 -->
     <main class="main">
@@ -245,49 +213,12 @@
     <footer class="footer">
       <p>© 2026 工具商店 · 精选优质 AI 工具</p>
     </footer>
-
-    <!-- 登录注册弹窗 -->
-    <div class="modal-overlay" v-if="authModalVisible" @click.self="closeAuthModal">
-      <div class="auth-modal">
-        <div class="auth-header">
-          <h3>{{ isLogin ? '登录' : '注册' }}</h3>
-          <button class="modal-close" @click="closeAuthModal">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-
-        <div class="auth-tabs">
-          <button :class="['auth-tab', { active: isLogin }]" @click="isLogin = true">登录</button>
-          <button :class="['auth-tab', { active: !isLogin }]" @click="isLogin = false">注册</button>
-        </div>
-
-        <div class="auth-form">
-          <div class="form-group">
-            <label><i class="fa-solid fa-user"></i> 用户名</label>
-            <input type="text" v-model="authForm.username" placeholder="3-20位英文、数字、下划线" class="form-input">
-          </div>
-          <div class="form-group">
-            <label><i class="fa-solid fa-lock"></i> 密码</label>
-            <input type="password" v-model="authForm.password" placeholder="至少6位" class="form-input">
-          </div>
-          <div class="form-group" v-if="!isLogin">
-            <label><i class="fa-solid fa-lock"></i> 确认密码</label>
-            <input type="password" v-model="authForm.confirmPassword" placeholder="再次输入密码" class="form-input">
-          </div>
-
-          <button class="btn btn-primary btn-block" @click="handleAuth" :disabled="authLoading">
-            <i class="fa-solid fa-spinner fa-spin" v-if="authLoading"></i>
-            {{ authLoading ? '处理中...' : (isLogin ? '登录' : '注册') }}
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <script>
-    const { createApp, ref, computed, onMounted } = Vue;
+    const { createApp, ref, onMounted } = Vue;
 
-    createApp({
+    const app = createApp({
       setup() {
         // 状态
         const product = ref(null);
@@ -296,21 +227,6 @@
         const redeemCode = ref('');
         const redeeming = ref(false);
         const redeemResult = ref(null);
-        const isLoggedIn = ref(false);
-        const currentUser = ref(null);
-
-        // 登录注册相关
-        const authModalVisible = ref(false);
-        const isLogin = ref(true);
-        const authLoading = ref(false);
-        const authForm = ref({
-          username: '',
-          password: '',
-          confirmPassword: ''
-        });
-
-        // 用户名验证
-        const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
         // 获取 URL 参数
         const getUrlParam = (name) => {
@@ -402,109 +318,21 @@
           });
         };
 
-        // 登录注册相关方法
-        const showAuthModal = () => {
-          authModalVisible.value = true;
-          authForm.value = { username: '', password: '', confirmPassword: '' };
-        };
-
-        const closeAuthModal = () => {
-          authModalVisible.value = false;
-          authForm.value = { username: '', password: '', confirmPassword: '' };
-        };
-
-        const handleAuth = async () => {
-          if (!authForm.value.username.trim()) {
-            Toast.warning('请输入用户名');
-            return;
-          }
-          if (!USERNAME_REGEX.test(authForm.value.username)) {
-            Toast.warning('用户名只能包含英文、数字、下划线，长度3-20位');
-            return;
-          }
-          if (!authForm.value.password) {
-            Toast.warning('请输入密码');
-            return;
-          }
-          if (authForm.value.password.length < 6) {
-            Toast.warning('密码长度至少6位');
-            return;
-          }
-          if (!isLogin.value) {
-            if (!authForm.value.confirmPassword) {
-              Toast.warning('请确认密码');
-              return;
-            }
-            if (authForm.value.password !== authForm.value.confirmPassword) {
-              Toast.warning('两次密码不一致');
-              return;
-            }
-          }
-
-          authLoading.value = true;
-          try {
-            const url = isLogin.value ? '/api/users/login' : '/api/users/register';
-            const response = await axios.post(url, {
-              username: authForm.value.username,
-              password: authForm.value.password
-            });
-
-            const { user } = response.data;
-            currentUser.value = user;
-            isLoggedIn.value = true;
-            localStorage.setItem('user', JSON.stringify(user));
-
-            Toast.success(isLogin.value ? '登录成功' : '注册成功');
-            closeAuthModal();
-          } catch (error) {
-            console.error('认证错误:', error);
-            Toast.error(error.response?.data?.error || error.message || '操作失败');
-          } finally {
-            authLoading.value = false;
-          }
-        };
-
-        const logout = async () => {
-          try {
-            await axios.post('/api/users/logout');
-          } catch (e) { }
-          localStorage.removeItem('user');
-          isLoggedIn.value = false;
-          currentUser.value = null;
-          Toast.info('已退出登录');
-        };
-
-        const checkLogin = async () => {
-          const user = JSON.parse(localStorage.getItem('user') || 'null');
-          if (user) {
-            currentUser.value = user;
-            isLoggedIn.value = true;
-            try {
-              const response = await axios.get('/api/users/me');
-              currentUser.value = response.data;
-              localStorage.setItem('user', JSON.stringify(response.data));
-            } catch (error) {
-              localStorage.removeItem('user');
-              isLoggedIn.value = false;
-              currentUser.value = null;
-            }
-          }
-        };
-
         const goHome = () => { window.location.href = '/'; };
 
         onMounted(() => {
-          checkLogin();
           loadProduct();
         });
 
         return {
           product, loading, error, redeemCode, redeeming, redeemResult,
-          isLoggedIn, currentUser, authModalVisible, isLogin, authLoading, authForm,
-          handleRedeem, copyCDK, goToRedeem, copyRedeemUrl, goHome, showAuthModal, closeAuthModal, handleAuth, logout
+          handleRedeem, copyCDK, goToRedeem, copyRedeemUrl, goHome
         };
       }
-    }).mount('#app');
+    });
+
+    registerAppHeader(app);
+    app.mount('#app');
   </script>
 </body>
 
