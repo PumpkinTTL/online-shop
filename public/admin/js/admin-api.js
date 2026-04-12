@@ -143,4 +143,10 @@ const AdminAPI = {
   deleteAdmin(id) {
     return this.request('DELETE', `/admins/${id}`);
   },
+
+  // 接码记录
+  getSmsRecords(params) {
+    const query = new URLSearchParams(params).toString();
+    return this.request('GET', `/sms-records?${query}`);
+  },
 };

@@ -39,6 +39,7 @@ function statusTag(status, type) {
   const map = {
     card: { unused: ['未使用', 'green'], used: ['已使用', 'gray'], expired: ['已过期', 'red'] },
     order: { pending: ['待处理', 'orange'], completed: ['已完成', 'green'], failed: ['失败', 'red'] },
+    sms: { active: ['使用中', 'blue'], completed: ['已完成', 'green'], released: ['已释放', 'gray'], blocked: ['已拉黑', 'red'] },
   };
   const [label, color] = (map[type] && map[type][status]) || [status, 'gray'];
   return `<span class="tag tag-${color}">${label}</span>`;

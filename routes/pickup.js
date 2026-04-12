@@ -56,7 +56,8 @@ router.post('/get-phone', async (req, res) => {
     const result = await pickupService.getPhone(
       keyword || (cardKey ? cardKey.keyword : ''),
       phone || '',
-      cardType || '全部'
+      cardType || '全部',
+      req.ip
     );
 
     // 卡密模式下把手机号暂存到卡密记录

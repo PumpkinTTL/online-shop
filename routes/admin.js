@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const adminService = require('../services/adminService');
+const pickupService = require('../services/pickupService');
 
 const router = express.Router();
 
@@ -303,6 +304,24 @@ router.delete('/orders/:id', auth, async (req, res) => {
     res.json({ message: '删除成功' });
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// ==================== 接码记录 ====================
+
+router.get('/sms-records', auth, async (req, res) => {
+  try {
+    const { status, phone, keyword, page = 1, pageSize = 20 } = req.query;
+    const result = await pickupService.querySmsRecords({
+      status: status || '',
+      phone: phone || '',
+      keyword: keyword || '',
+      page: parseInt(page),
+      pageSize: parseInt(pageSize),
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

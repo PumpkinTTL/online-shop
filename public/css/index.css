@@ -471,6 +471,22 @@
   line-height: 1.4;
 }
 
+.product-warranty {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--primary);
+  background: rgba(22, 119, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.product-warranty i {
+  font-size: 11px;
+}
+
 .product-footer {
   display: flex;
   align-items: center;

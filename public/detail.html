@@ -75,8 +75,13 @@
             <!-- 商品封面 -->
             <div class="product-cover" style="background: url('/assets/bg.png') center/cover no-repeat;">
               <div class="cover-overlay">
-                <div class="product-badge">
-                  <i class="fa-solid fa-fire"></i> 热门
+                <div class="product-badges">
+                  <div class="product-badge">
+                    <i class="fa-solid fa-fire"></i> 热门
+                  </div>
+                  <div class="product-badge warranty" v-if="product.warranty">
+                    <i class="fa-solid fa-shield-halved"></i> 质保：{{ product.warranty }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -187,13 +192,22 @@
                   <div class="feature-desc">稳定可靠服务</div>
                 </div>
               </div>
-              <div class="feature-item warning">
+              <div class="feature-item warning" v-if="!product.warranty">
                 <div class="feature-icon">
                   <i class="fa-solid fa-triangle-exclamation"></i>
                 </div>
                 <div class="feature-content">
                   <div class="feature-title">无质保</div>
                   <div class="feature-desc">售后自理</div>
+                </div>
+              </div>
+              <div class="feature-item success" v-else>
+                <div class="feature-icon">
+                  <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="feature-content">
+                  <div class="feature-title">质保保障</div>
+                  <div class="feature-desc">{{ product.warranty }}</div>
                 </div>
               </div>
             </div>
@@ -207,7 +221,12 @@
             <div class="notice-content">
               <div class="notice-title">温馨提示</div>
               <div class="notice-text">
-                本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。如有疑问请联系客服。
+                <template v-if="product.warranty">
+                  本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。购买前请仔细了解产品特性，确认符合您的需求。
+                </template>
+                <template v-else>
+                  本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。如有疑问请联系客服。
+                </template>
               </div>
             </div>
           </div>

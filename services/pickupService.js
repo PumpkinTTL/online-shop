@@ -1,6 +1,7 @@
 const dataSource = require('../config/database');
 const CardKey = require('../entities/CardKey');
 const Order = require('../entities/Order');
+const SmsRecord = require('../entities/SmsRecord');
 const axios = require('axios');
 
 // MAAPI 配置
@@ -14,6 +15,10 @@ class PickupService {
 
   getOrderRepo() {
     return dataSource.getRepository(Order);
+  }
+
+  getSmsRecordRepo() {
+    return dataSource.getRepository(SmsRecord);
   }
 
   // 验证卡密 — 返回卡密信息
@@ -53,8 +58,8 @@ class PickupService {
     };
   }
 
-  // 获取手机号（调用 MAAPI）
-  async getPhone(keyword, phone, cardType) {
+  // 获取手机号（调用 MAAPI）并写入接码记录
+  async getPhone(keyword, phone, cardType, ip) {
     let url = `${MAAPI_BASE}?code=getPhone&token=${MAAPI_TOKEN}`;
     if (keyword) url += `&keyWord=${encodeURIComponent(keyword)}`;
     if (phone) url += `&phone=${encodeURIComponent(phone)}`;
@@ -67,10 +72,22 @@ class PickupService {
     if (typeof data === 'string' && data.startsWith('ERROR:')) {
       throw new Error(data.replace('ERROR:', '').trim());
     }
+
+    // 写入接码记录
+    const smsRecordRepo = this.getSmsRecordRepo();
+    const record = smsRecordRepo.create({
+      phone: String(data),
+      keyword: keyword || '',
+      cardType: cardType || '全部',
+      status: 'active',
+      ip: ip || '',
+    });
+    await smsRecordRepo.save(record);
+
     return data; // 返回手机号
   }
 
-  // 获取验证码（单次查询 MAAPI，由前端轮询调用）
+  // 获取验证码（单次查询 MAAPI，由前端轮询调用），成功后更新接码记录
   async getVerifyCode(phone, keyword) {
     if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置');
 
@@ -88,22 +105,40 @@ class PickupService {
     }
 
     // 提取验证码（4-6位数字）
+    let extractedCode = '';
     const codeMatch = (typeof data === 'string') && data.match(/验证码[：:\s]*(\d{4,6})/);
     if (codeMatch) {
-      return { received: true, code: codeMatch[1], content: data };
+      extractedCode = codeMatch[1];
+    } else {
+      // 尝试直接匹配4-6位纯数字
+      const numMatch = (typeof data === 'string') && data.match(/\b(\d{4,6})\b/);
+      if (numMatch) {
+        extractedCode = numMatch[1];
+      }
     }
 
-    // 尝试直接匹配4-6位纯数字
-    const numMatch = (typeof data === 'string') && data.match(/\b(\d{4,6})\b/);
-    if (numMatch) {
-      return { received: true, code: numMatch[1], content: data };
+    const content = typeof data === 'string' ? data : JSON.stringify(data);
+
+    // 收到短信后更新接码记录
+    if (extractedCode || content) {
+      const smsRecordRepo = this.getSmsRecordRepo();
+      const record = await smsRecordRepo.findOne({
+        where: { phone, status: 'active' },
+        order: { createdAt: 'DESC' },
+      });
+      if (record) {
+        await smsRecordRepo.update(record.id, {
+          smsContent: content,
+          verifyCode: extractedCode,
+          status: extractedCode ? 'completed' : 'active',
+        });
+      }
     }
 
-    // 有短信内容但无法提取验证码，返回原始内容
-    return { received: true, code: '', content: typeof data === 'string' ? data : JSON.stringify(data) };
+    return { received: true, code: extractedCode, content };
   }
 
-  // 释放号码
+  // 释放号码（同时更新接码记录状态）
   async releasePhone(phone) {
     if (!MAAPI_TOKEN) return;
     try {
@@ -112,9 +147,20 @@ class PickupService {
     } catch (e) {
       console.warn('释放号码失败:', e.message);
     }
+    // 更新接码记录状态
+    try {
+      const smsRecordRepo = this.getSmsRecordRepo();
+      const record = await smsRecordRepo.findOne({
+        where: { phone, status: 'active' },
+        order: { createdAt: 'DESC' },
+      });
+      if (record) {
+        await smsRecordRepo.update(record.id, { status: 'released' });
+      }
+    } catch (e) {}
   }
 
-  // 拉黑号码
+  // 拉黑号码（同时更新接码记录状态）
   async blockPhone(phone) {
     if (!MAAPI_TOKEN) return;
     try {
@@ -123,6 +169,17 @@ class PickupService {
     } catch (e) {
       console.warn('拉黑号码失败:', e.message);
     }
+    // 更新接码记录状态
+    try {
+      const smsRecordRepo = this.getSmsRecordRepo();
+      const record = await smsRecordRepo.findOne({
+        where: { phone, status: 'active' },
+        order: { createdAt: 'DESC' },
+      });
+      if (record) {
+        await smsRecordRepo.update(record.id, { status: 'blocked' });
+      }
+    } catch (e) {}
   }
 
   // 查询余额
@@ -188,6 +245,24 @@ class PickupService {
       where: { contact },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  // 查询接码记录（后台用）
+  async querySmsRecords(filter = {}) {
+    const repo = this.getSmsRecordRepo();
+    const where = {};
+    if (filter.status) where.status = filter.status;
+    if (filter.phone) where.phone = filter.phone;
+    if (filter.keyword) where.keyword = filter.keyword;
+
+    const [items, total] = await repo.findAndCount({
+      where: Object.keys(where).length > 0 ? where : undefined,
+      order: { createdAt: 'DESC' },
+      skip: ((filter.page || 1) - 1) * (filter.pageSize || 20),
+      take: filter.pageSize || 20,
+    });
+
+    return { items, total };
   }
 }
 

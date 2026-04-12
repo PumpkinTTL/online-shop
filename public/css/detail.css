@@ -79,10 +79,15 @@
   background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%);
 }
 
-.product-badge {
+.product-badges {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  gap: 6px;
+}
+
+.product-badge {
   background: linear-gradient(135deg, var(--accent), var(--accent-light));
   color: white;
   padding: 4px 10px;
@@ -93,6 +98,11 @@
   align-items: center;
   gap: 4px;
   box-shadow: 0 2px 8px rgba(250, 140, 22, 0.3);
+}
+
+.product-badge.warranty {
+  background: linear-gradient(135deg, #1677ff, #4096ff);
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
 }
 
 /* 商品信息 */
@@ -247,6 +257,10 @@
 
 .feature-item.warning .feature-icon {
   color: var(--accent);
+}
+
+.feature-item.success .feature-icon {
+  color: #22c55e;
 }
 
 .feature-content {

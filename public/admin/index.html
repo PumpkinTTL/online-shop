@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/admin/css/admin.css">
 </head>
+
 <body>
   <div id="app">
     <div class="admin-layout">
@@ -47,6 +49,9 @@
             <div class="nav-section-title">系统</div>
             <div class="nav-item" :class="{ active: currentPage === 'admins' }" @click="currentPage = 'admins'">
               <i class="fa-solid fa-user-shield"></i> <span>管理员</span>
+            </div>
+            <div class="nav-item" :class="{ active: currentPage === 'smsrecords' }" @click="currentPage = 'smsrecords'">
+              <i class="fa-solid fa-mobile-screen"></i> <span>接码记录</span>
             </div>
           </div>
         </nav>
@@ -145,6 +150,7 @@
                       <th>价格</th>
                       <th>库存</th>
                       <th>销量</th>
+                      <th>质保</th>
                       <th>创建时间</th>
                       <th>操作</th>
                     </tr>
@@ -157,10 +163,13 @@
                       <td>¥{{ p.price }}</td>
                       <td>{{ p.stock }}</td>
                       <td>{{ p.sales }}</td>
+                      <td>{{ p.warranty || '-' }}</td>
                       <td>{{ formatDate(p.createdAt) }}</td>
                       <td>
-                        <button class="btn btn-ghost btn-sm" @click="openProductModal(p)"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn btn-danger btn-sm" @click="handleDeleteProduct(p.id)"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn btn-ghost btn-sm" @click="openProductModal(p)"><i
+                            class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-danger btn-sm" @click="handleDeleteProduct(p.id)"><i
+                            class="fa-solid fa-trash"></i></button>
                       </td>
                     </tr>
                   </tbody>
@@ -173,7 +182,8 @@
               <div class="modal">
                 <div class="modal-header">
                   <h3>{{ editingProduct.id ? '编辑商品' : '添加商品' }}</h3>
-                  <button class="modal-close" @click="productModalVisible = false"><i class="fa-solid fa-xmark"></i></button>
+                  <button class="modal-close" @click="productModalVisible = false"><i
+                      class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="modal-body">
                   <div class="form-group">
@@ -182,7 +192,8 @@
                   </div>
                   <div class="form-group">
                     <label>价格</label>
-                    <input type="number" step="0.01" class="form-input" v-model="editingProduct.price" placeholder="请输入价格">
+                    <input type="number" step="0.01" class="form-input" v-model="editingProduct.price"
+                      placeholder="请输入价格">
                   </div>
                   <div class="form-group">
                     <label>描述</label>
@@ -203,6 +214,10 @@
                   <div class="form-group">
                     <label>销量</label>
                     <input type="number" class="form-input" v-model="editingProduct.sales" placeholder="销量">
+                  </div>
+                  <div class="form-group">
+                    <label>质保时间</label>
+                    <input type="text" class="form-input" v-model="editingProduct.warranty" placeholder="例如：30天、永久、1个月（可选）">
                   </div>
                 </div>
                 <div class="modal-footer">
@@ -267,8 +282,10 @@
                       <td>{{ ck.phone || '-' }}</td>
                       <td>{{ formatDate(ck.createdAt) }}</td>
                       <td>
-                        <button class="btn btn-ghost btn-sm" @click="openEditCDKModal(ck)" title="编辑CDK"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn btn-danger btn-sm" @click="handleDeleteCardKey(ck.id)"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn btn-ghost btn-sm" @click="openEditCDKModal(ck)" title="编辑CDK"><i
+                            class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-danger btn-sm" @click="handleDeleteCardKey(ck.id)"><i
+                            class="fa-solid fa-trash"></i></button>
                       </td>
                     </tr>
                   </tbody>
@@ -276,9 +293,11 @@
               </div>
               <div class="pagination" v-if="cardKeyTotal > cardKeyFilter.pageSize">
                 <span class="page-info">共 {{ cardKeyTotal }} 条</span>
-                <button class="page-btn" :disabled="cardKeyFilter.page <= 1" @click="cardKeyFilter.page--; loadCardKeys()">上一页</button>
+                <button class="page-btn" :disabled="cardKeyFilter.page <= 1"
+                  @click="cardKeyFilter.page--; loadCardKeys()">上一页</button>
                 <button class="page-btn active">{{ cardKeyFilter.page }}</button>
-                <button class="page-btn" :disabled="cardKeyFilter.page * cardKeyFilter.pageSize >= cardKeyTotal" @click="cardKeyFilter.page++; loadCardKeys()">下一页</button>
+                <button class="page-btn" :disabled="cardKeyFilter.page * cardKeyFilter.pageSize >= cardKeyTotal"
+                  @click="cardKeyFilter.page++; loadCardKeys()">下一页</button>
               </div>
             </div>
 
@@ -287,7 +306,8 @@
               <div class="modal" style="max-width:560px;">
                 <div class="modal-header">
                   <h3>批量生成卡密</h3>
-                  <button class="modal-close" @click="cardKeyModalVisible = false"><i class="fa-solid fa-xmark"></i></button>
+                  <button class="modal-close" @click="cardKeyModalVisible = false"><i
+                      class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="modal-body">
                   <div class="form-group">
@@ -300,8 +320,8 @@
                   <div class="form-group">
                     <label>卡密前缀</label>
                     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-                      <button v-for="(label, key) in cardPrefixes" :key="key"
-                        class="btn btn-sm" :class="cardKeyForm.prefix === key ? 'btn-primary' : 'btn-ghost'"
+                      <button v-for="(label, key) in cardPrefixes" :key="key" class="btn btn-sm"
+                        :class="cardKeyForm.prefix === key ? 'btn-primary' : 'btn-ghost'"
                         @click="cardKeyForm.prefix = key">
                         {{ label }} ({{ key }})
                       </button>
@@ -311,11 +331,13 @@
                   </div>
                   <div class="form-group">
                     <label>生成数量</label>
-                    <input type="number" class="form-input" v-model.number="cardKeyForm.count" min="1" max="100" placeholder="1-100">
+                    <input type="number" class="form-input" v-model.number="cardKeyForm.count" min="1" max="100"
+                      placeholder="1-100">
                   </div>
                   <div class="form-group">
                     <label>CDK 列表 <span style="color:#9ca3af;font-weight:400;">（可选，每行一个，对应每个卡密）</span></label>
-                    <textarea class="cdk-textarea" v-model="cardKeyForm.cdkText" placeholder="每行输入一个CDK&#10;例如：&#10;ABC123DEF456GHI7&#10;XYZ789UVW012RST3"></textarea>
+                    <textarea class="cdk-textarea" v-model="cardKeyForm.cdkText"
+                      placeholder="每行输入一个CDK&#10;例如：&#10;ABC123DEF456GHI7&#10;XYZ789UVW012RST3"></textarea>
                     <div class="cdk-hint">留空则不关联CDK，后续可单独编辑。行数应与生成数量一致。</div>
                   </div>
                 </div>
@@ -334,7 +356,8 @@
               <div class="modal" style="max-width:420px;">
                 <div class="modal-header">
                   <h3>编辑 CDK</h3>
-                  <button class="modal-close" @click="editCDKModalVisible = false"><i class="fa-solid fa-xmark"></i></button>
+                  <button class="modal-close" @click="editCDKModalVisible = false"><i
+                      class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="modal-body">
                   <div class="form-group">
@@ -410,7 +433,8 @@
                       <td v-html="statusTag(o.status, 'order')"></td>
                       <td>{{ formatDate(o.createdAt) }}</td>
                       <td>
-                        <button class="btn btn-danger btn-sm" @click="handleDeleteOrder(o.id)"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn btn-danger btn-sm" @click="handleDeleteOrder(o.id)"><i
+                            class="fa-solid fa-trash"></i></button>
                       </td>
                     </tr>
                   </tbody>
@@ -418,9 +442,11 @@
               </div>
               <div class="pagination" v-if="orderTotal > orderFilter.pageSize">
                 <span class="page-info">共 {{ orderTotal }} 条</span>
-                <button class="page-btn" :disabled="orderFilter.page <= 1" @click="orderFilter.page--; loadOrders()">上一页</button>
+                <button class="page-btn" :disabled="orderFilter.page <= 1"
+                  @click="orderFilter.page--; loadOrders()">上一页</button>
                 <button class="page-btn active">{{ orderFilter.page }}</button>
-                <button class="page-btn" :disabled="orderFilter.page * orderFilter.pageSize >= orderTotal" @click="orderFilter.page++; loadOrders()">下一页</button>
+                <button class="page-btn" :disabled="orderFilter.page * orderFilter.pageSize >= orderTotal"
+                  @click="orderFilter.page++; loadOrders()">下一页</button>
               </div>
             </div>
           </div>
@@ -456,15 +482,18 @@
                       <td><strong>{{ u.username }}</strong></td>
                       <td>{{ u.nickname || '-' }}</td>
                       <td>
-                        <span class="tag" :class="u.isActive ? 'tag-green' : 'tag-red'">{{ u.isActive ? '正常' : '禁用' }}</span>
+                        <span class="tag" :class="u.isActive ? 'tag-green' : 'tag-red'">{{ u.isActive ? '正常' : '禁用'
+                          }}</span>
                       </td>
                       <td>{{ formatDate(u.createdAt) }}</td>
                       <td>
-                        <button class="btn btn-sm" :class="u.isActive ? 'btn-warning' : 'btn-success'" @click="handleToggleUser(u.id)">
+                        <button class="btn btn-sm" :class="u.isActive ? 'btn-warning' : 'btn-success'"
+                          @click="handleToggleUser(u.id)">
                           <i :class="u.isActive ? 'fa-solid fa-ban' : 'fa-solid fa-check'"></i>
                           {{ u.isActive ? '禁用' : '启用' }}
                         </button>
-                        <button class="btn btn-danger btn-sm" @click="handleDeleteUser(u.id)"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn btn-danger btn-sm" @click="handleDeleteUser(u.id)"><i
+                            class="fa-solid fa-trash"></i></button>
                       </td>
                     </tr>
                   </tbody>
@@ -513,11 +542,13 @@
                         </span>
                       </td>
                       <td>
-                        <span class="tag" :class="a.isActive ? 'tag-green' : 'tag-red'">{{ a.isActive ? '正常' : '禁用' }}</span>
+                        <span class="tag" :class="a.isActive ? 'tag-green' : 'tag-red'">{{ a.isActive ? '正常' : '禁用'
+                          }}</span>
                       </td>
                       <td>{{ formatDate(a.createdAt) }}</td>
                       <td>
-                        <button class="btn btn-danger btn-sm" @click="handleDeleteAdmin(a.id, a.role)" :disabled="a.role === 'super'">
+                        <button class="btn btn-danger btn-sm" @click="handleDeleteAdmin(a.id, a.role)"
+                          :disabled="a.role === 'super'">
                           <i class="fa-solid fa-trash"></i>
                         </button>
                       </td>
@@ -532,7 +563,8 @@
               <div class="modal" style="max-width:420px;">
                 <div class="modal-header">
                   <h3>添加管理员</h3>
-                  <button class="modal-close" @click="adminModalVisible = false"><i class="fa-solid fa-xmark"></i></button>
+                  <button class="modal-close" @click="adminModalVisible = false"><i
+                      class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="modal-body">
                   <div class="form-group">
@@ -565,6 +597,72 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 接码记录管理 ========== -->
+    <div v-if="currentPage === 'smsrecords'">
+      <div class="toolbar">
+        <div class="spacer"></div>
+        <select class="form-select" style="width:auto;" v-model="smsRecordFilter.status" @change="loadSmsRecords">
+          <option value="">全部状态</option>
+          <option value="active">使用中</option>
+          <option value="completed">已完成</option>
+          <option value="released">已释放</option>
+          <option value="blocked">已拉黑</option>
+        </select>
+        <input type="text" class="form-input" style="width:160px;" v-model="smsRecordFilter.phone" placeholder="手机号搜索"
+          @keyup.enter="loadSmsRecords">
+        <button class="btn btn-primary btn-sm" @click="loadSmsRecords"><i class="fa-solid fa-search"></i></button>
+        <button class="btn btn-ghost" @click="loadSmsRecords">
+          <i class="fa-solid fa-sync"></i>
+        </button>
+      </div>
+      <div class="card">
+        <div class="table-wrapper" v-if="smsRecordLoading">
+          <div style="text-align:center;padding:40px;color:#9ca3af;">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size:24px;"></i>
+            <p style="margin-top:8px;">加载中...</p>
+          </div>
+        </div>
+        <div class="table-wrapper" v-else>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>手机号</th>
+                <th>关键词</th>
+                <th>卡类型</th>
+                <th>验证码</th>
+                <th>状态</th>
+                <th>IP</th>
+                <th>创建时间</th>
+                <th>更新时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in smsRecords" :key="r.id">
+                <td>{{ r.id }}</td>
+                <td><code>{{ r.phone }}</code></td>
+                <td>{{ r.keyword || '-' }}</td>
+                <td>{{ r.cardType || '全部' }}</td>
+                <td><code v-if="r.verifyCode" style="color:#22c55e;">{{ r.verifyCode }}</code><span v-else>-</span></td>
+                <td v-html="statusTag(r.status, 'sms')"></td>
+                <td style="font-size:11px;">{{ r.ip || '-' }}</td>
+                <td>{{ formatDate(r.createdAt) }}</td>
+                <td>{{ formatDate(r.updatedAt) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" v-if="smsRecordTotal > smsRecordFilter.pageSize">
+          <span class="page-info">共 {{ smsRecordTotal }} 条</span>
+          <button class="page-btn" :disabled="smsRecordFilter.page <= 1"
+            @click="smsRecordFilter.page--; loadSmsRecords()">上一页</button>
+          <button class="page-btn active">{{ smsRecordFilter.page }}</button>
+          <button class="page-btn" :disabled="smsRecordFilter.page * smsRecordFilter.pageSize >= smsRecordTotal"
+            @click="smsRecordFilter.page++; loadSmsRecords()">下一页</button>
         </div>
       </div>
     </div>
@@ -622,6 +720,7 @@
             orders: '订单管理',
             users: '用户管理',
             admins: '管理员管理',
+            smsrecords: '接码记录',
           };
           return map[currentPage.value] || '仪表盘';
         });
@@ -721,7 +820,7 @@
         const loadCardPrefixes = async () => {
           try {
             cardPrefixes.value = await AdminAPI.getCardPrefixes();
-          } catch (e) {}
+          } catch (e) { }
         };
 
         const openCardKeyModal = () => {
@@ -913,6 +1012,25 @@
           }
         };
 
+        // ===== 接码记录管理 =====
+        const smsRecords = ref([]);
+        const smsRecordTotal = ref(0);
+        const smsRecordLoading = ref(false);
+        const smsRecordFilter = ref({ status: '', phone: '', keyword: '', page: 1, pageSize: 20 });
+
+        const loadSmsRecords = async () => {
+          smsRecordLoading.value = true;
+          try {
+            const result = await AdminAPI.getSmsRecords(smsRecordFilter.value);
+            smsRecords.value = result.items;
+            smsRecordTotal.value = result.total;
+          } catch (e) {
+            AdminToast.error('加载接码记录失败');
+          } finally {
+            smsRecordLoading.value = false;
+          }
+        };
+
         // ===== 修改密码 =====
         const showPasswordModal = ref(false);
         const passwordForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -949,6 +1067,7 @@
           else if (page === 'orders') loadOrders();
           else if (page === 'users') loadUsers();
           else if (page === 'admins') loadAdmins();
+          else if (page === 'smsrecords') loadSmsRecords();
         });
 
         onMounted(async () => {
@@ -988,9 +1107,12 @@
           loadAdmins, openAdminModal, handleCreateAdmin, handleDeleteAdmin,
           // 修改密码
           showPasswordModal, passwordForm, handleChangePassword,
+          // 接码记录
+          smsRecords, smsRecordTotal, smsRecordLoading, smsRecordFilter, loadSmsRecords,
         };
       }
     }).mount('#app');
   </script>
 </body>
+
 </html>

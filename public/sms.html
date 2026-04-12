@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
+  <script src="/js/confirmDialog.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/common.css">
@@ -71,8 +72,7 @@
           <div class="phone-row">
             <input type="text" v-model="currentPhone" class="form-input phone-input" readonly>
             <button class="btn btn-icon" @click="copyPhone" title="复制"><i class="fa-solid fa-copy"></i></button>
-            <button class="btn btn-sm btn-ghost" @click="releasePhone"><i class="fa-solid fa-trash"></i></button>
-            <button class="btn btn-sm btn-danger" @click="blockPhone"><i class="fa-solid fa-ban"></i></button>
+            <button class="btn btn-sm btn-danger" @click="blockPhone" title="拉黑"><i class="fa-solid fa-ban"></i></button>
           </div>
         </div>
 
@@ -204,91 +204,175 @@
           confirmPassword: ''
         });
 
-        const extractedCode = computed(() => {
-          if (!smsContent.value) return '';
-          const match = smsContent.value.match(/(\d{4,8})/);
-          return match ? match[1] : '';
-        });
+        const extractedCode = ref('');
 
         const getPhone = async () => {
+          console.log('[getPhone] 开始执行, currentPhone:', currentPhone.value);
+          
           if (!keyWord.value.trim()) {
             Toast.warning('请输入短信关键词');
             return;
           }
 
+          // 已有号码时确认是否替换（不释放，直接覆盖）
+          if (currentPhone.value) {
+            console.log('[getPhone] 已有号码，准备弹出确认框');
+            
+            // 检查 ConfirmDialog 是否存在
+            if (typeof ConfirmDialog === 'undefined') {
+              console.error('[getPhone] ConfirmDialog 未定义!');
+              Toast.error('确认框组件加载失败，请刷新页面');
+              return;
+            }
+            
+            try {
+              console.log('[getPhone] 调用 ConfirmDialog.show()');
+              const ok = await ConfirmDialog.show('当前已有号码，确定要重新获取吗？');
+              console.log('[getPhone] 确认框结果:', ok);
+              if (!ok) {
+                console.log('[getPhone] 用户取消了操作');
+                return;
+              }
+            } catch (err) {
+              console.error('[getPhone] 确认框异常:', err);
+              Toast.error('确认框弹出失败: ' + err.message);
+              return;
+            }
+          }
+
+          console.log('[getPhone] 准备发送请求');
           loading.value = true;
           try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            if (phoneInput.value.trim()) {
-              currentPhone.value = phoneInput.value.trim();
-            } else {
-              const randomPhone = '165' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
-              currentPhone.value = randomPhone;
-              phoneInput.value = randomPhone;
-            }
+            // 重新获取时不传旧号码，让后端随机分配新号码
+            const res = await axios.post('/api/pickup/get-phone', {
+              cardCode: 'FREE_SMS',
+              keyword: keyWord.value.trim(),
+              phone: undefined,
+              cardType: cardType.value,
+            });
+            console.log('[getPhone] 请求成功:', res.data);
+            currentPhone.value = res.data.phone;
+            phoneInput.value = res.data.phone;
             smsContent.value = '';
             smsTime.value = '';
+            extractedCode.value = '';
             Toast.success('获取号码成功');
           } catch (error) {
-            Toast.error('获取失败：' + error.message);
+            console.log('[getPhone] 请求失败:', error);
+            Toast.error(error.response?.data?.error || '获取号码失败');
           } finally {
             loading.value = false;
           }
         };
 
         const getMsg = async () => {
-          if (!currentPhone.value || !keyWord.value) {
+          if (!currentPhone.value) {
             Toast.warning('请先获取号码');
+            return;
+          }
+          if (!keyWord.value.trim()) {
+            Toast.warning('请输入短信关键词');
             return;
           }
 
           smsLoading.value = true;
           try {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const codes = ['123456', '654321', '888888', '666666', '999999'];
-            smsContent.value = `【${keyWord.value}】验证码${codes[Math.floor(Math.random() * codes.length)]}，有效期5分钟，请勿泄露。`;
-            smsTime.value = new Date().toLocaleString('zh-CN');
-            Toast.success('获取短信成功');
+            const res = await axios.post('/api/pickup/get-verify-code', {
+              phone: currentPhone.value,
+              keyword: keyWord.value.trim(),
+            });
+
+            if (res.data.received) {
+              smsContent.value = res.data.content || '';
+              smsTime.value = new Date().toLocaleString('zh-CN');
+              extractedCode.value = res.data.code || '';
+              if (res.data.code) {
+                Toast.success('获取验证码成功');
+              } else {
+                Toast.info('已收到短信，但无法自动提取验证码，请查看短信原文');
+              }
+            } else {
+              Toast.info('尚未收到短信，请稍后再试');
+            }
           } catch (error) {
-            Toast.error('获取失败：' + error.message);
+            Toast.error(error.response?.data?.error || '获取短信失败');
           } finally {
             smsLoading.value = false;
           }
         };
 
         const releasePhone = async () => {
-          if (confirm('确定要释放该号码吗？')) {
-            currentPhone.value = '';
-            smsContent.value = '';
-            Toast.info('已释放号码');
-          }
+          if (!currentPhone.value) return;
+          const ok = await ConfirmDialog.show('确定要释放该号码吗？');
+          if (!ok) return;
+          axios.post('/api/pickup/release-phone', { phone: currentPhone.value }).catch(() => {});
+          currentPhone.value = '';
+          phoneInput.value = '';
+          smsContent.value = '';
+          extractedCode.value = '';
+          Toast.info('已释放号码');
         };
 
         const blockPhone = async () => {
-          if (confirm('确定要拉黑该号码吗？')) {
-            currentPhone.value = '';
-            smsContent.value = '';
-            Toast.info('已拉黑号码');
-          }
-        };
-
-        const copyToClipboard = (text) => {
-          const input = document.createElement('input');
-          input.value = text;
-          document.body.appendChild(input);
-          input.select();
-          document.execCommand('copy');
-          document.body.removeChild(input);
+          if (!currentPhone.value) return;
+          const ok = await ConfirmDialog.show('确定要拉黑该号码吗？拉黑后将无法再获取此号码');
+          if (!ok) return;
+          axios.post('/api/pickup/block-phone', { phone: currentPhone.value }).catch(() => {});
+          currentPhone.value = '';
+          phoneInput.value = '';
+          smsContent.value = '';
+          extractedCode.value = '';
+          Toast.info('已拉黑号码');
         };
 
         const copyPhone = () => {
-          copyToClipboard(currentPhone.value);
-          Toast.success('已复制号码');
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(currentPhone.value).then(() => {
+              Toast.success('已复制号码');
+            }).catch(() => {
+              const input = document.createElement('input');
+              input.value = currentPhone.value;
+              document.body.appendChild(input);
+              input.select();
+              document.execCommand('copy');
+              document.body.removeChild(input);
+              Toast.success('已复制号码');
+            });
+          } else {
+            const input = document.createElement('input');
+            input.value = currentPhone.value;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            Toast.success('已复制号码');
+          }
         };
 
         const copyCode = () => {
-          copyToClipboard(extractedCode.value);
-          Toast.success('已复制验证码');
+          const code = extractedCode.value;
+          if (!code) return;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(code).then(() => {
+              Toast.success('已复制验证码');
+            }).catch(() => {
+              const input = document.createElement('input');
+              input.value = code;
+              document.body.appendChild(input);
+              input.select();
+              document.execCommand('copy');
+              document.body.removeChild(input);
+              Toast.success('已复制验证码');
+            });
+          } else {
+            const input = document.createElement('input');
+            input.value = code;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            Toast.success('已复制验证码');
+          }
         };
 
         // 登录注册相关方法

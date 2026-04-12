@@ -5,6 +5,7 @@ const Product = require('../entities/Product');
 const User = require('../entities/User');
 const CardKey = require('../entities/CardKey');
 const Order = require('../entities/Order');
+const SmsRecord = require('../entities/SmsRecord');
 
 const SALT_ROUNDS = 10;
 
@@ -117,14 +118,16 @@ class AdminService {
     const userRepo = dataSource.getRepository(User);
     const cardKeyRepo = dataSource.getRepository(CardKey);
     const orderRepo = dataSource.getRepository(Order);
+    const smsRecordRepo = dataSource.getRepository(SmsRecord);
 
-    const [productCount, userCount, cardKeyUnused, cardKeyUsed, orderCount, orderCompleted] = await Promise.all([
+    const [productCount, userCount, cardKeyUnused, cardKeyUsed, orderCount, orderCompleted, smsRecordCount] = await Promise.all([
       productRepo.count(),
       userRepo.count(),
       cardKeyRepo.count({ where: { status: 'unused' } }),
       cardKeyRepo.count({ where: { status: 'used' } }),
       orderRepo.count(),
       orderRepo.count({ where: { status: 'completed' } }),
+      smsRecordRepo.count(),
     ]);
 
     // 近7天订单数
@@ -143,6 +146,7 @@ class AdminService {
       orderCount,
       orderCompleted,
       recentOrders,
+      smsRecordCount,
     };
   }
 

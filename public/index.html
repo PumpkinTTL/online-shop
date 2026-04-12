@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
+  <script src="/js/confirmDialog.js"></script>
   <script src="/js/sms.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -140,6 +141,9 @@
             <div class="product-body">
               <h3 class="product-name">{{ product.name }}</h3>
               <p class="product-desc">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
+              <div class="product-warranty" v-if="product.warranty">
+                <i class="fa-solid fa-shield-halved"></i> {{ product.warranty }}
+              </div>
               <div class="product-footer">
                 <div class="product-left">
                   <div class="product-price">
@@ -172,7 +176,7 @@
             <div class="hint">短信【括号】里的名字</div>
 
             <label>指定号码 <span class="optional">(可选)</span></label>
-            <input type="text" v-model="sms.phoneInput" placeholder="不填则随机获取" class="form-input">
+            <input type="text" v-model="sms.phoneInput" placeholder="不填则随机获取" class="form-input" @input="markManualPhone">
 
             <!-- 当前号码 -->
             <div class="phone-box" v-if="sms.currentPhone">
@@ -180,8 +184,7 @@
               <div class="phone-row">
                 <input type="text" v-model="sms.currentPhone" class="form-input phone-input" readonly>
                 <button class="btn btn-icon" @click="copyPhone" title="复制"><i class="fa-solid fa-copy"></i></button>
-                <button class="btn btn-sm btn-ghost" @click="releasePhone"><i class="fa-solid fa-trash"></i></button>
-                <button class="btn btn-sm btn-danger" @click="blockPhone"><i class="fa-solid fa-ban"></i></button>
+                <button class="btn btn-sm btn-danger" @click="blockPhone" title="拉黑"><i class="fa-solid fa-ban"></i></button>
               </div>
             </div>
 
@@ -396,6 +399,7 @@
         const blockPhone = () => SmsModule.blockPhone(sms, Toast);
         const copyPhone = () => SmsModule.copyPhone(sms, Toast);
         const copyCode = () => SmsModule.copyCode(sms, Toast);
+        const markManualPhone = () => SmsModule.markManualPhone(sms);
 
         // 用户名验证：只能包含英文、数字、下划线，长度3-20
         const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
@@ -513,7 +517,7 @@
           categories, priceRanges, filteredProducts, currentUser,
           authModalVisible, isLogin, authLoading, authForm, sms,
           handleSearch, goHome, goToDetail, goToOrders, showAuthModal, closeAuthModal, handleAuth, logout, toggleFilter, formatSales,
-          getPhone, getMsg, releasePhone, blockPhone, copyPhone, copyCode
+          getPhone, getMsg, releasePhone, blockPhone, copyPhone, copyCode, markManualPhone
         };
       }
     }).mount('#app');
