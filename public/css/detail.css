@@ -220,6 +220,38 @@
   color: var(--primary-light);
 }
 
+/* 支付宝购买 */
+.alipay-card .card-body {
+  text-align: center;
+}
+
+.alipay-desc {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.btn-alipay {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+  background: #1677ff;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-alipay:hover {
+  background: #0958d9;
+}
+
 /* 特点卡片 */
 .features-grid {
   padding: 12px;

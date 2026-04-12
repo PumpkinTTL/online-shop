@@ -5,6 +5,7 @@ const CardKey = require('../entities/CardKey');
 const Order = require('../entities/Order');
 const Admin = require('../entities/Admin');
 const SmsRecord = require('../entities/SmsRecord');
+const PaymentOrder = require('../entities/PaymentOrder');
 
 const dataSource = new DataSource({
   type: 'mysql',
@@ -13,7 +14,7 @@ const dataSource = new DataSource({
   username: 'root',
   password: 'root',
   database: 'online_shop',
-  entities: [Product, User, CardKey, Order, Admin, SmsRecord],
+  entities: [Product, User, CardKey, Order, Admin, SmsRecord, PaymentOrder],
   synchronize: true,
   logging: false,
 });

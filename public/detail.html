@@ -91,6 +91,20 @@
             </div>
           </div>
 
+          <!-- 支付宝购买 -->
+          <div class="action-card alipay-card" v-if="!redeemResult">
+            <div class="card-header">
+              <i class="fa-brands fa-alipay"></i>
+              <span>支付宝购买</span>
+            </div>
+            <div class="card-body">
+              <p class="alipay-desc">扫码支付，自动发放兑换码</p>
+              <button class="btn btn-alipay" @click="goToPay">
+                <i class="fa-brands fa-alipay"></i> 立即购买 ¥{{ product.price }}
+              </button>
+            </div>
+          </div>
+
           <!-- 兑换成功卡片 -->
           <div class="success-card" v-if="redeemResult">
             <div class="success-header">
@@ -320,13 +334,21 @@
 
         const goHome = () => { window.location.href = '/'; };
 
+        // 支付宝购买
+        const goToPay = () => {
+          const productId = getUrlParam('id');
+          if (productId) {
+            window.location.href = `/pay?productId=${productId}`;
+          }
+        };
+
         onMounted(() => {
           loadProduct();
         });
 
         return {
           product, loading, error, redeemCode, redeeming, redeemResult,
-          handleRedeem, copyCDK, goToRedeem, copyRedeemUrl, goHome
+          handleRedeem, copyCDK, goToRedeem, copyRedeemUrl, goHome, goToPay
         };
       }
     });

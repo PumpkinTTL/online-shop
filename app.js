@@ -6,6 +6,7 @@ const productsRouter = require('./routes/products');
 const usersRouter = require('./routes/users');
 const pickupRouter = require('./routes/pickup');
 const adminRouter = require('./routes/admin');
+const paymentRouter = require('./routes/payment');
 const adminService = require('./services/adminService');
 
 const app = express();
@@ -25,6 +26,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/pickup', pickupRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/payment', paymentRouter);
 
 // 主页
 app.get('/', (req, res) => {
@@ -39,6 +41,11 @@ app.get('/pickup', (req, res) => {
 // 订单中心
 app.get('/orders', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'orders.html'));
+});
+
+// 支付页面
+app.get('/pay', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'payment.html'));
 });
 
 // 后台管理页
