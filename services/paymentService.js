@@ -54,37 +54,41 @@ class PaymentService {
     });
     await paymentRepo.save(paymentOrder);
 
-    // 调用支付宝当面付预下单接口（v3 API）
+    // 调用支付宝当面付预下单接口
     try {
       const alipaySdk = getAlipaySdk();
-      const result = await alipaySdk.curl('POST', '/v3/alipay/trade/precreate', {
-        body: {
-          out_trade_no: orderNo,
-          total_amount: String(product.price),
-          subject: product.name,
-          timeout_express: '30m',
-          notify_url: process.env.ALIPAY_NOTIFY_URL || undefined,
-        },
-      });
+      const bizContent = {
+        out_trade_no: orderNo,
+        total_amount: String(product.price),
+        subject: product.name,
+        timeout_express: '30m',
+      };
 
-      const data = result.data;
-      if (result.responseHttpStatus === 200 && data.qr_code) {
+      const notifyUrl = process.env.ALIPAY_NOTIFY_URL || undefined;
+      const requestOptions = {
+        bizContent,
+        ...(notifyUrl ? { notifyUrl } : {}),
+      };
+
+      const result = await alipaySdk.exec('alipay.trade.precreate', requestOptions);
+
+      if (result.code === '10000' && result.qrCode) {
         // 预下单成功，保存二维码
-        await paymentRepo.update(paymentOrder.id, { qrCode: data.qr_code });
+        await paymentRepo.update(paymentOrder.id, { qrCode: result.qrCode });
         return {
           orderNo,
-          qrCode: data.qr_code,
+          qrCode: result.qrCode,
           amount: product.price,
           productName: product.name,
           expiredAt,
         };
       } else {
-        throw new Error(data.sub_msg || data.msg || '预下单失败');
+        throw new Error(result.subMsg || result.msg || '预下单失败');
       }
     } catch (error) {
       // 预下单失败
       await paymentRepo.update(paymentOrder.id, { status: 'failed' });
-      const errMsg = error.data?.sub_msg || error.data?.msg || error.message || '未知错误';
+      const errMsg = error.subMsg || error.message || '未知错误';
       throw new Error('创建支付订单失败: ' + errMsg);
     }
   }
@@ -93,10 +97,15 @@ class PaymentService {
   async queryAlipayTrade(orderNo) {
     try {
       const alipaySdk = getAlipaySdk();
-      const result = await alipaySdk.curl('GET', `/v3/alipay/trade/query?out_trade_no=${orderNo}`);
-      const data = result.data;
-      if (result.responseHttpStatus === 200 && data.trade_status) {
-        return data;
+      const result = await alipaySdk.exec('alipay.trade.query', {
+        bizContent: { out_trade_no: orderNo },
+      });
+
+      if (result.code === '10000' && result.tradeStatus) {
+        return {
+          trade_status: result.tradeStatus,
+          trade_no: result.tradeNo,
+        };
       }
       return null;
     } catch (error) {
