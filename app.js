@@ -36,6 +36,11 @@ app.get('/pickup', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pickup.html'));
 });
 
+// 订单中心
+app.get('/orders', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'orders.html'));
+});
+
 // 后台管理页
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));

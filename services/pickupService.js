@@ -238,13 +238,45 @@ class PickupService {
     return savedOrder;
   }
 
-  // 按联系方式查询订单
-  async queryOrders(contact) {
+  // 查询订单（支持多条件）
+  async queryOrders(filter = {}) {
     const orderRepo = this.getOrderRepo();
-    return orderRepo.find({
-      where: { contact },
+
+    // 构建查询条件
+    const where = {};
+    if (filter.contact) where.contact = filter.contact;
+    if (filter.orderNo) where.orderNo = filter.orderNo;
+    if (filter.phone) where.phone = filter.phone;
+    if (filter.status) where.status = filter.status;
+    if (filter.productId) where.productId = parseInt(filter.productId);
+
+    // 如果没有任何条件，不允许查询（防止全表扫描）
+    if (Object.keys(where).length === 0) {
+      return { items: [], total: 0 };
+    }
+
+    const [items, total] = await orderRepo.findAndCount({
+      where: Object.keys(where).length > 0 ? where : undefined,
       order: { createdAt: 'DESC' },
+      skip: ((filter.page || 1) - 1) * (filter.pageSize || 20),
+      take: filter.pageSize || 20,
     });
+
+    // 关联查询商品名称
+    const productRepo = dataSource.getRepository(require('../entities/Product'));
+    const productIds = [...new Set(items.map(o => o.productId).filter(Boolean))];
+    let productMap = {};
+    if (productIds.length > 0) {
+      const products = await productRepo.findByIds(productIds);
+      products.forEach(p => { productMap[p.id] = p.name; });
+    }
+
+    const enrichedItems = items.map(order => ({
+      ...order,
+      productName: productMap[order.productId] || '未知商品',
+    }));
+
+    return { items: enrichedItems, total };
   }
 
   // 查询接码记录（后台用）

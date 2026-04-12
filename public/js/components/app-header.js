@@ -2,7 +2,7 @@
  * 通用头部组件 — 导航栏 + 登录注册弹窗
  * 
  * Props:
- *   activePage    String   当前页面高亮: 'home' | 'sms' | 'pickup' | 'detail'
+ *   activePage    String   当前页面高亮: 'home' | 'sms' | 'pickup' | 'orders'
  *   showSearch    Boolean  是否显示搜索框（默认 false）
  *   showAuth      Boolean  是否显示登录/用户信息（默认 false）
  *   hideInIframe  Boolean  iframe中是否隐藏（默认 false）
@@ -34,6 +34,9 @@ const AppHeader = {
             </a>
             <a href="/pickup.html" class="nav-link" :class="{ active: activePage === 'pickup' }">
               <i class="fa-solid fa-box-open"></i> 提货
+            </a>
+            <a href="/orders" class="nav-link" :class="{ active: activePage === 'orders' }">
+              <i class="fa-solid fa-receipt"></i> 订单
             </a>
           </div>
         </div>

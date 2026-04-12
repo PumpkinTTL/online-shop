@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>订单中心 - 工具商店</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="/js/toast.js"></script>
+  <script src="/js/components/app-header.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <style>
+    .orders-page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-title i {
+      color: var(--primary);
+    }
+
+    /* 搜索区 */
+    .search-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .search-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-tab {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--text-light);
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .search-tab:hover {
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .search-tab.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .search-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input-wrap i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+      font-size: 14px;
+    }
+
+    .search-input-wrap input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input-wrap input:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-search {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-search:hover { opacity: 0.9; }
+    .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* 筛选行 */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tag {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--text-light);
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .filter-tag.active {
+      background: #ecfdf5;
+      color: #10b981;
+      border-color: #10b981;
+    }
+
+    .filter-tag:hover {
+      color: var(--text);
+    }
+
+    /* 结果区 */
+    .results-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .order-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .order-card {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+
+    .order-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .order-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .order-no {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .order-no i { color: var(--primary); font-size: 12px; }
+
+    .order-status {
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .order-status.completed {
+      background: #ecfdf5;
+      color: #10b981;
+    }
+
+    .order-status.pending {
+      background: #fffbeb;
+      color: #f59e0b;
+    }
+
+    .order-status.failed {
+      background: #fef2f2;
+      color: #ef4444;
+    }
+
+    .order-card-body {
+      padding: 12px 16px;
+    }
+
+    .order-info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+
+    .order-info-label {
+      color: var(--text-light);
+    }
+
+    .order-info-value {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .product-name {
+      color: var(--primary);
+    }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 48px 16px;
+      color: var(--text-light);
+    }
+
+    .empty-state i {
+      font-size: 40px;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .page-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .page-info {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    @media (max-width: 600px) {
+      .orders-page { padding: 16px 12px 32px; }
+      .search-input-group { flex-direction: column; }
+      .order-info-row { flex-direction: column; gap: 2px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <!-- 导航栏 -->
+    <app-header active-page="orders" show-auth></app-header>
+
+    <!-- 主内容 -->
+    <main class="main">
+      <div class="orders-page">
+
+        <div class="page-title">
+          <i class="fa-solid fa-receipt"></i>
+          订单中心
+        </div>
+
+        <!-- 搜索区 -->
+        <div class="search-card">
+          <div class="search-tabs">
+            <div :class="['search-tab', { active: searchType === 'contact' }]" @click="searchType = 'contact'">
+              <i class="fa-solid fa-address-card"></i> 联系方式
+            </div>
+            <div :class="['search-tab', { active: searchType === 'orderNo' }]" @click="searchType = 'orderNo'">
+              <i class="fa-solid fa-hashtag"></i> 订单号
+            </div>
+            <div :class="['search-tab', { active: searchType === 'phone' }]" @click="searchType = 'phone'">
+              <i class="fa-solid fa-phone"></i> 手机号
+            </div>
+          </div>
+
+          <div class="search-input-group">
+            <div class="search-input-wrap">
+              <i :class="searchIcon"></i>
+              <input type="text"
+                v-model="keyword"
+                :placeholder="searchPlaceholder"
+                @keyup.enter="doSearch"
+                :disabled="loading">
+            </div>
+            <button class="btn-search" @click="doSearch" :disabled="loading || !keyword.trim()">
+              <i class="fa-solid fa-spinner fa-spin" v-if="loading"></i>
+              <i class="fa-solid fa-magnifying-glass" v-else></i>
+              查询
+            </button>
+          </div>
+
+          <!-- 状态筛选 -->
+          <div class="filter-row">
+            <span style="font-size:12px;color:var(--text-light);line-height:26px">状态：</span>
+            <div :class="['filter-tag', { active: statusFilter === '' }]" @click="statusFilter = ''">全部</div>
+            <div :class="['filter-tag', { active: statusFilter === 'completed' }]" @click="statusFilter = 'completed'">已完成</div>
+            <div :class="['filter-tag', { active: statusFilter === 'pending' }]" @click="statusFilter = 'pending'">待处理</div>
+            <div :class="['filter-tag', { active: statusFilter === 'failed' }]" @click="statusFilter = 'failed'">失败</div>
+          </div>
+        </div>
+
+        <!-- 查询结果 -->
+        <template v-if="searched">
+          <div class="results-info">
+            <span>共 {{ total }} 条结果</span>
+            <span>第 {{ page }} / {{ totalPages }} 页</span>
+          </div>
+
+          <div class="order-list" v-if="orders.length > 0">
+            <div class="order-card" v-for="order in orders" :key="order.id">
+              <div class="order-card-header">
+                <span class="order-no">
+                  <i class="fa-solid fa-receipt"></i>
+                  {{ order.orderNo }}
+                </span>
+                <span :class="['order-status', order.status]">
+                  {{ statusText(order.status) }}
+                </span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-info-row">
+                  <span class="order-info-label">商品</span>
+                  <span class="order-info-value product-name">{{ order.productName }}</span>
+                </div>
+                <div class="order-info-row">
+                  <span class="order-info-label">联系方式</span>
+                  <span class="order-info-value">{{ order.contact }}</span>
+                </div>
+                <div class="order-info-row">
+                  <span class="order-info-label">手机号</span>
+                  <span class="order-info-value">{{ order.phone || '-' }}</span>
+                </div>
+                <div class="order-info-row" v-if="order.verifyCode">
+                  <span class="order-info-label">验证码</span>
+                  <span class="order-info-value">{{ order.verifyCode }}</span>
+                </div>
+                <div class="order-info-row">
+                  <span class="order-info-label">创建时间</span>
+                  <span class="order-info-value">{{ formatTime(order.createdAt) }}</span>
+                </div>
+                <div class="order-info-row" v-if="order.completedAt">
+                  <span class="order-info-label">完成时间</span>
+                  <span class="order-info-value">{{ formatTime(order.completedAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-state" v-else>
+            <i class="fa-solid fa-inbox"></i>
+            <p>未找到相关订单</p>
+          </div>
+
+          <!-- 分页 -->
+          <div class="pagination" v-if="totalPages > 1">
+            <button class="page-btn" :disabled="page <= 1" @click="goPage(page - 1)">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span class="page-info">{{ page }} / {{ totalPages }}</span>
+            <button class="page-btn" :disabled="page >= totalPages" @click="goPage(page + 1)">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </template>
+
+        <!-- 首次进入的提示 -->
+        <div class="empty-state" v-if="!searched">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <p>输入联系方式、订单号或手机号查询您的订单</p>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>© 2026 工具商店 · 精选优质 AI 工具</p>
+    </footer>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, watch } = Vue;
+
+    const app = createApp({
+      setup() {
+        // 搜索
+        const searchType = ref('contact');
+        const keyword = ref('');
+        const loading = ref(false);
+        const searched = ref(false);
+
+        // 状态筛选
+        const statusFilter = ref('');
+
+        // 结果
+        const orders = ref([]);
+        const total = ref(0);
+        const page = ref(1);
+        const pageSize = 10;
+
+        const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
+
+        const searchIcon = computed(() => {
+          const map = {
+            contact: 'fa-solid fa-address-card',
+            orderNo: 'fa-solid fa-hashtag',
+            phone: 'fa-solid fa-phone',
+          };
+          return map[searchType.value];
+        });
+
+        const searchPlaceholder = computed(() => {
+          const map = {
+            contact: '输入联系方式（手机号/QQ/邮箱）',
+            orderNo: '输入订单号，如 ORD20260413...',
+            phone: '输入接码手机号',
+          };
+          return map[searchType.value];
+        });
+
+        // 切换搜索类型时清空结果
+        watch(searchType, () => {
+          keyword.value = '';
+          searched.value = false;
+          orders.value = [];
+          total.value = 0;
+          page.value = 1;
+        });
+
+        // 切换状态筛选时重新搜索
+        watch(statusFilter, () => {
+          if (searched.value) doSearch();
+        });
+
+        const doSearch = async () => {
+          if (!keyword.value.trim()) {
+            Toast.warning('请输入查询关键词');
+            return;
+          }
+          loading.value = true;
+          try {
+            const params = { page: page.value, pageSize };
+            params[searchType.value] = keyword.value.trim();
+            if (statusFilter.value) params.status = statusFilter.value;
+
+            const res = await axios.get('/api/pickup/orders', { params });
+            orders.value = res.data.items;
+            total.value = res.data.total;
+            searched.value = true;
+          } catch (err) {
+            Toast.error(err.response?.data?.error || '查询失败');
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        const goPage = (p) => {
+          page.value = p;
+          doSearch();
+        };
+
+        const statusText = (s) => {
+          const map = { completed: '已完成', pending: '待处理', failed: '失败' };
+          return map[s] || s;
+        };
+
+        const formatTime = (t) => {
+          if (!t) return '';
+          const d = new Date(t);
+          return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0') + ' ' +
+            String(d.getHours()).padStart(2, '0') + ':' +
+            String(d.getMinutes()).padStart(2, '0') + ':' +
+            String(d.getSeconds()).padStart(2, '0');
+        };
+
+        return {
+          searchType, keyword, loading, searched,
+          statusFilter, orders, total, page, pageSize, totalPages,
+          searchIcon, searchPlaceholder,
+          doSearch, goPage, statusText, formatTime,
+        };
+      }
+    });
+
+    registerAppHeader(app);
+    app.mount('#app');
+  </script>
+</body>
+
+</html>

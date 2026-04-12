@@ -167,15 +167,26 @@ router.get('/balance', async (req, res) => {
   }
 });
 
-// 按联系方式查询订单
+// 查询订单（免登录，支持多条件）
 router.get('/orders', async (req, res) => {
   try {
-    const { contact } = req.query;
-    if (!contact || !contact.trim()) {
-      return res.status(400).json({ error: '请输入联系方式' });
+    const { contact, orderNo, phone, status, productId, page, pageSize } = req.query;
+    const filter = {};
+    if (contact) filter.contact = contact.trim();
+    if (orderNo) filter.orderNo = orderNo.trim();
+    if (phone) filter.phone = phone.trim();
+    if (status) filter.status = status.trim();
+    if (productId) filter.productId = productId;
+    if (page) filter.page = parseInt(page);
+    if (pageSize) filter.pageSize = parseInt(pageSize);
+
+    // 至少需要一个查询条件
+    if (Object.keys(filter).filter(k => !['page', 'pageSize'].includes(k)).length === 0) {
+      return res.status(400).json({ error: '请至少输入一个查询条件' });
     }
-    const orders = await pickupService.queryOrders(contact.trim());
-    res.json(orders);
+
+    const result = await pickupService.queryOrders(filter);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
