@@ -90,11 +90,16 @@
           </div>
 
           <!-- 商品卡片 -->
-          <div class="product-card" v-for="product in filteredProducts" :key="product.id"
+          <div class="product-card" :class="{ 'sold-out': product.stock === 0 }" v-for="product in filteredProducts" :key="product.id"
             @click="goToDetail(product.id)" v-else>
             <div class="product-image" style="background: url('/assets/bg.png') center/cover no-repeat;">
-              <div class="product-badge">
-                <i class="fa-solid fa-fire"></i> 热门
+              <div class="product-badges">
+                <div class="product-badge hot">
+                  <i class="fa-solid fa-fire"></i> 热门
+                </div>
+                <div class="product-badge sold-out-badge" v-if="product.stock === 0">
+                  <i class="fa-solid fa-ban"></i> 售罄
+                </div>
               </div>
             </div>
             <div class="product-body">
@@ -109,13 +114,19 @@
                     <span class="price-currency">¥</span>
                     <span class="price-amount">{{ product.price }}</span>
                   </div>
-                  <div class="product-sales">
-                    <i class="fa-solid fa-chart-line"></i>
-                    {{ formatSales(product.sales) }}
+                  <div class="product-meta">
+                    <span class="product-sales">
+                      <i class="fa-solid fa-chart-line"></i>
+                      {{ formatSales(product.sales) }}
+                    </span>
+                    <span class="product-stock" :class="{ 'low-stock': product.stock > 0 && product.stock <= 5, 'no-stock': product.stock === 0 }">
+                      <i class="fa-solid fa-box"></i>
+                      {{ product.stock === 0 ? '售罄' : product.stock + ' 件' }}
+                    </span>
                   </div>
                 </div>
-                <button class="btn btn-primary btn-buy" @click.stop="goToDetail(product.id)">
-                  <i class="fa-solid fa-box-open"></i> 提货
+                <button class="btn btn-primary btn-buy" @click.stop="goToDetail(product.id)" :disabled="product.stock === 0">
+                  <i class="fa-solid fa-box-open"></i> {{ product.stock === 0 ? '售罄' : '提货' }}
                 </button>
               </div>
             </div>
