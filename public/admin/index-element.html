@@ -5,71 +5,83 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>后台管理 - 工具商店</title>
-  <!-- Vue 3 -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <!-- Element Plus CSS -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
-  <!-- Element Plus JS -->
   <script src="https://unpkg.com/element-plus"></script>
-  <!-- Element Plus Icons -->
   <script src="https://unpkg.com/@element-plus/icons-vue"></script>
-  <!-- Axios -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <!-- 自定义样式 -->
   <link rel="stylesheet" href="/admin/css/admin-element.css">
 </head>
 
 <body>
   <div id="app">
     <el-container style="height:100vh">
-      <!-- 侧边栏（亮色 + 可折叠） -->
+      <!-- 侧边栏 -->
       <el-aside :width="isCollapsed ? '64px' : '220px'" class="sidebar-wrap">
         <div class="sidebar-logo" :class="{ collapsed: isCollapsed }">
-          <el-icon :size="24" color="#409eff"><Promotion /></el-icon>
-          <transition name="fade">
-            <span v-if="!isCollapsed" class="logo-title">工具商店</span>
-          </transition>
+          <el-icon :size="24" color="#409eff">
+            <Promotion />
+          </el-icon>
+          <span v-if="!isCollapsed" class="logo-title">工具商店</span>
         </div>
 
         <el-menu :default-active="currentPage" @select="handleMenuSelect" :collapse="isCollapsed"
-          :collapse-transition="true" :default-openeds="['manage', 'system']" class="sidebar-menu">
+          :collapse-transition="true" :default-openeds="openMenus" class="sidebar-menu">
           <el-menu-item index="dashboard">
-            <el-icon><DataAnalysis /></el-icon>
+            <el-icon>
+              <DataAnalysis />
+            </el-icon>
             <template #title>仪表盘</template>
           </el-menu-item>
           <el-sub-menu index="manage">
             <template #title>
-              <el-icon><Grid /></el-icon>
+              <el-icon>
+                <Grid />
+              </el-icon>
               <span>业务管理</span>
             </template>
             <el-menu-item index="products">
-              <el-icon><Goods /></el-icon>
+              <el-icon>
+                <Goods />
+              </el-icon>
               <template #title>商品管理</template>
             </el-menu-item>
             <el-menu-item index="cardkeys">
-              <el-icon><Key /></el-icon>
+              <el-icon>
+                <Key />
+              </el-icon>
               <template #title>卡密管理</template>
             </el-menu-item>
             <el-menu-item index="orders">
-              <el-icon><Document /></el-icon>
+              <el-icon>
+                <Document />
+              </el-icon>
               <template #title>订单管理</template>
             </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="system">
             <template #title>
-              <el-icon><Setting /></el-icon>
+              <el-icon>
+                <Setting />
+              </el-icon>
               <span>系统管理</span>
             </template>
             <el-menu-item index="users">
-              <el-icon><User /></el-icon>
+              <el-icon>
+                <User />
+              </el-icon>
               <template #title>用户管理</template>
             </el-menu-item>
             <el-menu-item index="admins">
-              <el-icon><UserFilled /></el-icon>
+              <el-icon>
+                <UserFilled />
+              </el-icon>
               <template #title>管理员</template>
             </el-menu-item>
             <el-menu-item index="smsrecords">
-              <el-icon><Iphone /></el-icon>
+              <el-icon>
+                <Iphone />
+              </el-icon>
               <template #title>接码记录</template>
             </el-menu-item>
           </el-sub-menu>
@@ -93,19 +105,23 @@
           <div class="header-right">
             <el-dropdown trigger="click" @command="handleHeaderCommand">
               <div class="user-dropdown">
-                <el-avatar :size="32" class="user-avatar">
-                  {{ userInitial }}
-                </el-avatar>
+                <el-avatar :size="32" class="user-avatar">{{ userInitial }}</el-avatar>
                 <span class="user-name">{{ userName }}</span>
-                <el-icon><ArrowDown /></el-icon>
+                <el-icon>
+                  <ArrowDown />
+                </el-icon>
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="password">
-                    <el-icon><Lock /></el-icon> 修改密码
+                    <el-icon>
+                      <Lock />
+                    </el-icon> 修改密码
                   </el-dropdown-item>
                   <el-dropdown-item command="logout" divided>
-                    <el-icon><SwitchButton /></el-icon> 退出登录
+                    <el-icon>
+                      <SwitchButton />
+                    </el-icon> 退出登录
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -116,10 +132,10 @@
         <!-- 内容区 -->
         <el-main class="app-main" v-loading="pageLoading">
 
-          <!-- ========== 仪表盘 ========== -->
+          <!-- 仪表盘 -->
           <div v-if="currentPage === 'dashboard'">
             <el-row :gutter="16">
-                <el-col :xs="12" :sm="8" :md="4" v-for="item in statCards" :key="item.label">
+              <el-col :xs="12" :sm="8" :md="4" v-for="item in statCards" :key="item.label">
                 <el-card shadow="hover" class="stat-card" :body-style="{ padding: '20px' }">
                   <div class="stat-icon-wrap" :style="{ background: item.bg }">
                     <el-icon :size="24" :style="{ color: item.color }">
@@ -135,13 +151,17 @@
             </el-row>
           </div>
 
-          <!-- ========== 商品管理 ========== -->
+          <!-- 商品管理 -->
           <div v-if="currentPage === 'products'">
             <div class="page-toolbar">
               <el-button type="primary" @click="openProductModal()">
-                <el-icon><Plus /></el-icon> 添加商品
+                <el-icon>
+                  <Plus />
+                </el-icon> 添加商品
               </el-button>
-              <el-button @click="loadProducts"><el-icon><Refresh /></el-icon> 刷新</el-button>
+              <el-button @click="loadProducts"><el-icon>
+                  <Refresh />
+                </el-icon> 刷新</el-button>
             </div>
             <el-table :data="products" v-loading="productsLoading" stripe style="width:100%">
               <el-table-column prop="id" label="ID" width="60" sortable />
@@ -150,19 +170,19 @@
               </el-table-column>
               <el-table-column label="分类" width="100">
                 <template #default="{ row }">
-                  <el-tag size="small" :type="row.type === 'ai' ? 'primary' : row.type === 'remote' ? 'warning' : 'success'">
+                  <el-tag size="small" :type="getProductTypeTag(row.type)">
                     {{ productTypeLabel(row.type) }}
                   </el-tag>
                 </template>
               </el-table-column>
               <el-table-column label="价格" width="90" sortable>
                 <template #default="{ row }">
-                  <span style="color:#f56c6c;font-weight:600">¥{{ row.price }}</span>
+                  <span style="color:#f56c6c;font-weight:600">{{ '¥' + row.price }}</span>
                 </template>
               </el-table-column>
               <el-table-column label="库存" width="70" sortable>
                 <template #default="{ row }">
-                  <el-tag size="small" :type="(row.stock || 0) > 0 ? 'success' : 'danger'">
+                  <el-tag size="small" :type="row.stock > 0 ? 'success' : 'danger'">
                     {{ row.stock || 0 }}
                   </el-tag>
                 </template>
@@ -187,24 +207,32 @@
               <el-table-column label="操作" width="120" fixed="right">
                 <template #default="{ row }">
                   <el-button type="primary" text size="small" @click="openProductModal(row)">
-                    <el-icon><Edit /></el-icon>
+                    <el-icon>
+                      <Edit />
+                    </el-icon>
                   </el-button>
                   <el-button type="danger" text size="small" @click="handleDeleteProduct(row.id)">
-                    <el-icon><Delete /></el-icon>
+                    <el-icon>
+                      <Delete />
+                    </el-icon>
                   </el-button>
                 </template>
               </el-table-column>
             </el-table>
           </div>
 
-          <!-- ========== 卡密管理 ========== -->
+          <!-- 卡密管理 -->
           <div v-if="currentPage === 'cardkeys'">
             <div class="page-toolbar">
               <el-button type="primary" @click="openCardKeyModal()">
-                <el-icon><Plus /></el-icon> 生成卡密
+                <el-icon>
+                  <Plus />
+                </el-icon> 生成卡密
               </el-button>
               <el-button type="danger" v-if="selectedCardKeyIds.length > 0" @click="handleBatchDeleteCardKeys">
-                <el-icon><Delete /></el-icon> 批量删除 ({{ selectedCardKeyIds.length }})
+                <el-icon>
+                  <Delete />
+                </el-icon> {{ '批量删除 (' + selectedCardKeyIds.length + ')' }}
               </el-button>
               <div style="flex:1"></div>
               <el-select v-model="cardKeyFilter.productId" placeholder="全部商品" clearable style="width:150px"
@@ -217,7 +245,9 @@
                 <el-option label="已使用" value="used" />
                 <el-option label="已过期" value="expired" />
               </el-select>
-              <el-button @click="loadCardKeys"><el-icon><Refresh /></el-icon></el-button>
+              <el-button @click="loadCardKeys"><el-icon>
+                  <Refresh />
+                </el-icon></el-button>
             </div>
 
             <el-table :data="cardKeys" v-loading="cardKeysLoading" stripe style="width:100%"
@@ -225,18 +255,16 @@
               <el-table-column type="selection" width="45" />
               <el-table-column prop="id" label="ID" width="60" sortable />
               <el-table-column label="卡密" min-width="140">
-                <template #default="{ row }"><el-text tag="code" size="small">{{ row.code }}</el-text></template>
+                <template #default="{ row }"><code>{{ row.code }}</code></template>
               </el-table-column>
               <el-table-column label="CDK" min-width="140">
                 <template #default="{ row }">
-                  <el-text v-if="row.CDK" tag="code" size="small" type="success">{{ row.CDK }}</el-text>
-                  <el-text v-else type="info" size="small">-</el-text>
+                  <code v-if="row.CDK" style="color:#67c23a">{{ row.CDK }}</code>
+                  <span v-else style="color:#909399">-</span>
                 </template>
               </el-table-column>
               <el-table-column label="商品" min-width="120">
-                <template #default="{ row }">
-                  {{ getProductName(row.productId) }}
-                </template>
+                <template #default="{ row }">{{ getProductName(row.productId) }}</template>
               </el-table-column>
               <el-table-column label="状态" width="90">
                 <template #default="{ row }">
@@ -252,10 +280,14 @@
               <el-table-column label="操作" width="120" fixed="right">
                 <template #default="{ row }">
                   <el-button type="primary" text size="small" @click="openEditCDKModal(row)">
-                    <el-icon><Edit /></el-icon>
+                    <el-icon>
+                      <Edit />
+                    </el-icon>
                   </el-button>
                   <el-button type="danger" text size="small" @click="handleDeleteCardKey(row.id)">
-                    <el-icon><Delete /></el-icon>
+                    <el-icon>
+                      <Delete />
+                    </el-icon>
                   </el-button>
                 </template>
               </el-table-column>
@@ -268,7 +300,7 @@
             </div>
           </div>
 
-          <!-- ========== 订单管理 ========== -->
+          <!-- 订单管理 -->
           <div v-if="currentPage === 'orders'">
             <div class="page-toolbar">
               <div style="flex:1"></div>
@@ -278,18 +310,18 @@
                 <el-option label="已完成" value="completed" />
                 <el-option label="失败" value="failed" />
               </el-select>
-              <el-button @click="loadOrders"><el-icon><Refresh /></el-icon></el-button>
+              <el-button @click="loadOrders"><el-icon>
+                  <Refresh />
+                </el-icon></el-button>
             </div>
 
             <el-table :data="orders" v-loading="ordersLoading" stripe style="width:100%">
               <el-table-column prop="id" label="ID" width="60" sortable />
               <el-table-column label="订单号" width="180">
-                <template #default="{ row }"><el-text tag="code" size="small">{{ row.orderNo }}</el-text></template>
+                <template #default="{ row }"><code>{{ row.orderNo }}</code></template>
               </el-table-column>
               <el-table-column label="商品" min-width="120">
-                <template #default="{ row }">
-                  {{ getProductName(row.productId) }}
-                </template>
+                <template #default="{ row }">{{ getProductName(row.productId) }}</template>
               </el-table-column>
               <el-table-column prop="contact" label="联系方式" width="140" />
               <el-table-column label="手机号" width="120">
@@ -309,7 +341,9 @@
               <el-table-column label="操作" width="70" fixed="right">
                 <template #default="{ row }">
                   <el-button type="danger" text size="small" @click="handleDeleteOrder(row.id)">
-                    <el-icon><Delete /></el-icon>
+                    <el-icon>
+                      <Delete />
+                    </el-icon>
                   </el-button>
                 </template>
               </el-table-column>
@@ -322,11 +356,13 @@
             </div>
           </div>
 
-          <!-- ========== 用户管理 ========== -->
+          <!-- 用户管理 -->
           <div v-if="currentPage === 'users'">
             <div class="page-toolbar">
               <div style="flex:1"></div>
-              <el-button @click="loadUsers"><el-icon><Refresh /></el-icon> 刷新</el-button>
+              <el-button @click="loadUsers"><el-icon>
+                  <Refresh />
+                </el-icon> 刷新</el-button>
             </div>
             <el-table :data="users" v-loading="usersLoading" stripe style="width:100%">
               <el-table-column prop="id" label="ID" width="60" sortable />
@@ -353,20 +389,26 @@
                     {{ row.isActive ? '禁用' : '启用' }}
                   </el-button>
                   <el-button type="danger" text size="small" @click="handleDeleteUser(row.id)">
-                    <el-icon><Delete /></el-icon>
+                    <el-icon>
+                      <Delete />
+                    </el-icon>
                   </el-button>
                 </template>
               </el-table-column>
             </el-table>
           </div>
 
-          <!-- ========== 管理员管理 ========== -->
+          <!-- 管理员管理 -->
           <div v-if="currentPage === 'admins'">
             <div class="page-toolbar">
               <el-button type="primary" @click="openAdminModal()">
-                <el-icon><Plus /></el-icon> 添加管理员
+                <el-icon>
+                  <Plus />
+                </el-icon> 添加管理员
               </el-button>
-              <el-button @click="loadAdmins"><el-icon><Refresh /></el-icon> 刷新</el-button>
+              <el-button @click="loadAdmins"><el-icon>
+                  <Refresh />
+                </el-icon> 刷新</el-button>
             </div>
             <el-table :data="admins" v-loading="adminsLoading" stripe style="width:100%">
               <el-table-column prop="id" label="ID" width="60" sortable />
@@ -397,14 +439,16 @@
                 <template #default="{ row }">
                   <el-button type="danger" text size="small" @click="handleDeleteAdmin(row.id, row.role)"
                     :disabled="row.role === 'super'">
-                    <el-icon><Delete /></el-icon>
+                    <el-icon>
+                      <Delete />
+                    </el-icon>
                   </el-button>
                 </template>
               </el-table-column>
             </el-table>
           </div>
 
-          <!-- ========== 接码记录 ========== -->
+          <!-- 接码记录 -->
           <div v-if="currentPage === 'smsrecords'">
             <div class="page-toolbar">
               <div style="flex:1"></div>
@@ -417,16 +461,19 @@
               </el-select>
               <el-input v-model="smsRecordFilter.phone" placeholder="手机号搜索" style="width:160px" clearable
                 @keyup.enter="loadSmsRecords">
-                <template #prefix><el-icon><Search /></el-icon></template>
               </el-input>
-              <el-button type="primary" @click="loadSmsRecords"><el-icon><Search /></el-icon></el-button>
-              <el-button @click="loadSmsRecords"><el-icon><Refresh /></el-icon></el-button>
+              <el-button type="primary" @click="loadSmsRecords"><el-icon>
+                  <Search />
+                </el-icon></el-button>
+              <el-button @click="loadSmsRecords"><el-icon>
+                  <Refresh />
+                </el-icon></el-button>
             </div>
 
             <el-table :data="smsRecords" v-loading="smsRecordLoading" stripe style="width:100%">
               <el-table-column prop="id" label="ID" width="60" sortable />
               <el-table-column label="手机号" width="130">
-                <template #default="{ row }"><el-text tag="code">{{ row.phone }}</el-text></template>
+                <template #default="{ row }"><code>{{ row.phone }}</code></template>
               </el-table-column>
               <el-table-column label="关键词" width="100">
                 <template #default="{ row }">{{ row.keyword || '-' }}</template>
@@ -436,8 +483,8 @@
               </el-table-column>
               <el-table-column label="验证码" width="100">
                 <template #default="{ row }">
-                  <el-text v-if="row.verifyCode" tag="code" type="success">{{ row.verifyCode }}</el-text>
-                  <el-text v-else type="info">-</el-text>
+                  <code v-if="row.verifyCode" style="color:#67c23a">{{ row.verifyCode }}</code>
+                  <span v-else style="color:#909399">-</span>
                 </template>
               </el-table-column>
               <el-table-column label="状态" width="90">
@@ -446,7 +493,8 @@
                 </template>
               </el-table-column>
               <el-table-column label="IP" width="130">
-                <template #default="{ row }"><el-text size="small" type="info">{{ row.ip || '-' }}</el-text></template>
+                <template #default="{ row }"><span style="color:#909399;font-size:12px">{{ row.ip || '-'
+                    }}</span></template>
               </el-table-column>
               <el-table-column label="创建时间" width="160" sortable>
                 <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
@@ -467,7 +515,7 @@
       </el-container>
     </el-container>
 
-    <!-- ========== 商品编辑弹窗 ========== -->
+    <!-- 商品编辑弹窗 -->
     <el-dialog v-model="productModalVisible" :title="editingProduct.id ? '编辑商品' : '添加商品'" width="520px"
       destroy-on-close>
       <el-form label-width="100px" label-position="right">
@@ -475,8 +523,7 @@
           <el-input v-model="editingProduct.name" placeholder="请输入商品名称" />
         </el-form-item>
         <el-form-item label="价格" required>
-          <el-input-number v-model="editingProduct.price" :min="0" :precision="2" :step="0.01"
-            placeholder="请输入价格" style="width:100%" />
+          <el-input-number v-model="editingProduct.price" :min="0" :precision="2" :step="0.01" style="width:100%" />
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="editingProduct.description" placeholder="商品描述（可选）" />
@@ -498,12 +545,12 @@
         <el-form-item label="质保时间">
           <el-input v-model="editingProduct.warranty" placeholder="例如：30天、永久、1个月（可选）" />
         </el-form-item>
-        <el-form-item label="需要接码登录">
-          <el-switch v-model="editingProduct.isCode" :active-value="1" :inactive-value="0"
-            active-text="是" inactive-text="否" />
+        <el-form-item label="需要接码">
+          <el-switch v-model="editingProduct.isCode" :active-value="1" :inactive-value="0" active-text="是"
+            inactive-text="否" />
         </el-form-item>
         <el-form-item label="接码关键词" v-if="editingProduct.isCode">
-          <el-input v-model="editingProduct.smKeyWord" placeholder="接码平台关键词（isCode=1时必填）" />
+          <el-input v-model="editingProduct.smKeyWord" placeholder="接码平台关键词" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -512,12 +559,12 @@
       </template>
     </el-dialog>
 
-    <!-- ========== 生成卡密弹窗 ========== -->
+    <!-- 生成卡密弹窗 -->
     <el-dialog v-model="cardKeyModalVisible" title="添加卡密" width="560px" destroy-on-close>
       <el-form label-width="100px" label-position="right">
         <el-form-item label="选择商品" required>
           <el-select v-model="cardKeyForm.productId" placeholder="请选择商品" style="width:100%">
-            <el-option v-for="p in products" :key="p.id" :label="p.name + ' (ID:' + p.id + ')'" :value="p.id" />
+            <el-option v-for="p in products" :key="p.id" :label="getProductLabel(p)" :value="p.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="录入方式">
@@ -526,13 +573,12 @@
             <el-radio-button label="manual">手动录入</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <!-- 自动生成模式 -->
         <template v-if="cardKeyForm.mode === 'auto'">
           <el-form-item label="卡密前缀">
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-              <el-button v-for="(label, key) in cardPrefixes" :key="key" size="small"
-                :type="cardKeyForm.prefix === key ? 'primary' : 'default'" @click="cardKeyForm.prefix = key">
-                {{ label }} ({{ key }})
+              <el-button v-for="(item, index) in prefixList" :key="index" size="small"
+                :type="cardKeyForm.prefix === item.key ? 'primary' : 'default'" @click="cardKeyForm.prefix = item.key">
+                {{ item.label + ' (' + item.key + ')' }}
               </el-button>
             </div>
             <el-input v-model="cardKeyForm.prefix" placeholder="或自定义前缀" />
@@ -542,7 +588,6 @@
             <el-input-number v-model="cardKeyForm.count" :min="1" :max="100" style="width:100%" />
           </el-form-item>
         </template>
-        <!-- 手动录入模式 -->
         <template v-if="cardKeyForm.mode === 'manual'">
           <el-form-item label="卡密列表">
             <el-input type="textarea" v-model="cardKeyForm.manualKeys" :autosize="{ minRows: 4, maxRows: 10 }"
@@ -562,7 +607,7 @@
       </template>
     </el-dialog>
 
-    <!-- ========== 编辑CDK弹窗 ========== -->
+    <!-- 编辑CDK弹窗 -->
     <el-dialog v-model="editCDKModalVisible" title="编辑 CDK" width="420px" destroy-on-close>
       <el-form label-width="100px" label-position="right">
         <el-form-item label="卡密">
@@ -585,7 +630,7 @@
       </template>
     </el-dialog>
 
-    <!-- ========== 添加管理员弹窗 ========== -->
+    <!-- 添加管理员弹窗 -->
     <el-dialog v-model="adminModalVisible" title="添加管理员" width="420px" destroy-on-close>
       <el-form label-width="80px" label-position="right">
         <el-form-item label="用户名" required>
@@ -610,7 +655,7 @@
       </template>
     </el-dialog>
 
-    <!-- ========== 修改密码弹窗 ========== -->
+    <!-- 修改密码弹窗 -->
     <el-dialog v-model="showPasswordModal" title="修改密码" width="420px" destroy-on-close>
       <el-form label-width="100px" label-position="right">
         <el-form-item label="原密码" required>
