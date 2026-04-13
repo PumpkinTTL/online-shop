@@ -9,6 +9,7 @@ const app = createApp({
     const adminInfo = ref(AdminAPI.getAdminInfo());
     const saving = ref(false);
     const pageLoading = ref(true);
+    const isCollapsed = ref(false);
 
     // ===== Element Plus 消息提示 =====
     const ElMsg = {
@@ -41,6 +42,32 @@ const app = createApp({
       return map[currentPage.value] || '仪表盘';
     });
 
+    // ===== 用户信息展示 =====
+    const userName = computed(() => {
+      const info = adminInfo.value;
+      return (info && info.nickname) || (info && info.username) || '管理员';
+    });
+
+    const userInitial = computed(() => {
+      const name = userName.value;
+      return name.charAt(0).toUpperCase();
+    });
+
+    // ===== 商品名查找 =====
+    const getProductName = (productId) => {
+      const p = products.value.find(item => item.id === productId);
+      return p ? p.name : productId;
+    };
+
+    // ===== 顶部下拉菜单 =====
+    const handleHeaderCommand = (command) => {
+      if (command === 'password') {
+        showPasswordModal.value = true;
+      } else if (command === 'logout') {
+        logout();
+      }
+    };
+
     // ===== 菜单切换 =====
     const handleMenuSelect = (index) => {
       currentPage.value = index;
@@ -49,12 +76,12 @@ const app = createApp({
     // ===== 仪表盘 =====
     const stats = ref({});
     const statCards = computed(() => [
-      { label: '商品总数', value: stats.value.productCount || 0, icon: 'fa-solid fa-box', bg: '#dbeafe', color: '#3b82f6' },
-      { label: '可用卡密', value: stats.value.cardKeyUnused || 0, icon: 'fa-solid fa-key', bg: '#dcfce7', color: '#22c55e' },
-      { label: '已用卡密', value: stats.value.cardKeyUsed || 0, icon: 'fa-solid fa-key', bg: '#f3f4f6', color: '#6b7280' },
-      { label: '用户总数', value: stats.value.userCount || 0, icon: 'fa-solid fa-users', bg: '#ffedd5', color: '#f97316' },
-      { label: '订单总数', value: stats.value.orderCount || 0, icon: 'fa-solid fa-receipt', bg: '#f3e8ff', color: '#a855f7' },
-      { label: '近7天订单', value: stats.value.recentOrders || 0, icon: 'fa-solid fa-chart-line', bg: '#fee2e2', color: '#ef4444' },
+      { label: '商品总数', value: stats.value.productCount || 0, iconEl: 'Goods', bg: '#dbeafe', color: '#3b82f6' },
+      { label: '可用卡密', value: stats.value.cardKeyUnused || 0, iconEl: 'Key', bg: '#dcfce7', color: '#22c55e' },
+      { label: '已用卡密', value: stats.value.cardKeyUsed || 0, iconEl: 'Key', bg: '#f3f4f6', color: '#6b7280' },
+      { label: '用户总数', value: stats.value.userCount || 0, iconEl: 'User', bg: '#ffedd5', color: '#f97316' },
+      { label: '订单总数', value: stats.value.orderCount || 0, iconEl: 'Document', bg: '#f3e8ff', color: '#a855f7' },
+      { label: '近7天订单', value: stats.value.recentOrders || 0, iconEl: 'TrendCharts', bg: '#fee2e2', color: '#ef4444' },
     ]);
 
     const loadStats = async () => {
@@ -465,8 +492,8 @@ const app = createApp({
     });
 
     return {
-      currentPage, adminInfo, saving, pageLoading, pageTitle, handleMenuSelect, logout,
-      formatDate,
+      currentPage, adminInfo, saving, pageLoading, isCollapsed, pageTitle, handleMenuSelect, logout,
+      formatDate, userName, userInitial, getProductName, handleHeaderCommand,
       // 仪表盘
       stats, statCards,
       // 商品
