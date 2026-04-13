@@ -153,11 +153,22 @@ class AdminService {
   // ==================== 商品管理 ====================
 
   async getProducts() {
-    return dataSource.getRepository(Product).find({ order: { id: 'DESC' } });
+    const products = await dataSource.getRepository(Product).find({ order: { id: 'DESC' } });
+    // 附加库存（卡密动态计算）
+    const cardKeyRepo = dataSource.getRepository(CardKey);
+    for (const p of products) {
+      p.stock = await cardKeyRepo.count({ where: { productId: p.id, status: 'unused' } });
+    }
+    return products;
   }
 
   async getProduct(id) {
-    return dataSource.getRepository(Product).findOne({ where: { id } });
+    const product = await dataSource.getRepository(Product).findOne({ where: { id } });
+    if (product) {
+      const cardKeyRepo = dataSource.getRepository(CardKey);
+      product.stock = await cardKeyRepo.count({ where: { productId: product.id, status: 'unused' } });
+    }
+    return product;
   }
 
   async createProduct(data) {

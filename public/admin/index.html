@@ -161,7 +161,7 @@
                       <td><strong>{{ p.name }}</strong></td>
                       <td><span class="tag tag-blue">{{ productTypeLabel(p.type) }}</span></td>
                       <td>¥{{ p.price }}</td>
-                      <td>{{ p.stock }} <span style="font-size:10px;color:#999">卡密</span></td>
+                      <td>{{ p.stock ?? 0 }}</td>
                       <td>{{ p.sales }}</td>
                       <td>{{ p.warranty || '-' }}</td>
                       <td>{{ formatDate(p.createdAt) }}</td>
