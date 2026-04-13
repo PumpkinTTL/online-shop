@@ -786,11 +786,7 @@
         // ===== 通用确认弹窗 =====
         const confirmAction = (message) => {
           return new Promise((resolve) => {
-            if (window.confirm(message)) {
-              resolve(true);
-            } else {
-              resolve(false);
-            }
+            resolve(window.confirm(message));
           });
         };
 
@@ -1011,13 +1007,15 @@
           if (selectedCardKeyIds.value.length === 0) return;
           if (!await confirmAction(`确定要删除选中的 ${selectedCardKeyIds.value.length} 条卡密吗？此操作不可恢复！`)) return;
           try {
-            const res = await axios.post('/api/admin/card-keys/batch-delete', { ids: selectedCardKeyIds.value }, {
-              headers: { Authorization: `Bearer ${token.value}` }
-            });
-            AdminToast.success(res.data.message);
+            const res = await AdminAPI.batchDeleteCardKeys(selectedCardKeyIds.value);
+            AdminToast.success(res.message || '删除成功');
             selectedCardKeyIds.value = [];
             loadCardKeys();
+            loadStats();
           } catch (e) {
+            AdminToast.error(e.message || '批量删除失败');
+          }
+        };
             AdminToast.error(e.response?.data?.error || '批量删除失败');
           }
         };

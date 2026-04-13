@@ -126,6 +126,9 @@ const AdminAPI = {
   deleteCardKey(id) {
     return this.request('DELETE', `/card-keys/${id}`);
   },
+  batchDeleteCardKeys(ids) {
+    return this.request('POST', '/card-keys/batch-delete', { ids });
+  },
 
   // 订单
   getOrders(params) {
