@@ -166,7 +166,8 @@
                       <td>{{ p.stock ?? 0 }}</td>
                       <td>{{ p.sales }}</td>
                       <td>{{ p.warranty || '-' }}</td>
-                      <td><span :class="p.isCode ? 'tag tag-green' : 'tag tag-gray'">{{ p.isCode ? '需要' : '否' }}</span></td>
+                      <td><span :class="p.isCode ? 'tag tag-green' : 'tag tag-gray'">{{ p.isCode ? '需要' : '否' }}</span>
+                      </td>
                       <td>{{ p.smKeyWord || '-' }}</td>
                       <td>{{ formatDate(p.createdAt) }}</td>
                       <td>
@@ -228,11 +229,15 @@
                   <div class="form-group">
                     <label>需要接码登录</label>
                     <div style="display:flex;align-items:center;gap:10px;">
-                      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:400;font-size:13px;">
-                        <input type="radio" v-model="editingProduct.isCode" :value="1" style="accent-color:var(--primary)"> 是
+                      <label
+                        style="display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:400;font-size:13px;">
+                        <input type="radio" v-model="editingProduct.isCode" :value="1"
+                          style="accent-color:var(--primary)"> 是
                       </label>
-                      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:400;font-size:13px;">
-                        <input type="radio" v-model="editingProduct.isCode" :value="0" style="accent-color:var(--primary)"> 否
+                      <label
+                        style="display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:400;font-size:13px;">
+                        <input type="radio" v-model="editingProduct.isCode" :value="0"
+                          style="accent-color:var(--primary)"> 否
                       </label>
                       <span style="font-size:11px;color:#999;">开启后购买成功需用号码接码登录</span>
                     </div>
@@ -288,7 +293,9 @@
                 <table>
                   <thead>
                     <tr>
-                      <th style="width:36px;"><input type="checkbox" :checked="selectedCardKeyIds.length === cardKeys.length && cardKeys.length > 0" @change="toggleSelectAllCardKeys" style="accent-color:var(--primary)"></th>
+                      <th style="width:36px;"><input type="checkbox"
+                          :checked="selectedCardKeyIds.length === cardKeys.length && cardKeys.length > 0"
+                          @change="toggleSelectAllCardKeys" style="accent-color:var(--primary)"></th>
                       <th>ID</th>
                       <th>卡密</th>
                       <th>CDK</th>
@@ -301,7 +308,8 @@
                   </thead>
                   <tbody>
                     <tr v-for="ck in cardKeys" :key="ck.id">
-                      <td><input type="checkbox" :value="ck.id" v-model="selectedCardKeyIds" style="accent-color:var(--primary)"></td>
+                      <td><input type="checkbox" :value="ck.id" v-model="selectedCardKeyIds"
+                          style="accent-color:var(--primary)"></td>
                       <td>{{ ck.id }}</td>
                       <td><code style="font-size:12px;">{{ ck.code }}</code></td>
                       <td><code style="font-size:12px;color:#22c55e;">{{ ck.CDK || '-' }}</code></td>
@@ -1014,231 +1022,228 @@
             loadStats();
           } catch (e) {
             AdminToast.error(e.message || '批量删除失败');
-          }
-        };
-            AdminToast.error(e.response?.data?.error || '批量删除失败');
-          }
+                    }
         };
 
         // ===== 订单管理 =====
-        const orders = ref([]);
-        const ordersLoading = ref(false);
-        const orderTotal = ref(0);
-        const orderFilter = ref({ status: '', page: 1, pageSize: 20 });
+    const orders = ref([]);
+    const ordersLoading = ref(false);
+    const orderTotal = ref(0);
+    const orderFilter = ref({ status: '', page: 1, pageSize: 20 });
 
-        const loadOrders = async () => {
-          ordersLoading.value = true;
-          try {
-            const result = await AdminAPI.getOrders(orderFilter.value);
-            orders.value = result.items;
-            orderTotal.value = result.total;
-          } catch (e) {
-            AdminToast.error('加载订单失败');
-          } finally {
-            ordersLoading.value = false;
-          }
-        };
+    const loadOrders = async () => {
+      ordersLoading.value = true;
+      try {
+        const result = await AdminAPI.getOrders(orderFilter.value);
+        orders.value = result.items;
+        orderTotal.value = result.total;
+      } catch (e) {
+        AdminToast.error('加载订单失败');
+      } finally {
+        ordersLoading.value = false;
+      }
+    };
 
-        const handleDeleteOrder = async (id) => {
-          if (!await confirmAction('确定要删除该订单吗？')) return;
-          try {
-            await AdminAPI.deleteOrder(id);
-            AdminToast.success('删除成功');
-            loadOrders();
-            loadStats();
-          } catch (e) {
-            AdminToast.error(e.message);
-          }
-        };
+    const handleDeleteOrder = async (id) => {
+      if (!await confirmAction('确定要删除该订单吗？')) return;
+      try {
+        await AdminAPI.deleteOrder(id);
+        AdminToast.success('删除成功');
+        loadOrders();
+        loadStats();
+      } catch (e) {
+        AdminToast.error(e.message);
+      }
+    };
 
-        // ===== 用户管理 =====
-        const users = ref([]);
-        const usersLoading = ref(false);
+    // ===== 用户管理 =====
+    const users = ref([]);
+    const usersLoading = ref(false);
 
-        const loadUsers = async () => {
-          usersLoading.value = true;
-          try {
-            users.value = await AdminAPI.getUsers();
-          } catch (e) {
-            AdminToast.error('加载用户失败');
-          } finally {
-            usersLoading.value = false;
-          }
-        };
+    const loadUsers = async () => {
+      usersLoading.value = true;
+      try {
+        users.value = await AdminAPI.getUsers();
+      } catch (e) {
+        AdminToast.error('加载用户失败');
+      } finally {
+        usersLoading.value = false;
+      }
+    };
 
-        const handleToggleUser = async (id) => {
-          try {
-            await AdminAPI.toggleUserActive(id);
-            AdminToast.success('操作成功');
-            loadUsers();
-          } catch (e) {
-            AdminToast.error(e.message);
-          }
-        };
+    const handleToggleUser = async (id) => {
+      try {
+        await AdminAPI.toggleUserActive(id);
+        AdminToast.success('操作成功');
+        loadUsers();
+      } catch (e) {
+        AdminToast.error(e.message);
+      }
+    };
 
-        const handleDeleteUser = async (id) => {
-          if (!await confirmAction('确定要删除该用户吗？此操作不可恢复！')) return;
-          try {
-            await AdminAPI.deleteUser(id);
-            AdminToast.success('删除成功');
-            loadUsers();
-            loadStats();
-          } catch (e) {
-            AdminToast.error(e.message);
-          }
-        };
+    const handleDeleteUser = async (id) => {
+      if (!await confirmAction('确定要删除该用户吗？此操作不可恢复！')) return;
+      try {
+        await AdminAPI.deleteUser(id);
+        AdminToast.success('删除成功');
+        loadUsers();
+        loadStats();
+      } catch (e) {
+        AdminToast.error(e.message);
+      }
+    };
 
-        // ===== 管理员管理 =====
-        const admins = ref([]);
-        const adminsLoading = ref(false);
-        const adminModalVisible = ref(false);
-        const adminForm = ref({ username: '', password: '', nickname: '', role: 'admin' });
+    // ===== 管理员管理 =====
+    const admins = ref([]);
+    const adminsLoading = ref(false);
+    const adminModalVisible = ref(false);
+    const adminForm = ref({ username: '', password: '', nickname: '', role: 'admin' });
 
-        const loadAdmins = async () => {
-          adminsLoading.value = true;
-          try {
-            admins.value = await AdminAPI.getAdmins();
-          } catch (e) {
-            AdminToast.error('加载管理员列表失败');
-          } finally {
-            adminsLoading.value = false;
-          }
-        };
+    const loadAdmins = async () => {
+      adminsLoading.value = true;
+      try {
+        admins.value = await AdminAPI.getAdmins();
+      } catch (e) {
+        AdminToast.error('加载管理员列表失败');
+      } finally {
+        adminsLoading.value = false;
+      }
+    };
 
-        const openAdminModal = () => {
-          adminForm.value = { username: '', password: '', nickname: '', role: 'admin' };
-          adminModalVisible.value = true;
-        };
+    const openAdminModal = () => {
+      adminForm.value = { username: '', password: '', nickname: '', role: 'admin' };
+      adminModalVisible.value = true;
+    };
 
-        const handleCreateAdmin = async () => {
-          const f = adminForm.value;
-          if (!f.username || f.username.length < 3) return AdminToast.warning('用户名至少3位');
-          if (!f.password || f.password.length < 6) return AdminToast.warning('密码至少6位');
+    const handleCreateAdmin = async () => {
+      const f = adminForm.value;
+      if (!f.username || f.username.length < 3) return AdminToast.warning('用户名至少3位');
+      if (!f.password || f.password.length < 6) return AdminToast.warning('密码至少6位');
 
-          saving.value = true;
-          try {
-            await AdminAPI.createAdmin(f);
-            AdminToast.success('创建成功');
-            adminModalVisible.value = false;
-            loadAdmins();
-          } catch (e) {
-            AdminToast.error(e.message);
-          } finally {
-            saving.value = false;
-          }
-        };
+      saving.value = true;
+      try {
+        await AdminAPI.createAdmin(f);
+        AdminToast.success('创建成功');
+        adminModalVisible.value = false;
+        loadAdmins();
+      } catch (e) {
+        AdminToast.error(e.message);
+      } finally {
+        saving.value = false;
+      }
+    };
 
-        const handleDeleteAdmin = async (id, role) => {
-          if (role === 'super') return AdminToast.warning('不能删除超级管理员');
-          if (!await confirmAction('确定要删除该管理员吗？')) return;
-          try {
-            await AdminAPI.deleteAdmin(id);
-            AdminToast.success('删除成功');
-            loadAdmins();
-          } catch (e) {
-            AdminToast.error(e.message);
-          }
-        };
+    const handleDeleteAdmin = async (id, role) => {
+      if (role === 'super') return AdminToast.warning('不能删除超级管理员');
+      if (!await confirmAction('确定要删除该管理员吗？')) return;
+      try {
+        await AdminAPI.deleteAdmin(id);
+        AdminToast.success('删除成功');
+        loadAdmins();
+      } catch (e) {
+        AdminToast.error(e.message);
+      }
+    };
 
-        // ===== 接码记录管理 =====
-        const smsRecords = ref([]);
-        const smsRecordTotal = ref(0);
-        const smsRecordLoading = ref(false);
-        const smsRecordFilter = ref({ status: '', phone: '', keyword: '', page: 1, pageSize: 20 });
+    // ===== 接码记录管理 =====
+    const smsRecords = ref([]);
+    const smsRecordTotal = ref(0);
+    const smsRecordLoading = ref(false);
+    const smsRecordFilter = ref({ status: '', phone: '', keyword: '', page: 1, pageSize: 20 });
 
-        const loadSmsRecords = async () => {
-          smsRecordLoading.value = true;
-          try {
-            const result = await AdminAPI.getSmsRecords(smsRecordFilter.value);
-            smsRecords.value = result.items;
-            smsRecordTotal.value = result.total;
-          } catch (e) {
-            AdminToast.error('加载接码记录失败');
-          } finally {
-            smsRecordLoading.value = false;
-          }
-        };
+    const loadSmsRecords = async () => {
+      smsRecordLoading.value = true;
+      try {
+        const result = await AdminAPI.getSmsRecords(smsRecordFilter.value);
+        smsRecords.value = result.items;
+        smsRecordTotal.value = result.total;
+      } catch (e) {
+        AdminToast.error('加载接码记录失败');
+      } finally {
+        smsRecordLoading.value = false;
+      }
+    };
 
-        // ===== 修改密码 =====
-        const showPasswordModal = ref(false);
-        const passwordForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    // ===== 修改密码 =====
+    const showPasswordModal = ref(false);
+    const passwordForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
 
-        const handleChangePassword = async () => {
-          const f = passwordForm.value;
-          if (!f.oldPassword) return AdminToast.warning('请输入原密码');
-          if (!f.newPassword || f.newPassword.length < 6) return AdminToast.warning('新密码至少6位');
-          if (f.newPassword !== f.confirmPassword) return AdminToast.warning('两次密码不一致');
+    const handleChangePassword = async () => {
+      const f = passwordForm.value;
+      if (!f.oldPassword) return AdminToast.warning('请输入原密码');
+      if (!f.newPassword || f.newPassword.length < 6) return AdminToast.warning('新密码至少6位');
+      if (f.newPassword !== f.confirmPassword) return AdminToast.warning('两次密码不一致');
 
-          saving.value = true;
-          try {
-            await AdminAPI.changePassword(f.oldPassword, f.newPassword);
-            AdminToast.success('密码修改成功，请重新登录');
-            showPasswordModal.value = false;
-            setTimeout(() => logout(), 1000);
-          } catch (e) {
-            AdminToast.error(e.message);
-          } finally {
-            saving.value = false;
-          }
-        };
+      saving.value = true;
+      try {
+        await AdminAPI.changePassword(f.oldPassword, f.newPassword);
+        AdminToast.success('密码修改成功，请重新登录');
+        showPasswordModal.value = false;
+        setTimeout(() => logout(), 1000);
+      } catch (e) {
+        AdminToast.error(e.message);
+      } finally {
+        saving.value = false;
+      }
+    };
 
-        // ===== 通用 =====
-        const logout = () => {
-          AdminAuth.logout();
-        };
+    // ===== 通用 =====
+    const logout = () => {
+      AdminAuth.logout();
+    };
 
-        // 页面切换时加载数据
-        watch(currentPage, (page) => {
-          if (page === 'dashboard') loadStats();
-          else if (page === 'products') loadProducts();
-          else if (page === 'cardkeys') { loadProducts(); loadCardKeys(); loadCardPrefixes(); }
-          else if (page === 'orders') loadOrders();
-          else if (page === 'users') loadUsers();
-          else if (page === 'admins') loadAdmins();
-          else if (page === 'smsrecords') loadSmsRecords();
-        });
+    // 页面切换时加载数据
+    watch(currentPage, (page) => {
+      if (page === 'dashboard') loadStats();
+      else if (page === 'products') loadProducts();
+      else if (page === 'cardkeys') { loadProducts(); loadCardKeys(); loadCardPrefixes(); }
+      else if (page === 'orders') loadOrders();
+      else if (page === 'users') loadUsers();
+      else if (page === 'admins') loadAdmins();
+      else if (page === 'smsrecords') loadSmsRecords();
+    });
 
-        onMounted(async () => {
-          const ok = await AdminAuth.check();
-          if (!ok) return;
-          adminInfo.value = AdminAPI.getAdminInfo();
-          await loadStats();
-          pageLoading.value = false;
-        });
+    onMounted(async () => {
+      const ok = await AdminAuth.check();
+      if (!ok) return;
+      adminInfo.value = AdminAPI.getAdminInfo();
+      await loadStats();
+      pageLoading.value = false;
+    });
 
-        // 商品分类标签
-        const productTypeLabel = (type) => {
-          const map = { ai: 'AI账号', remote: '远程服务', sms: '接码服务' };
-          return map[type] || type || '未分类';
-        };
+    // 商品分类标签
+    const productTypeLabel = (type) => {
+      const map = { ai: 'AI账号', remote: '远程服务', sms: '接码服务' };
+      return map[type] || type || '未分类';
+    };
 
-        return {
-          currentPage, adminInfo, saving, pageLoading, pageTitle,
-          formatDate, statusTag, productTypeLabel, logout,
-          // 仪表盘 
-          stats,
-          // 商品
-          products, productsLoading, productModalVisible, editingProduct,
-          loadProducts, openProductModal, handleSaveProduct, handleDeleteProduct,
-          // 卡密
-          cardKeys, cardKeysLoading, cardKeyTotal, cardKeyFilter, cardKeyModalVisible, cardKeyForm,
-          cardPrefixes, manualKeyCount, editCDKModalVisible, editingCDK,
-          loadCardKeys, openCardKeyModal, openEditCDKModal,
-          handleGenerateCardKeys, handleSaveCDK, handleDeleteCardKey,
-          selectedCardKeyIds, toggleSelectAllCardKeys, handleBatchDeleteCardKeys,
-          // 订单
-          orders, ordersLoading, orderTotal, orderFilter,
-          loadOrders, handleDeleteOrder,
-          // 用户
-          users, usersLoading, loadUsers, handleToggleUser, handleDeleteUser,
-          // 管理员
-          admins, adminsLoading, adminModalVisible, adminForm,
-          loadAdmins, openAdminModal, handleCreateAdmin, handleDeleteAdmin,
-          // 修改密码
-          showPasswordModal, passwordForm, handleChangePassword,
-          // 接码记录
-          smsRecords, smsRecordTotal, smsRecordLoading, smsRecordFilter, loadSmsRecords,
-        };
+    return {
+      currentPage, adminInfo, saving, pageLoading, pageTitle,
+      formatDate, statusTag, productTypeLabel, logout,
+      // 仪表盘 
+      stats,
+      // 商品
+      products, productsLoading, productModalVisible, editingProduct,
+      loadProducts, openProductModal, handleSaveProduct, handleDeleteProduct,
+      // 卡密
+      cardKeys, cardKeysLoading, cardKeyTotal, cardKeyFilter, cardKeyModalVisible, cardKeyForm,
+      cardPrefixes, manualKeyCount, editCDKModalVisible, editingCDK,
+      loadCardKeys, openCardKeyModal, openEditCDKModal,
+      handleGenerateCardKeys, handleSaveCDK, handleDeleteCardKey,
+      selectedCardKeyIds, toggleSelectAllCardKeys, handleBatchDeleteCardKeys,
+      // 订单
+      orders, ordersLoading, orderTotal, orderFilter,
+      loadOrders, handleDeleteOrder,
+      // 用户
+      users, usersLoading, loadUsers, handleToggleUser, handleDeleteUser,
+      // 管理员
+      admins, adminsLoading, adminModalVisible, adminForm,
+      loadAdmins, openAdminModal, handleCreateAdmin, handleDeleteAdmin,
+      // 修改密码
+      showPasswordModal, passwordForm, handleChangePassword,
+      // 接码记录
+      smsRecords, smsRecordTotal, smsRecordLoading, smsRecordFilter, loadSmsRecords,
+    };
       }
     }).mount('#app');
   </script>
