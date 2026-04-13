@@ -1010,11 +1010,6 @@
             AdminToast.error(e.response?.data?.error || '批量删除失败');
           }
         };
-            loadStats();
-          } catch (e) {
-            AdminToast.error(e.message);
-          }
-        };
 
         // ===== 订单管理 =====
         const orders = ref([]);
