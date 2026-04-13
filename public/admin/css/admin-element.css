@@ -1,0 +1,196 @@
+/* Element Plus 版后台管理 - 自定义样式 */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f3f4f6;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+/* ===== 侧边栏 ===== */
+.sidebar {
+  background: #1f2937 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-header .logo-icon {
+  width: 36px;
+  height: 36px;
+  background: #3b82f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.sidebar-header .logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+}
+
+.sidebar-header .logo-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-menu {
+  flex: 1;
+  border-right: none !important;
+  overflow-y: auto;
+}
+
+.sidebar-menu .el-menu-item-group__title {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-top: 12px !important;
+}
+
+.sidebar-menu .el-menu-item {
+  border-radius: 6px;
+  margin: 2px 8px;
+  height: 40px;
+  line-height: 40px;
+}
+
+.sidebar-menu .el-menu-item.is-active {
+  background-color: #3b82f6 !important;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sidebar-user .avatar-icon {
+  background: #3b82f6;
+}
+
+.sidebar-user .name {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.sidebar-user .role {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ===== 头部 ===== */
+.content-header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px !important;
+}
+
+.content-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* ===== 主内容区 ===== */
+.content-main {
+  background: #f3f4f6;
+  padding: 24px;
+}
+
+/* ===== 工具栏 ===== */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* ===== 统计卡片 ===== */
+.stat-card {
+  margin-bottom: 8px;
+}
+
+.stat-card .stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ===== 表单提示 ===== */
+.el-form-item-tip {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ===== 分页居中 ===== */
+.el-pagination {
+  justify-content: center;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .el-aside.sidebar {
+    width: 64px !important;
+  }
+  .sidebar-header .logo-text,
+  .sidebar-header .logo-sub,
+  .sidebar-user,
+  .sidebar-footer .el-button span {
+    display: none;
+  }
+  .sidebar-header {
+    padding: 16px 12px;
+    justify-content: center;
+  }
+  .sidebar-menu .el-menu-item span {
+    display: none;
+  }
+}

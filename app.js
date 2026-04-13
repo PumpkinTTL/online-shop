@@ -47,6 +47,9 @@ app.get('/orders', (req, res) => {
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
 });
+app.get('/admin2', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'index-element.html'));
+});
 app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
 });
