@@ -105,6 +105,11 @@
   box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
 }
 
+.product-badge.code-badge {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
 /* 商品信息 */
 .product-info {
   padding: 16px;
@@ -670,4 +675,373 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ========== 支付弹窗 ========== */
+.pay-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.pay-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.pay-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.pay-modal-header i {
+  color: #1677ff;
+  margin-right: 6px;
+}
+
+.pay-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.pay-modal-close:hover {
+  color: #333;
+}
+
+.pay-modal-body {
+  padding: 24px 20px;
+}
+
+/* 支付商品信息 */
+.pay-product-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.pay-product-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.pay-product-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ff4d4f;
+}
+
+/* 二维码 */
+.pay-qr {
+  text-align: center;
+}
+
+.pay-qr-title {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.qr-canvas-wrap {
+  display: inline-block;
+  padding: 12px;
+  background: #fff;
+  border: 2px solid #f0f0f0;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.pay-qr-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+}
+
+.pay-countdown {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #ff9800;
+}
+
+.pay-countdown.expired {
+  color: #999;
+}
+
+/* 加载/错误 */
+.pay-loading {
+  text-align: center;
+  padding: 20px;
+}
+
+.pay-loading i {
+  font-size: 28px;
+  color: #1677ff;
+  animation: spin 1s linear infinite;
+}
+
+.pay-loading p {
+  margin-top: 12px;
+  color: #666;
+  font-size: 14px;
+}
+
+.pay-error {
+  text-align: center;
+  padding: 20px;
+}
+
+.pay-error i {
+  font-size: 40px;
+  color: #ff4d4f;
+  margin-bottom: 12px;
+}
+
+.pay-error p {
+  color: #666;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* 支付成功 */
+.pay-success {
+  text-align: center;
+}
+
+.pay-success-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #52c41a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.pay-success-icon i {
+  font-size: 28px;
+  color: #fff;
+}
+
+.pay-success-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.pay-success-desc {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+/* CDK 卡片 */
+.cdk-card {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 12px;
+  text-align: left;
+}
+
+.cdk-card-label {
+  font-size: 12px;
+  color: #52c41a;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.cdk-card-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cdk-card-value input {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: monospace;
+  color: #1a1a1a;
+}
+
+.cdk-card-value .btn-copy {
+  background: #52c41a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cdk-card-value .btn-copy:hover {
+  background: #45a714;
+}
+
+.cdk-go-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px 20px;
+  background: #1677ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cdk-go-btn:hover {
+  background: #0958d9;
+}
+
+.no-cdk {
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.no-cdk i {
+  color: #fa8c16;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.no-cdk p {
+  font-size: 13px;
+  color: #666;
+}
+
+/* ========== 接码区域 ========== */
+.sms-section {
+  margin-top: 16px;
+  background: #fafafa;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  text-align: left;
+}
+
+.sms-section-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sms-section-header i {
+  color: #1677ff;
+}
+
+.sms-step {
+  text-align: center;
+}
+
+.sms-step-desc {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.sms-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.sms-phone-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sms-phone-number {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1677ff;
+  letter-spacing: 1px;
+}
+
+.btn-sm {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.sms-code-waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #ff9800;
+  font-size: 13px;
+}
+
+.sms-code-waiting i {
+  font-size: 14px;
+}
+
+.sms-step-success {
+  text-align: left;
+}
+
+.sms-step-tip {
+  font-size: 12px;
+  color: #52c41a;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 弹窗内接码区域特殊处理 */
+.pay-success .sms-section {
+  text-align: left;
+}
+
+.pay-success .cdk-card {
+  text-align: left;
 }

@@ -151,6 +151,7 @@
                       <th>库存</th>
                       <th>销量</th>
                       <th>质保</th>
+                      <th>接码</th>
                       <th>创建时间</th>
                       <th>操作</th>
                     </tr>
@@ -164,6 +165,7 @@
                       <td>{{ p.stock ?? 0 }}</td>
                       <td>{{ p.sales }}</td>
                       <td>{{ p.warranty || '-' }}</td>
+                      <td><span :class="p.isCode ? 'tag tag-green' : 'tag tag-gray'">{{ p.isCode ? '需要' : '否' }}</span></td>
                       <td>{{ formatDate(p.createdAt) }}</td>
                       <td>
                         <button class="btn btn-ghost btn-sm" @click="openProductModal(p)"><i
@@ -209,7 +211,8 @@
                   </div>
                   <div class="form-group">
                     <label>库存 <span style="font-size:11px;color:#999;font-weight:400">（由卡密自动计算）</span></label>
-                    <input type="text" class="form-input" :value="editingProduct.stock ?? 0" disabled style="background:#f5f5f5;color:#666;cursor:not-allowed">
+                    <input type="text" class="form-input" :value="editingProduct.stock ?? 0" disabled
+                      style="background:#f5f5f5;color:#666;cursor:not-allowed">
                   </div>
                   <div class="form-group">
                     <label>销量</label>
@@ -217,7 +220,25 @@
                   </div>
                   <div class="form-group">
                     <label>质保时间</label>
-                    <input type="text" class="form-input" v-model="editingProduct.warranty" placeholder="例如：30天、永久、1个月（可选）">
+                    <input type="text" class="form-input" v-model="editingProduct.warranty"
+                      placeholder="例如：30天、永久、1个月（可选）">
+                  </div>
+                  <div class="form-group">
+                    <label>需要接码登录</label>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:400;font-size:13px;">
+                        <input type="radio" v-model="editingProduct.isCode" :value="1" style="accent-color:var(--primary)"> 是
+                      </label>
+                      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:400;font-size:13px;">
+                        <input type="radio" v-model="editingProduct.isCode" :value="0" style="accent-color:var(--primary)"> 否
+                      </label>
+                      <span style="font-size:11px;color:#999;">开启后购买成功需用号码接码登录</span>
+                    </div>
+                  </div>
+                  <div class="form-group" v-if="editingProduct.isCode">
+                    <label>接码关键词</label>
+                    <input type="text" class="form-input" v-model="editingProduct.smKeyWord"
+                      placeholder="接码平台关键词（isCode=1时必填）">
                   </div>
                 </div>
                 <div class="modal-footer">
@@ -277,7 +298,8 @@
                       <td>{{ ck.id }}</td>
                       <td><code style="font-size:12px;">{{ ck.code }}</code></td>
                       <td><code style="font-size:12px;color:#22c55e;">{{ ck.CDK || '-' }}</code></td>
-                      <td>{{ products.find(p => p.id === ck.productId)?.name || ck.productId }}<span style="color:#999;font-size:10px;margin-left:4px;">#{{ ck.productId }}</span></td>
+                      <td>{{ products.find(p => p.id === ck.productId)?.name || ck.productId }}<span
+                          style="color:#999;font-size:10px;margin-left:4px;">#{{ ck.productId }}</span></td>
                       <td v-html="statusTag(ck.status, 'card')"></td>
                       <td>{{ ck.phone || '-' }}</td>
                       <td>{{ formatDate(ck.createdAt) }}</td>
@@ -454,7 +476,8 @@
                     <tr v-for="o in orders" :key="o.id">
                       <td>{{ o.id }}</td>
                       <td><code style="font-size:11px;">{{ o.orderNo }}</code></td>
-                      <td>{{ products.find(p => p.id === o.productId)?.name || o.productId }}<span style="color:#999;font-size:10px;margin-left:4px;">#{{ o.productId }}</span></td>
+                      <td>{{ products.find(p => p.id === o.productId)?.name || o.productId }}<span
+                          style="color:#999;font-size:10px;margin-left:4px;">#{{ o.productId }}</span></td>
                       <td>{{ o.contact }}</td>
                       <td>{{ o.phone || '-' }}</td>
                       <td>{{ o.verifyCode || '-' }}</td>
@@ -781,7 +804,7 @@
         };
 
         const openProductModal = (product = null) => {
-          editingProduct.value = product ? { ...product } : { name: '', price: '', description: '', type: 'ai', sales: 0 };
+          editingProduct.value = product ? { ...product } : { name: '', price: '', description: '', type: 'ai', sales: 0, isCode: 0, smKeyWord: '' };
           productModalVisible.value = true;
         };
 
@@ -1150,7 +1173,7 @@
         return {
           currentPage, adminInfo, saving, pageLoading, pageTitle,
           formatDate, statusTag, productTypeLabel, logout,
-          // 仪表盘
+          // 仪表盘 
           stats,
           // 商品
           products, productsLoading, productModalVisible, editingProduct,

@@ -7,9 +7,11 @@
   <title>产品详情 - 工具商店</title>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/confirmDialog.js"></script>
   <script src="/js/components/app-header.js"></script>
+  <script src="/js/components/product-action.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/common.css">
@@ -51,6 +53,9 @@
                   <div class="product-badge warranty" v-if="product.warranty">
                     <i class="fa-solid fa-shield-halved"></i> 质保：{{ product.warranty }}
                   </div>
+                  <div class="product-badge code-badge" v-if="product.isCode">
+                    <i class="fa-solid fa-mobile-screen"></i> 接码登录
+                  </div>
                 </div>
               </div>
             </div>
@@ -69,99 +74,8 @@
             </div>
           </div>
 
-          <!-- 统一购买卡片 -->
-          <div class="purchase-card" v-if="!redeemResult">
-            <div class="card-header">
-              <i class="fa-solid fa-bag-shopping"></i>
-              <span>购买方式</span>
-            </div>
-            <div class="card-body">
-              <!-- 联系方式 -->
-              <div class="contact-field">
-                <label class="field-label">
-                  <i class="fa-solid fa-phone"></i> 联系方式
-                  <span class="field-hint">用于订单查询，请妥善填写</span>
-                </label>
-                <input type="text" class="form-input" v-model="contact" placeholder="手机号 / QQ / 邮箱">
-              </div>
-
-              <!-- 方式切换 -->
-              <div class="method-tabs">
-                <div class="method-tab" :class="{ active: payMethod === 'alipay' }" @click="payMethod = 'alipay'">
-                  <i class="fa-brands fa-alipay"></i>
-                  <span>支付宝购买</span>
-                  <span class="recommend-tag">推荐</span>
-                </div>
-                <div class="method-tab" :class="{ active: payMethod === 'card' }" @click="payMethod = 'card'">
-                  <i class="fa-solid fa-key"></i>
-                  <span>卡密兑换</span>
-                </div>
-              </div>
-
-              <!-- 支付宝购买区域 -->
-              <div class="method-content" v-if="payMethod === 'alipay'">
-                <div class="alipay-info">
-                  <i class="fa-brands fa-alipay"></i>
-                  <span>扫码支付，自动发放兑换码</span>
-                </div>
-                <button class="btn btn-alipay" @click="goToPay">
-                  <i class="fa-brands fa-alipay"></i> 立即购买 ¥{{ product.price }}
-                </button>
-              </div>
-
-              <!-- 卡密兑换区域 -->
-              <div class="method-content" v-if="payMethod === 'card'">
-                <div class="input-group">
-                  <input type="text" class="form-input" v-model="redeemCode" placeholder="请输入卡密"
-                    @keyup.enter="handleRedeem">
-                  <button class="btn btn-primary" @click="handleRedeem" :disabled="redeeming">
-                    <i class="fa-solid fa-check" v-if="!redeeming"></i>
-                    <i class="fa-solid fa-spinner fa-spin" v-else></i>
-                    {{ redeeming ? '兑换中' : '兑换' }}
-                  </button>
-                </div>
-                <a href="https://68n.cn/xZSmW" target="_blank" class="buy-link">
-                  <i class="fa-solid fa-shopping-cart"></i>
-                  没有卡密？点击购买
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 兑换成功卡片 -->
-          <div class="success-card" v-if="redeemResult">
-            <div class="success-header">
-              <div class="success-icon">
-                <i class="fa-solid fa-circle-check"></i>
-              </div>
-              <h3 class="success-title">兑换成功</h3>
-              <p class="success-desc">请复制兑换码前往网站完成兑换</p>
-            </div>
-            <div class="cdk-box">
-              <div class="cdk-label">兑换码 (CDK)</div>
-              <div class="cdk-row">
-                <input type="text" class="cdk-input" :value="redeemResult.CDK" readonly>
-                <button class="btn btn-primary btn-copy" @click="copyCDK">
-                  <i class="fa-solid fa-copy"></i> 复制
-                </button>
-              </div>
-            </div>
-            <div class="success-actions">
-              <button class="btn btn-primary btn-go" @click="goToRedeem">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> 前往兑换
-              </button>
-              <div class="redeem-url-box">
-                <input type="text" class="redeem-url-input" value="https://aisub.vip/" readonly>
-                <button class="btn btn-ghost btn-copy-url" @click="copyRedeemUrl">
-                  <i class="fa-solid fa-copy"></i> 复制网址
-                </button>
-              </div>
-              <p class="success-tip">
-                <i class="fa-solid fa-info-circle"></i>
-                若无法跳转，请复制网址到浏览器打开，兑换码仅可使用一次
-              </p>
-            </div>
-          </div>
+          <!-- 购买操作组件 -->
+          <product-action :product="product" @success="onActionSuccess"></product-action>
 
           <!-- 产品特点 -->
           <div class="features-card">
@@ -226,7 +140,10 @@
             <div class="notice-content">
               <div class="notice-title">温馨提示</div>
               <div class="notice-text">
-                <template v-if="product.warranty">
+                <template v-if="product.isCode">
+                  本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
+                </template>
+                <template v-else-if="product.warranty">
                   本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。购买前请仔细了解产品特性，确认符合您的需求。
                 </template>
                 <template v-else>
@@ -257,23 +174,14 @@
 
     const app = createApp({
       setup() {
-        // 状态
         const product = ref(null);
         const loading = ref(true);
         const error = ref('');
-        const redeemCode = ref('');
-        const redeeming = ref(false);
-        const redeemResult = ref(null);
-        const payMethod = ref('alipay');
-        const contact = ref(localStorage.getItem('lastContact') || '');
 
-        // 获取 URL 参数
         const getUrlParam = (name) => {
-          const urlParams = new URLSearchParams(window.location.search);
-          return urlParams.get(name);
+          return new URLSearchParams(window.location.search).get(name);
         };
 
-        // 加载商品
         const loadProduct = async () => {
           const productId = getUrlParam('id');
           if (!productId) {
@@ -296,100 +204,25 @@
           }
         };
 
-        // 兑换卡密
-        const handleRedeem = async () => {
-          if (!contact.value.trim()) {
-            Toast.warning('请先填写联系方式');
-            return;
-          }
-          if (!redeemCode.value.trim()) {
-            Toast.warning('请输入卡密');
-            return;
-          }
-
-          redeeming.value = true;
-          try {
-            const productId = getUrlParam('id');
-            const response = await axios.post('/api/pickup/redeem', {
-              code: redeemCode.value.trim(),
-              productId: productId,
-              contact: contact.value.trim(),
-            });
-            redeemResult.value = response.data;
-            // 保存联系方式
-            localStorage.setItem('lastContact', contact.value.trim());
-            Toast.success('兑换成功！请复制兑换码前往兑换');
-          } catch (err) {
-            Toast.error(err.response?.data?.error || err.message || '兑换失败');
-          } finally {
-            redeeming.value = false;
-          }
-        };
-
-        // 复制CDK
-        const copyCDK = () => {
-          if (redeemResult.value && redeemResult.value.CDK) {
-            navigator.clipboard.writeText(redeemResult.value.CDK).then(() => {
-              Toast.success('兑换码已复制到剪贴板');
-            }).catch(() => {
-              const input = document.querySelector('.cdk-input');
-              if (input) {
-                input.select();
-                document.execCommand('copy');
-                Toast.success('兑换码已复制到剪贴板');
-              }
-            });
-          }
-        };
-
-        // 前往兑换网站
-        const goToRedeem = () => {
-          window.open('https://aisub.vip/', '_blank');
-        };
-
-        // 复制兑换网址
-        const copyRedeemUrl = () => {
-          navigator.clipboard.writeText('https://aisub.vip/').then(() => {
-            Toast.success('网址已复制到剪贴板');
-          }).catch(() => {
-            const input = document.querySelector('.redeem-url-input');
-            if (input) {
-              input.select();
-              document.execCommand('copy');
-              Toast.success('网址已复制到剪贴板');
-            }
-          });
+        const onActionSuccess = (result) => {
+          console.log('操作成功:', result);
         };
 
         const goHome = () => { window.location.href = '/'; };
-
-        // 支付宝购买
-        const goToPay = () => {
-          if (!contact.value.trim()) {
-            Toast.warning('请先填写联系方式');
-            return;
-          }
-          // 保存联系方式
-          localStorage.setItem('lastContact', contact.value.trim());
-          const productId = getUrlParam('id');
-          if (productId) {
-            window.location.href = `/pay?productId=${productId}&contact=${encodeURIComponent(contact.value.trim())}`;
-          }
-        };
 
         onMounted(() => {
           loadProduct();
         });
 
         return {
-          product, loading, error, redeemCode, redeeming, redeemResult,
-          payMethod, contact,
-          handleRedeem, copyCDK, goToRedeem, copyRedeemUrl, goHome, goToPay
+          product, loading, error,
+          onActionSuccess, goHome,
         };
       }
     });
 
     registerAppHeader(app);
+    registerProductAction(app);
     app.mount('#app');
   </script>
 </body>

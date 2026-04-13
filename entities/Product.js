@@ -12,6 +12,8 @@ module.exports = new EntitySchema({
     type: { type: 'varchar', length: 20, default: 'ai' },
     sales: { type: 'int', default: 0 },
     warranty: { type: 'varchar', length: 200, nullable: true },
+    isCode: { type: 'tinyint', default: 0 },
+    smKeyWord: { type: 'varchar', length: 100, nullable: true },
     createdAt: { type: 'datetime', createDate: true },
     updatedAt: { type: 'datetime', updateDate: true },
   },

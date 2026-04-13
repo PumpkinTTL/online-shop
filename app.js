@@ -43,11 +43,6 @@ app.get('/orders', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'orders.html'));
 });
 
-// 支付页面
-app.get('/pay', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'payment.html'));
-});
-
 // 后台管理页
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
