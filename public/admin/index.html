@@ -152,6 +152,7 @@
                       <th>销量</th>
                       <th>质保</th>
                       <th>接码</th>
+                      <th>关键词</th>
                       <th>创建时间</th>
                       <th>操作</th>
                     </tr>
@@ -166,6 +167,7 @@
                       <td>{{ p.sales }}</td>
                       <td>{{ p.warranty || '-' }}</td>
                       <td><span :class="p.isCode ? 'tag tag-green' : 'tag tag-gray'">{{ p.isCode ? '需要' : '否' }}</span></td>
+                      <td>{{ p.smKeyWord || '-' }}</td>
                       <td>{{ formatDate(p.createdAt) }}</td>
                       <td>
                         <button class="btn btn-ghost btn-sm" @click="openProductModal(p)"><i
