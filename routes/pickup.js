@@ -22,14 +22,28 @@ router.post('/verify-card', async (req, res) => {
   }
 });
 
-// 兑换卡密 — 验证卡密后返回CDK
+// 兑换卡密 — 验证卡密后返回CDK，并写入订单
 router.post('/redeem', async (req, res) => {
   try {
-    const { code, productId } = req.body;
+    const { code, productId, contact } = req.body;
     if (!code || !code.trim()) {
       return res.status(400).json({ error: '请输入卡密' });
     }
     const result = await pickupService.redeemCardKey(code.trim(), productId);
+
+    // 写入订单
+    try {
+      await pickupService.createOrder({
+        cardKeyId: result.id,
+        productId: result.productId || productId,
+        contact: contact || '',
+        phone: '',
+        verifyCode: '',
+      });
+    } catch (orderErr) {
+      console.warn('[Redeem] 写入订单失败:', orderErr.message);
+    }
+
     res.json({
       success: true,
       CDK: result.CDK,

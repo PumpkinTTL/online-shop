@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
+  <script src="/js/confirmDialog.js"></script>
   <script src="/js/components/app-header.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -68,40 +69,62 @@
             </div>
           </div>
 
-          <!-- 兑换卡片 -->
-          <div class="action-card" v-if="!redeemResult">
+          <!-- 统一购买卡片 -->
+          <div class="purchase-card" v-if="!redeemResult">
             <div class="card-header">
-              <i class="fa-solid fa-key"></i>
-              <span>卡密兑换</span>
+              <i class="fa-solid fa-bag-shopping"></i>
+              <span>购买方式</span>
             </div>
             <div class="card-body">
-              <div class="input-group">
-                <input type="text" class="form-input" v-model="redeemCode" placeholder="请输入卡密"
-                  @keyup.enter="handleRedeem">
-                <button class="btn btn-primary" @click="handleRedeem" :disabled="redeeming">
-                  <i class="fa-solid fa-check" v-if="!redeeming"></i>
-                  <i class="fa-solid fa-spinner fa-spin" v-else></i>
-                  {{ redeeming ? '兑换中' : '兑换' }}
+              <!-- 联系方式 -->
+              <div class="contact-field">
+                <label class="field-label">
+                  <i class="fa-solid fa-phone"></i> 联系方式
+                  <span class="field-hint">用于订单查询，请妥善填写</span>
+                </label>
+                <input type="text" class="form-input" v-model="contact" placeholder="手机号 / QQ / 邮箱">
+              </div>
+
+              <!-- 方式切换 -->
+              <div class="method-tabs">
+                <div class="method-tab" :class="{ active: payMethod === 'alipay' }" @click="payMethod = 'alipay'">
+                  <i class="fa-brands fa-alipay"></i>
+                  <span>支付宝购买</span>
+                  <span class="recommend-tag">推荐</span>
+                </div>
+                <div class="method-tab" :class="{ active: payMethod === 'card' }" @click="payMethod = 'card'">
+                  <i class="fa-solid fa-key"></i>
+                  <span>卡密兑换</span>
+                </div>
+              </div>
+
+              <!-- 支付宝购买区域 -->
+              <div class="method-content" v-if="payMethod === 'alipay'">
+                <div class="alipay-info">
+                  <i class="fa-brands fa-alipay"></i>
+                  <span>扫码支付，自动发放兑换码</span>
+                </div>
+                <button class="btn btn-alipay" @click="goToPay">
+                  <i class="fa-brands fa-alipay"></i> 立即购买 ¥{{ product.price }}
                 </button>
               </div>
-              <a href="https://68n.cn/xZSmW" target="_blank" class="buy-link">
-                <i class="fa-solid fa-shopping-cart"></i>
-                没有卡密？点击购买
-              </a>
-            </div>
-          </div>
 
-          <!-- 支付宝购买 -->
-          <div class="action-card alipay-card" v-if="!redeemResult">
-            <div class="card-header">
-              <i class="fa-brands fa-alipay"></i>
-              <span>支付宝购买</span>
-            </div>
-            <div class="card-body">
-              <p class="alipay-desc">扫码支付，自动发放兑换码</p>
-              <button class="btn btn-alipay" @click="goToPay">
-                <i class="fa-brands fa-alipay"></i> 立即购买 ¥{{ product.price }}
-              </button>
+              <!-- 卡密兑换区域 -->
+              <div class="method-content" v-if="payMethod === 'card'">
+                <div class="input-group">
+                  <input type="text" class="form-input" v-model="redeemCode" placeholder="请输入卡密"
+                    @keyup.enter="handleRedeem">
+                  <button class="btn btn-primary" @click="handleRedeem" :disabled="redeeming">
+                    <i class="fa-solid fa-check" v-if="!redeeming"></i>
+                    <i class="fa-solid fa-spinner fa-spin" v-else></i>
+                    {{ redeeming ? '兑换中' : '兑换' }}
+                  </button>
+                </div>
+                <a href="https://68n.cn/xZSmW" target="_blank" class="buy-link">
+                  <i class="fa-solid fa-shopping-cart"></i>
+                  没有卡密？点击购买
+                </a>
+              </div>
             </div>
           </div>
 
@@ -241,6 +264,8 @@
         const redeemCode = ref('');
         const redeeming = ref(false);
         const redeemResult = ref(null);
+        const payMethod = ref('alipay');
+        const contact = ref(localStorage.getItem('lastContact') || '');
 
         // 获取 URL 参数
         const getUrlParam = (name) => {
@@ -251,17 +276,14 @@
         // 加载商品
         const loadProduct = async () => {
           const productId = getUrlParam('id');
-
           if (!productId) {
             error.value = '产品不存在';
             loading.value = false;
             return;
           }
-
           try {
             const response = await axios.get(`/api/products/${productId}`);
             product.value = response.data;
-
             if (!product.value) {
               error.value = '产品不存在';
             } else {
@@ -276,6 +298,10 @@
 
         // 兑换卡密
         const handleRedeem = async () => {
+          if (!contact.value.trim()) {
+            Toast.warning('请先填写联系方式');
+            return;
+          }
           if (!redeemCode.value.trim()) {
             Toast.warning('请输入卡密');
             return;
@@ -287,8 +313,11 @@
             const response = await axios.post('/api/pickup/redeem', {
               code: redeemCode.value.trim(),
               productId: productId,
+              contact: contact.value.trim(),
             });
             redeemResult.value = response.data;
+            // 保存联系方式
+            localStorage.setItem('lastContact', contact.value.trim());
             Toast.success('兑换成功！请复制兑换码前往兑换');
           } catch (err) {
             Toast.error(err.response?.data?.error || err.message || '兑换失败');
@@ -336,9 +365,15 @@
 
         // 支付宝购买
         const goToPay = () => {
+          if (!contact.value.trim()) {
+            Toast.warning('请先填写联系方式');
+            return;
+          }
+          // 保存联系方式
+          localStorage.setItem('lastContact', contact.value.trim());
           const productId = getUrlParam('id');
           if (productId) {
-            window.location.href = `/pay?productId=${productId}`;
+            window.location.href = `/pay?productId=${productId}&contact=${encodeURIComponent(contact.value.trim())}`;
           }
         };
 
@@ -348,6 +383,7 @@
 
         return {
           product, loading, error, redeemCode, redeeming, redeemResult,
+          payMethod, contact,
           handleRedeem, copyCDK, goToRedeem, copyRedeemUrl, goHome, goToPay
         };
       }

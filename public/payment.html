@@ -444,9 +444,11 @@
             return;
           }
 
-          // 读取保存的联系方式
-          const savedContact = localStorage.getItem('pay_contact') || '';
+          // 读取联系方式（优先URL参数，其次localStorage）
+          const urlContact = getUrlParam('contact');
+          const savedContact = urlContact || localStorage.getItem('pay_contact') || '';
           contact.value = savedContact;
+          if (savedContact) localStorage.setItem('pay_contact', savedContact);
 
           try {
             const res = await axios.post('/api/payment/create', {
