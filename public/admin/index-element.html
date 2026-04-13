@@ -32,7 +32,7 @@
         </div>
 
         <el-menu :default-active="currentPage" @select="handleMenuSelect" :collapse="isCollapsed"
-          :collapse-transition="true" class="sidebar-menu" router>
+          :collapse-transition="true" :default-openeds="['manage', 'system']" class="sidebar-menu">
           <el-menu-item index="dashboard">
             <el-icon><DataAnalysis /></el-icon>
             <template #title>仪表盘</template>
@@ -517,7 +517,7 @@
       <el-form label-width="100px" label-position="right">
         <el-form-item label="选择商品" required>
           <el-select v-model="cardKeyForm.productId" placeholder="请选择商品" style="width:100%">
-            <el-option v-for="p in products" :key="p.id" :label="`${p.name} (ID:${p.id})`" :value="p.id" />
+            <el-option v-for="p in products" :key="p.id" :label="p.name + ' (ID:' + p.id + ')'" :value="p.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="录入方式">
