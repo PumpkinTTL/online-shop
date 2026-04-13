@@ -1,4 +1,4 @@
-// 后台管理 API 封装
+// 后台管理 API 封装（基于 axios）
 const AdminAPI = {
   // 获取存储的 Token
   getToken() {
@@ -26,133 +26,139 @@ const AdminAPI = {
     localStorage.setItem('admin_info', JSON.stringify(info));
   },
 
-  // 通用请求方法
-  async request(method, url, data) {
-    const token = this.getToken();
-    const headers = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+  // 创建 axios 实例
+  _http: null,
+  getHttp() {
+    if (!this._http) {
+      this._http = axios.create({
+        baseURL: '/api/admin',
+        timeout: 15000,
+      });
 
-    const config = { method, headers };
-    if (data && (method === 'POST' || method === 'PUT')) {
-      headers['Content-Type'] = 'application/json';
-      config.body = JSON.stringify(data);
-    }
+      // 请求拦截器：自动注入 token
+      this._http.interceptors.request.use((config) => {
+        const token = this.getToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      });
 
-    const response = await fetch(`/api/admin${url}`, config);
-
-    if (response.status === 401) {
-      this.clearToken();
-      window.location.href = '/admin/login';
-      throw new Error('登录已过期');
+      // 响应拦截器：401 跳转登录，统一错误处理
+      this._http.interceptors.response.use(
+        (response) => response.data,
+        (error) => {
+          if (error.response) {
+            const { status, data } = error.response;
+            if (status === 401) {
+              this.clearToken();
+              window.location.href = '/admin/login';
+              throw new Error('登录已过期');
+            }
+            throw new Error(data?.error || '请求失败');
+          }
+          throw new Error('网络连接失败');
+        }
+      );
     }
-
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(result.error || '请求失败');
-    }
-    return result;
+    return this._http;
   },
 
   // 登录
   login(username, password) {
-    return this.request('POST', '/login', { username, password });
+    return this.getHttp().post('/login', { username, password });
   },
 
   // 验证 Token
   check() {
-    return this.request('GET', '/check');
+    return this.getHttp().get('/check');
   },
 
   // 修改密码
   changePassword(oldPassword, newPassword) {
-    return this.request('POST', '/change-password', { oldPassword, newPassword });
+    return this.getHttp().post('/change-password', { oldPassword, newPassword });
   },
 
   // 仪表盘
   getStats() {
-    return this.request('GET', '/stats');
+    return this.getHttp().get('/stats');
   },
 
   // 商品
   getProducts() {
-    return this.request('GET', '/products');
+    return this.getHttp().get('/products');
   },
   getProduct(id) {
-    return this.request('GET', `/products/${id}`);
+    return this.getHttp().get(`/products/${id}`);
   },
   createProduct(data) {
-    return this.request('POST', '/products', data);
+    return this.getHttp().post('/products', data);
   },
   updateProduct(id, data) {
-    return this.request('PUT', `/products/${id}`, data);
+    return this.getHttp().put(`/products/${id}`, data);
   },
   deleteProduct(id) {
-    return this.request('DELETE', `/products/${id}`);
+    return this.getHttp().delete(`/products/${id}`);
   },
 
   // 用户
   getUsers() {
-    return this.request('GET', '/users');
+    return this.getHttp().get('/users');
   },
   getUser(id) {
-    return this.request('GET', `/users/${id}`);
+    return this.getHttp().get(`/users/${id}`);
   },
   toggleUserActive(id) {
-    return this.request('PUT', `/users/${id}/toggle-active`);
+    return this.getHttp().put(`/users/${id}/toggle-active`);
   },
   deleteUser(id) {
-    return this.request('DELETE', `/users/${id}`);
+    return this.getHttp().delete(`/users/${id}`);
   },
 
   // 卡密
   getCardPrefixes() {
-    return this.request('GET', '/card-prefixes');
+    return this.getHttp().get('/card-prefixes');
   },
   getCardKeys(params) {
-    const query = new URLSearchParams(params).toString();
-    return this.request('GET', `/card-keys?${query}`);
+    return this.getHttp().get('/card-keys', { params });
   },
   generateCardKeys(data) {
-    return this.request('POST', '/card-keys/generate', data);
+    return this.getHttp().post('/card-keys/generate', data);
   },
   manualAddCardKeys(data) {
-    return this.request('POST', '/card-keys/manual', data);
+    return this.getHttp().post('/card-keys/manual', data);
   },
   updateCardKey(id, data) {
-    return this.request('PUT', `/card-keys/${id}`, data);
+    return this.getHttp().put(`/card-keys/${id}`, data);
   },
   deleteCardKey(id) {
-    return this.request('DELETE', `/card-keys/${id}`);
+    return this.getHttp().delete(`/card-keys/${id}`);
   },
   batchDeleteCardKeys(ids) {
-    return this.request('POST', '/card-keys/batch-delete', { ids });
+    return this.getHttp().post('/card-keys/batch-delete', { ids });
   },
 
   // 订单
   getOrders(params) {
-    const query = new URLSearchParams(params).toString();
-    return this.request('GET', `/orders?${query}`);
+    return this.getHttp().get('/orders', { params });
   },
   deleteOrder(id) {
-    return this.request('DELETE', `/orders/${id}`);
+    return this.getHttp().delete(`/orders/${id}`);
   },
 
   // 管理员
   getAdmins() {
-    return this.request('GET', '/admins');
+    return this.getHttp().get('/admins');
   },
   createAdmin(data) {
-    return this.request('POST', '/admins', data);
+    return this.getHttp().post('/admins', data);
   },
   deleteAdmin(id) {
-    return this.request('DELETE', `/admins/${id}`);
+    return this.getHttp().delete(`/admins/${id}`);
   },
 
   // 接码记录
   getSmsRecords(params) {
-    const query = new URLSearchParams(params).toString();
-    return this.request('GET', `/sms-records?${query}`);
+    return this.getHttp().get('/sms-records', { params });
   },
 };
