@@ -43,15 +43,20 @@ app.get('/orders', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'orders.html'));
 });
 
-// 后台管理页
+// 后台管理页（原版）
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
 });
-app.get('/admin2', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'index-element.html'));
-});
 app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
+});
+
+// 后台管理页（Element Plus 版）
+app.get('/admin/element', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'index-element.html'));
+});
+app.get('/admin/login-element', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'login-element.html'));
 });
 
 // 初始化数据库并启动
@@ -68,7 +73,8 @@ async function bootstrap() {
 
     app.listen(PORT, () => {
       console.log(`🛒 在线商品小站已启动: http://localhost:${PORT}`);
-      console.log(`🔧 后台管理: http://localhost:${PORT}/admin`);
+      console.log(`🔧 后台管理（原版）: http://localhost:${PORT}/admin`);
+      console.log(`🎨 后台管理（Element Plus）: http://localhost:${PORT}/admin/element`);
     });
   } catch (error) {
     console.error('❌ 数据库连接失败:', error.message);

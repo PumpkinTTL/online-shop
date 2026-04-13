@@ -5,11 +5,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>后台管理 - 工具商店</title>
+  <!-- Google Fonts: Poppins + Open Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <!-- Vue 3 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- Element Plus -->
   <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
   <script src="https://unpkg.com/element-plus"></script>
   <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+  <!-- Axios -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Custom Styles -->
   <link rel="stylesheet" href="/admin/css/admin-element.css">
 </head>
 
@@ -17,16 +27,17 @@
   <div id="app">
     <el-container style="height:100vh">
       <!-- 侧边栏 -->
-      <el-aside :width="isCollapsed ? '64px' : '220px'" class="sidebar-wrap">
+      <el-aside :width="isCollapsed ? '72px' : '240px'" class="sidebar-wrap">
         <div class="sidebar-logo" :class="{ collapsed: isCollapsed }">
-          <el-icon :size="24" color="#409eff">
+          <el-icon :size="26" style="color:#3B82F6;">
             <Promotion />
           </el-icon>
           <span v-if="!isCollapsed" class="logo-title">工具商店</span>
         </div>
 
         <el-menu :default-active="currentPage" @select="handleMenuSelect" :collapse="isCollapsed"
-          :collapse-transition="true" :default-openeds="openMenus" class="sidebar-menu">
+          :collapse-transition="true" :default-openeds="openMenus" class="sidebar-menu" background-color="transparent"
+          text-color="#94A3B8" active-text-color="#3B82F6">
           <el-menu-item index="dashboard">
             <el-icon>
               <DataAnalysis />
@@ -86,6 +97,11 @@
             </el-menu-item>
           </el-sub-menu>
         </el-menu>
+
+        <!-- 侧边栏底部版本信息 -->
+        <div v-if="!isCollapsed" style="padding:12px 20px;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
+          <div style="font-size:11px;color:#475569;">v2.0 Element Plus</div>
+        </div>
       </el-aside>
 
       <!-- 右侧主体 -->
@@ -103,11 +119,18 @@
             </el-breadcrumb>
           </div>
           <div class="header-right">
+            <el-tooltip content="刷新数据" placement="bottom">
+              <el-button circle size="small" @click="refreshCurrentPage">
+                <el-icon>
+                  <Refresh />
+                </el-icon>
+              </el-button>
+            </el-tooltip>
             <el-dropdown trigger="click" @command="handleHeaderCommand">
               <div class="user-dropdown">
-                <el-avatar :size="32" class="user-avatar">{{ userInitial }}</el-avatar>
+                <el-avatar :size="34" class="user-avatar">{{ userInitial }}</el-avatar>
                 <span class="user-name">{{ userName }}</span>
-                <el-icon>
+                <el-icon style="color:#94A3B8;">
                   <ArrowDown />
                 </el-icon>
               </div>
@@ -134,17 +157,23 @@
 
           <!-- 仪表盘 -->
           <div v-if="currentPage === 'dashboard'">
+            <div style="margin-bottom:24px;">
+              <h2 style="font-size:22px;font-weight:700;color:#0F172A;margin-bottom:4px;">欢迎回来，{{ userName }}</h2>
+              <p style="font-size:14px;color:#94A3B8;">以下是您的店铺概览数据</p>
+            </div>
             <el-row :gutter="16">
-              <el-col :xs="12" :sm="8" :md="4" v-for="item in statCards" :key="item.label">
-                <el-card shadow="hover" class="stat-card" :body-style="{ padding: '20px' }">
-                  <div class="stat-icon-wrap" :style="{ background: item.bg }">
-                    <el-icon :size="24" :style="{ color: item.color }">
-                      <component :is="item.iconEl" />
-                    </el-icon>
-                  </div>
-                  <div class="stat-info">
-                    <div class="stat-value">{{ item.value }}</div>
-                    <div class="stat-label">{{ item.label }}</div>
+              <el-col :xs="12" :sm="8" :md="8" :lg="4" v-for="item in statCards" :key="item.label">
+                <el-card shadow="hover" class="stat-card" :body-style="{ padding: 0 }">
+                  <div class="stat-card-inner" :style="{ borderLeft: '4px solid ' + item.color }">
+                    <div class="stat-icon-wrap" :style="{ background: item.bg }">
+                      <el-icon :size="24" :style="{ color: item.color }">
+                        <component :is="item.iconEl" />
+                      </el-icon>
+                    </div>
+                    <div class="stat-info">
+                      <div class="stat-value">{{ item.value }}</div>
+                      <div class="stat-label">{{ item.label }}</div>
+                    </div>
                   </div>
                 </el-card>
               </el-col>
@@ -177,7 +206,7 @@
               </el-table-column>
               <el-table-column label="价格" width="90" sortable>
                 <template #default="{ row }">
-                  <span style="color:#f56c6c;font-weight:600">{{ '¥' + row.price }}</span>
+                  <span style="color:#EF4444;font-weight:600">{{ '¥' + row.price }}</span>
                 </template>
               </el-table-column>
               <el-table-column label="库存" width="70" sortable>
@@ -187,7 +216,11 @@
                   </el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="sales" label="销量" width="70" sortable />
+              <el-table-column label="销量" width="80" sortable>
+                <template #default="{ row }">
+                  <span style="font-weight:600;color:#6366F1;">{{ row.sales || 0 }}</span>
+                </template>
+              </el-table-column>
               <el-table-column label="质保" width="100">
                 <template #default="{ row }">{{ row.warranty || '-' }}</template>
               </el-table-column>
@@ -204,18 +237,23 @@
               <el-table-column label="创建时间" width="160" sortable>
                 <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
               </el-table-column>
-              <el-table-column label="操作" width="120" fixed="right">
+              <el-table-column label="操作" width="100" fixed="right">
                 <template #default="{ row }">
-                  <el-button type="primary" text size="small" @click="openProductModal(row)">
-                    <el-icon>
-                      <Edit />
-                    </el-icon>
-                  </el-button>
-                  <el-button type="danger" text size="small" @click="handleDeleteProduct(row.id)">
-                    <el-icon>
-                      <Delete />
-                    </el-icon>
-                  </el-button>
+                  <el-tooltip content="编辑" placement="top">
+                    <el-button class="action-btn action-edit" size="small" circle @click="openProductModal(row)">
+                      <el-icon>
+                        <Edit />
+                      </el-icon>
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip content="删除" placement="top">
+                    <el-button class="action-btn action-delete" size="small" circle
+                      @click="handleDeleteProduct(row.id)">
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
+                    </el-button>
+                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>
@@ -259,8 +297,8 @@
               </el-table-column>
               <el-table-column label="CDK" min-width="140">
                 <template #default="{ row }">
-                  <code v-if="row.CDK" style="color:#67c23a">{{ row.CDK }}</code>
-                  <span v-else style="color:#909399">-</span>
+                  <code v-if="row.CDK" style="color:#22C55E">{{ row.CDK }}</code>
+                  <span v-else style="color:#94A3B8">-</span>
                 </template>
               </el-table-column>
               <el-table-column label="商品" min-width="120">
@@ -277,18 +315,23 @@
               <el-table-column label="创建时间" width="160" sortable>
                 <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
               </el-table-column>
-              <el-table-column label="操作" width="120" fixed="right">
+              <el-table-column label="操作" width="100" fixed="right">
                 <template #default="{ row }">
-                  <el-button type="primary" text size="small" @click="openEditCDKModal(row)">
-                    <el-icon>
-                      <Edit />
-                    </el-icon>
-                  </el-button>
-                  <el-button type="danger" text size="small" @click="handleDeleteCardKey(row.id)">
-                    <el-icon>
-                      <Delete />
-                    </el-icon>
-                  </el-button>
+                  <el-tooltip content="编辑CDK" placement="top">
+                    <el-button class="action-btn action-edit" size="small" circle @click="openEditCDKModal(row)">
+                      <el-icon>
+                        <Edit />
+                      </el-icon>
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip content="删除" placement="top">
+                    <el-button class="action-btn action-delete" size="small" circle
+                      @click="handleDeleteCardKey(row.id)">
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
+                    </el-button>
+                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>
@@ -340,11 +383,13 @@
               </el-table-column>
               <el-table-column label="操作" width="70" fixed="right">
                 <template #default="{ row }">
-                  <el-button type="danger" text size="small" @click="handleDeleteOrder(row.id)">
-                    <el-icon>
-                      <Delete />
-                    </el-icon>
-                  </el-button>
+                  <el-tooltip content="删除" placement="top">
+                    <el-button class="action-btn action-delete" size="small" circle @click="handleDeleteOrder(row.id)">
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
+                    </el-button>
+                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>
@@ -384,15 +429,17 @@
               </el-table-column>
               <el-table-column label="操作" width="140" fixed="right">
                 <template #default="{ row }">
-                  <el-button :type="row.isActive ? 'warning' : 'success'" text size="small"
+                  <el-button :type="row.isActive ? 'warning' : 'success'" size="small"
                     @click="handleToggleUser(row.id)">
                     {{ row.isActive ? '禁用' : '启用' }}
                   </el-button>
-                  <el-button type="danger" text size="small" @click="handleDeleteUser(row.id)">
-                    <el-icon>
-                      <Delete />
-                    </el-icon>
-                  </el-button>
+                  <el-tooltip content="删除" placement="top">
+                    <el-button class="action-btn action-delete" size="small" circle @click="handleDeleteUser(row.id)">
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
+                    </el-button>
+                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>
@@ -437,12 +484,14 @@
               </el-table-column>
               <el-table-column label="操作" width="70" fixed="right">
                 <template #default="{ row }">
-                  <el-button type="danger" text size="small" @click="handleDeleteAdmin(row.id, row.role)"
-                    :disabled="row.role === 'super'">
-                    <el-icon>
-                      <Delete />
-                    </el-icon>
-                  </el-button>
+                  <el-tooltip content="删除" placement="top">
+                    <el-button class="action-btn action-delete" size="small" circle
+                      @click="handleDeleteAdmin(row.id, row.role)" :disabled="row.role === 'super'">
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
+                    </el-button>
+                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>
@@ -460,7 +509,7 @@
                 <el-option label="已拉黑" value="blocked" />
               </el-select>
               <el-input v-model="smsRecordFilter.phone" placeholder="手机号搜索" style="width:160px" clearable
-                @keyup.enter="loadSmsRecords">
+                @keyup.enter="loadSmsRecords" :prefix-icon="Search">
               </el-input>
               <el-button type="primary" @click="loadSmsRecords"><el-icon>
                   <Search />
@@ -483,8 +532,8 @@
               </el-table-column>
               <el-table-column label="验证码" width="100">
                 <template #default="{ row }">
-                  <code v-if="row.verifyCode" style="color:#67c23a">{{ row.verifyCode }}</code>
-                  <span v-else style="color:#909399">-</span>
+                  <code v-if="row.verifyCode" style="color:#22C55E">{{ row.verifyCode }}</code>
+                  <span v-else style="color:#94A3B8">-</span>
                 </template>
               </el-table-column>
               <el-table-column label="状态" width="90">
@@ -493,7 +542,7 @@
                 </template>
               </el-table-column>
               <el-table-column label="IP" width="130">
-                <template #default="{ row }"><span style="color:#909399;font-size:12px">{{ row.ip || '-'
+                <template #default="{ row }"><span style="color:#94A3B8;font-size:12px">{{ row.ip || '-'
                     }}</span></template>
               </el-table-column>
               <el-table-column label="创建时间" width="160" sortable>

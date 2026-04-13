@@ -89,17 +89,30 @@ const app = createApp({
       currentPage.value = index;
     };
 
+    // ===== 刷新当前页面数据 =====
+    var refreshCurrentPage = function() {
+      var page = currentPage.value;
+      if (page === 'dashboard') loadStats();
+      else if (page === 'products') loadProducts();
+      else if (page === 'cardkeys') { loadProducts(); loadCardKeys(); }
+      else if (page === 'orders') loadOrders();
+      else if (page === 'users') loadUsers();
+      else if (page === 'admins') loadAdmins();
+      else if (page === 'smsrecords') loadSmsRecords();
+      ElMsg.success('数据已刷新');
+    };
+
     // ===== 仪表盘 =====
     var stats = ref({});
     var statCards = computed(function() {
       var s = stats.value;
       return [
-        { label: '商品总数', value: s.productCount || 0, iconEl: 'Goods', bg: '#dbeafe', color: '#3b82f6' },
-        { label: '可用卡密', value: s.cardKeyUnused || 0, iconEl: 'Key', bg: '#dcfce7', color: '#22c55e' },
-        { label: '已用卡密', value: s.cardKeyUsed || 0, iconEl: 'Key', bg: '#f3f4f6', color: '#6b7280' },
-        { label: '用户总数', value: s.userCount || 0, iconEl: 'User', bg: '#ffedd5', color: '#f97316' },
-        { label: '订单总数', value: s.orderCount || 0, iconEl: 'Document', bg: '#f3e8ff', color: '#a855f7' },
-        { label: '近7天订单', value: s.recentOrders || 0, iconEl: 'TrendCharts', bg: '#fee2e2', color: '#ef4444' },
+        { label: '商品总数', value: s.productCount || 0, iconEl: 'Goods', bg: '#EFF6FF', color: '#3B82F6' },
+        { label: '可用卡密', value: s.cardKeyUnused || 0, iconEl: 'Key', bg: '#F0FDF4', color: '#22C55E' },
+        { label: '已用卡密', value: s.cardKeyUsed || 0, iconEl: 'Key', bg: '#F8FAFC', color: '#64748B' },
+        { label: '用户总数', value: s.userCount || 0, iconEl: 'User', bg: '#FFF7ED', color: '#F97316' },
+        { label: '订单总数', value: s.orderCount || 0, iconEl: 'Document', bg: '#FAF5FF', color: '#A855F7' },
+        { label: '近7天订单', value: s.recentOrders || 0, iconEl: 'TrendCharts', bg: '#FEF2F2', color: '#EF4444' },
       ];
     });
 
@@ -522,8 +535,12 @@ const app = createApp({
     };
 
     // ===== 通用 =====
+    // Element 版本跳转到 Element 登录页
+    var ELEMENT_LOGIN = '/admin/login-element';
+
     var logout = function() {
-      AdminAuth.logout();
+      AdminAPI.clearToken();
+      window.location.href = ELEMENT_LOGIN;
     };
 
     // 页面切换时加载数据
@@ -538,8 +555,19 @@ const app = createApp({
     });
 
     onMounted(async function() {
-      var ok = await AdminAuth.check();
-      if (!ok) return;
+      var token = AdminAPI.getToken();
+      if (!token) {
+        window.location.href = ELEMENT_LOGIN;
+        return;
+      }
+      try {
+        var admin = await AdminAPI.check();
+        AdminAPI.setAdminInfo(admin);
+      } catch (e) {
+        AdminAPI.clearToken();
+        window.location.href = ELEMENT_LOGIN;
+        return;
+      }
       adminInfo.value = AdminAPI.getAdminInfo();
       await loadStats();
       pageLoading.value = false;
@@ -554,6 +582,7 @@ const app = createApp({
       openMenus: openMenus,
       pageTitle: pageTitle,
       handleMenuSelect: handleMenuSelect,
+      refreshCurrentPage: refreshCurrentPage,
       logout: logout,
       formatDate: formatDate,
       userName: userName,
@@ -634,12 +663,53 @@ const app = createApp({
       loadSmsRecords: loadSmsRecords,
       smsStatusType: smsStatusType,
       smsStatusLabel: smsStatusLabel,
+      // 搜索图标（供 el-input :prefix-icon 使用）
+      Search: ElementPlusIconsVue.Search,
     };
   },
 });
 
 // 注册 Element Plus
 app.use(ElementPlus);
+
+// 覆盖 401 跳转到 Element 版登录页
+// 重新创建 axios 实例，替换默认拦截器
+AdminAPI._http = null; // 清除旧实例
+AdminAPI.getHttp = function() {
+  if (!this._http) {
+    this._http = axios.create({
+      baseURL: '/api/admin',
+      timeout: 15000,
+    });
+    var self = this;
+    // 请求拦截器
+    this._http.interceptors.request.use(function(config) {
+      var token = self.getToken();
+      if (token) {
+        config.headers.Authorization = 'Bearer ' + token;
+      }
+      return config;
+    });
+    // 响应拦截器 - 401 跳转 Element 登录页
+    this._http.interceptors.response.use(
+      function(response) { return response.data; },
+      function(error) {
+        if (error.response) {
+          var status = error.response.status;
+          var data = error.response.data;
+          if (status === 401) {
+            self.clearToken();
+            window.location.href = '/admin/login-element';
+            throw new Error('登录已过期');
+          }
+          throw new Error((data && data.error) || '请求失败');
+        }
+        throw new Error('网络连接失败');
+      }
+    );
+  }
+  return this._http;
+};
 
 // 注册所有 Element Plus Icons
 for (var key in ElementPlusIconsVue) {
