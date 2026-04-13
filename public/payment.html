@@ -416,20 +416,24 @@
         });
 
         // 生成二维码
-        const generateQR = async (text) => {
-          await nextTick();
-          const canvas = document.getElementById('qrcode-canvas');
-          if (canvas && text) {
-            try {
-              await QRCode.toCanvas(canvas, text, {
-                width: 200,
-                margin: 1,
-                color: { dark: '#000000', light: '#ffffff' }
-              });
-            } catch (e) {
-              console.error('二维码生成失败:', e);
-            }
-          }
+        const generateQR = (text) => {
+          return new Promise((resolve) => {
+            nextTick(() => {
+              const canvas = document.getElementById('qrcode-canvas');
+              if (canvas && text) {
+                QRCode.toCanvas(canvas, text, {
+                  width: 200,
+                  margin: 1,
+                  color: { dark: '#000000', light: '#ffffff' }
+                }, function (err) {
+                  if (err) console.error('二维码生成失败:', err);
+                  resolve(!err);
+                });
+              } else {
+                resolve(false);
+              }
+            });
+          });
         };
 
         // 创建支付订单
