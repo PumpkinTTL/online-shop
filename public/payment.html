@@ -328,7 +328,7 @@
               <i class="fa-brands fa-alipay"></i> 请使用支付宝扫码支付
             </div>
             <div class="qr-canvas-wrap">
-              <canvas id="qrcode-canvas"></canvas>
+              <img v-if="qrImageUrl" :src="qrImageUrl" alt="支付宝二维码" style="width:200px;height:200px;" />
             </div>
             <div class="pay-qr-tip">二维码30分钟内有效，请尽快支付</div>
             <div class="pay-countdown" :class="{ expired: countdown <= 0 }">
@@ -399,6 +399,7 @@
         const cdKey = ref('');
         const contact = ref('');
         const countdown = ref(0);
+        const qrImageUrl = ref('');
 
         let pollTimer = null;
         let countdownTimer = null;
@@ -418,19 +419,17 @@
         // 生成二维码
         const generateQR = (text) => {
           return new Promise((resolve) => {
-            nextTick(() => {
-              const canvas = document.getElementById('qrcode-canvas');
-              if (canvas && text) {
-                QRCode.toCanvas(canvas, text, {
-                  width: 200,
-                  margin: 1,
-                  color: { dark: '#000000', light: '#ffffff' }
-                }, function (err) {
-                  if (err) console.error('二维码生成失败:', err);
-                  resolve(!err);
-                });
-              } else {
+            QRCode.toDataURL(text, {
+              width: 200,
+              margin: 2,
+              color: { dark: '#000000', light: '#ffffff' }
+            }, function (err, url) {
+              if (err) {
+                console.error('二维码生成失败:', err);
                 resolve(false);
+              } else {
+                qrImageUrl.value = url;
+                resolve(true);
               }
             });
           });
@@ -571,7 +570,7 @@
         });
 
         return {
-          loading, error, orderNo, qrCode, amount, productName,
+          loading, error, orderNo, qrCode, qrImageUrl, amount, productName,
           payStatus, cdKey, contact, countdown, countdownText,
           saveContact, copyCDK, goToRedeem, goBack,
         };
