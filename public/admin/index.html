@@ -161,7 +161,7 @@
                       <td><strong>{{ p.name }}</strong></td>
                       <td><span class="tag tag-blue">{{ productTypeLabel(p.type) }}</span></td>
                       <td>¥{{ p.price }}</td>
-                      <td>{{ p.stock }}</td>
+                      <td>{{ p.stock }} <span style="font-size:10px;color:#999">卡密</span></td>
                       <td>{{ p.sales }}</td>
                       <td>{{ p.warranty || '-' }}</td>
                       <td>{{ formatDate(p.createdAt) }}</td>
@@ -208,8 +208,8 @@
                     </select>
                   </div>
                   <div class="form-group">
-                    <label>库存</label>
-                    <input type="number" class="form-input" v-model="editingProduct.stock" placeholder="库存数量">
+                    <label>库存 <span style="font-size:11px;color:#999;font-weight:400">（由卡密自动计算）</span></label>
+                    <input type="text" class="form-input" :value="editingProduct.stock ?? 0" disabled style="background:#f5f5f5;color:#666;cursor:not-allowed">
                   </div>
                   <div class="form-group">
                     <label>销量</label>
@@ -753,7 +753,7 @@
         };
 
         const openProductModal = (product = null) => {
-          editingProduct.value = product ? { ...product } : { name: '', price: '', description: '', type: 'ai', stock: 0, sales: 0 };
+          editingProduct.value = product ? { ...product } : { name: '', price: '', description: '', type: 'ai', sales: 0 };
           productModalVisible.value = true;
         };
 

@@ -34,10 +34,15 @@ class PaymentService {
   async createPayment(productId, contact) {
     const productRepo = this.getProductRepo();
     const paymentRepo = this.getPaymentOrderRepo();
+    const cardKeyRepo = this.getCardKeyRepo();
 
     // 查询商品
     const product = await productRepo.findOne({ where: { id: productId } });
     if (!product) throw new Error('商品不存在');
+
+    // 检查库存（可用卡密数量）
+    const stock = await cardKeyRepo.count({ where: { productId, status: 'unused' } });
+    if (stock <= 0) throw new Error('商品已售罄，暂无库存');
 
     // 创建支付订单
     const orderNo = this.generateOrderNo();
