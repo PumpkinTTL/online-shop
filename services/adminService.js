@@ -323,6 +323,12 @@ class AdminService {
     return true;
   }
 
+  async batchDeleteCardKeys(ids) {
+    const repo = dataSource.getRepository(CardKey);
+    const result = await repo.delete(ids);
+    return result.affected || 0;
+  }
+
   // ==================== 订单管理 ====================
 
   async getOrders({ status, page, pageSize }) {

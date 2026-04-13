@@ -297,6 +297,23 @@ router.delete('/card-keys/:id', auth, async (req, res) => {
   }
 });
 
+// 批量删除卡密
+router.post('/card-keys/batch-delete', auth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请选择要删除的卡密' });
+    }
+    if (ids.length > 500) {
+      return res.status(400).json({ error: '单次最多删除500条' });
+    }
+    const result = await adminService.batchDeleteCardKeys(ids);
+    res.json({ message: `成功删除 ${result} 条卡密`, count: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ==================== 订单管理 ====================
 
 router.get('/orders', auth, async (req, res) => {

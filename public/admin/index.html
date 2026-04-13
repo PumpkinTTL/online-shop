@@ -260,6 +260,9 @@
               <button class="btn btn-primary" @click="openCardKeyModal()">
                 <i class="fa-solid fa-plus"></i> 生成卡密
               </button>
+              <button class="btn btn-danger" v-if="selectedCardKeyIds.length > 0" @click="handleBatchDeleteCardKeys">
+                <i class="fa-solid fa-trash"></i> 批量删除 ({{ selectedCardKeyIds.length }})
+              </button>
               <div class="spacer"></div>
               <select class="form-select" style="width:auto;" v-model="cardKeyFilter.productId" @change="loadCardKeys">
                 <option value="">全部商品</option>
@@ -285,6 +288,7 @@
                 <table>
                   <thead>
                     <tr>
+                      <th style="width:36px;"><input type="checkbox" :checked="selectedCardKeyIds.length === cardKeys.length && cardKeys.length > 0" @change="toggleSelectAllCardKeys" style="accent-color:var(--primary)"></th>
                       <th>ID</th>
                       <th>卡密</th>
                       <th>CDK</th>
@@ -297,6 +301,7 @@
                   </thead>
                   <tbody>
                     <tr v-for="ck in cardKeys" :key="ck.id">
+                      <td><input type="checkbox" :value="ck.id" v-model="selectedCardKeyIds" style="accent-color:var(--primary)"></td>
                       <td>{{ ck.id }}</td>
                       <td><code style="font-size:12px;">{{ ck.code }}</code></td>
                       <td><code style="font-size:12px;color:#22c55e;">{{ ck.CDK || '-' }}</code></td>
@@ -865,6 +870,7 @@
 
         const loadCardKeys = async () => {
           cardKeysLoading.value = true;
+          selectedCardKeyIds.value = [];
           try {
             const result = await AdminAPI.getCardKeys(cardKeyFilter.value);
             cardKeys.value = result.items;
@@ -974,6 +980,36 @@
             await AdminAPI.deleteCardKey(id);
             AdminToast.success('删除成功');
             loadCardKeys();
+          } catch (e) {
+            AdminToast.error('删除失败');
+          }
+        };
+
+        // 卡密批量选择
+        const selectedCardKeyIds = ref([]);
+
+        const toggleSelectAllCardKeys = (e) => {
+          if (e.target.checked) {
+            selectedCardKeyIds.value = cardKeys.value.map(ck => ck.id);
+          } else {
+            selectedCardKeyIds.value = [];
+          }
+        };
+
+        const handleBatchDeleteCardKeys = async () => {
+          if (selectedCardKeyIds.value.length === 0) return;
+          if (!await confirmAction(`确定要删除选中的 ${selectedCardKeyIds.value.length} 条卡密吗？此操作不可恢复！`)) return;
+          try {
+            const res = await axios.post('/api/admin/card-keys/batch-delete', { ids: selectedCardKeyIds.value }, {
+              headers: { Authorization: `Bearer ${token.value}` }
+            });
+            AdminToast.success(res.data.message);
+            selectedCardKeyIds.value = [];
+            loadCardKeys();
+          } catch (e) {
+            AdminToast.error(e.response?.data?.error || '批量删除失败');
+          }
+        };
             loadStats();
           } catch (e) {
             AdminToast.error(e.message);
@@ -1185,6 +1221,7 @@
           cardPrefixes, manualKeyCount, editCDKModalVisible, editingCDK,
           loadCardKeys, openCardKeyModal, openEditCDKModal,
           handleGenerateCardKeys, handleSaveCDK, handleDeleteCardKey,
+          selectedCardKeyIds, toggleSelectAllCardKeys, handleBatchDeleteCardKeys,
           // 订单
           orders, ordersLoading, orderTotal, orderFilter,
           loadOrders, handleDeleteOrder,
