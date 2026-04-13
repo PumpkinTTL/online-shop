@@ -783,6 +783,17 @@
           return map[currentPage.value] || '仪表盘';
         });
 
+        // ===== 通用确认弹窗 =====
+        const confirmAction = (message) => {
+          return new Promise((resolve) => {
+            if (window.confirm(message)) {
+              resolve(true);
+            } else {
+              resolve(false);
+            }
+          });
+        };
+
         // ===== 仪表盘 =====
         const stats = ref({});
         const loadStats = async () => {
