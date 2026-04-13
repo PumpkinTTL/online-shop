@@ -117,6 +117,9 @@ const AdminAPI = {
   generateCardKeys(data) {
     return this.request('POST', '/card-keys/generate', data);
   },
+  manualAddCardKeys(data) {
+    return this.request('POST', '/card-keys/manual', data);
+  },
   updateCardKey(id, data) {
     return this.request('PUT', `/card-keys/${id}`, data);
   },

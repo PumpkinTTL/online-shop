@@ -261,6 +261,36 @@ class AdminService {
     return repo.save(entities);
   }
 
+  // 手动录入卡密
+  async manualAddCardKeys(productId, keys, cdkList) {
+    const repo = dataSource.getRepository(CardKey);
+    const entities = [];
+
+    for (let i = 0; i < keys.length; i++) {
+      const code = keys[i].trim();
+      if (!code) continue;
+
+      // 检查卡密是否重复
+      const exists = await repo.findOne({ where: { code } });
+      if (exists) {
+        throw new Error(`卡密已存在: ${code}`);
+      }
+
+      entities.push(repo.create({
+        code,
+        productId: parseInt(productId),
+        CDK: (cdkList && cdkList[i]) || null,
+        status: 'unused',
+      }));
+    }
+
+    if (entities.length === 0) {
+      throw new Error('没有有效的卡密');
+    }
+
+    return repo.save(entities);
+  }
+
   async getCardKeys({ productId, status, page, pageSize }) {
     const repo = dataSource.getRepository(CardKey);
     const where = {};

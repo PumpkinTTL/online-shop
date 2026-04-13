@@ -305,7 +305,7 @@
             <div class="modal-overlay" v-if="cardKeyModalVisible">
               <div class="modal" style="max-width:560px;">
                 <div class="modal-header">
-                  <h3>批量生成卡密</h3>
+                  <h3>添加卡密</h3>
                   <button class="modal-close" @click="cardKeyModalVisible = false"><i
                       class="fa-solid fa-xmark"></i></button>
                 </div>
@@ -317,35 +317,63 @@
                       <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }} (ID:{{ p.id }})</option>
                     </select>
                   </div>
+                  <!-- 录入方式切换 -->
                   <div class="form-group">
-                    <label>卡密前缀</label>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-                      <button v-for="(label, key) in cardPrefixes" :key="key" class="btn btn-sm"
-                        :class="cardKeyForm.prefix === key ? 'btn-primary' : 'btn-ghost'"
-                        @click="cardKeyForm.prefix = key">
-                        {{ label }} ({{ key }})
+                    <label>录入方式</label>
+                    <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+                      <button class="btn" style="flex:1;border:none;border-radius:0;"
+                        :class="cardKeyForm.mode === 'auto' ? 'btn-primary' : 'btn-ghost'"
+                        @click="cardKeyForm.mode = 'auto'">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 自动生成
+                      </button>
+                      <button class="btn" style="flex:1;border:none;border-radius:0;"
+                        :class="cardKeyForm.mode === 'manual' ? 'btn-primary' : 'btn-ghost'"
+                        @click="cardKeyForm.mode = 'manual'">
+                        <i class="fa-solid fa-keyboard"></i> 手动录入
                       </button>
                     </div>
-                    <input type="text" class="form-input" v-model="cardKeyForm.prefix" placeholder="或自定义前缀">
-                    <div class="cdk-hint">生成格式：前缀 + XXXXX-XXXXX（10位）</div>
                   </div>
-                  <div class="form-group">
-                    <label>生成数量</label>
-                    <input type="number" class="form-input" v-model.number="cardKeyForm.count" min="1" max="100"
-                      placeholder="1-100">
-                  </div>
+                  <!-- 自动生成模式 -->
+                  <template v-if="cardKeyForm.mode === 'auto'">
+                    <div class="form-group">
+                      <label>卡密前缀</label>
+                      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                        <button v-for="(label, key) in cardPrefixes" :key="key" class="btn btn-sm"
+                          :class="cardKeyForm.prefix === key ? 'btn-primary' : 'btn-ghost'"
+                          @click="cardKeyForm.prefix = key">
+                          {{ label }} ({{ key }})
+                        </button>
+                      </div>
+                      <input type="text" class="form-input" v-model="cardKeyForm.prefix" placeholder="或自定义前缀">
+                      <div class="cdk-hint">生成格式：前缀 + XXXXX-XXXXX（10位）</div>
+                    </div>
+                    <div class="form-group">
+                      <label>生成数量</label>
+                      <input type="number" class="form-input" v-model.number="cardKeyForm.count" min="1" max="100"
+                        placeholder="1-100">
+                    </div>
+                  </template>
+                  <!-- 手动录入模式 -->
+                  <template v-if="cardKeyForm.mode === 'manual'">
+                    <div class="form-group">
+                      <label>卡密列表 <span style="color:#9ca3af;font-weight:400;">（每行一个，支持字母、数字、横线等任意格式）</span></label>
+                      <textarea class="cdk-textarea" v-model="cardKeyForm.manualKeys"
+                        placeholder="每行输入一个卡密&#10;例如：&#10;123456789&#10;ABC-DEF-GHI&#10;XY12345"></textarea>
+                      <div class="cdk-hint">已输入 <strong>{{ manualKeyCount }}</strong> 个卡密</div>
+                    </div>
+                  </template>
                   <div class="form-group">
                     <label>CDK 列表 <span style="color:#9ca3af;font-weight:400;">（可选，每行一个，对应每个卡密）</span></label>
                     <textarea class="cdk-textarea" v-model="cardKeyForm.cdkText"
                       placeholder="每行输入一个CDK&#10;例如：&#10;ABC123DEF456GHI7&#10;XYZ789UVW012RST3"></textarea>
-                    <div class="cdk-hint">留空则不关联CDK，后续可单独编辑。行数应与生成数量一致。</div>
+                    <div class="cdk-hint">留空则不关联CDK，后续可单独编辑。行数应与卡密数量一致。</div>
                   </div>
                 </div>
                 <div class="modal-footer">
                   <button class="btn btn-ghost" @click="cardKeyModalVisible = false">取消</button>
                   <button class="btn btn-primary" @click="handleGenerateCardKeys" :disabled="saving">
                     <i class="fa-solid fa-spinner fa-spin" v-if="saving"></i>
-                    {{ saving ? '生成中...' : '生成' }}
+                    {{ saving ? '提交中...' : '提交' }}
                   </button>
                 </div>
               </div>
@@ -799,10 +827,16 @@
         const cardKeyTotal = ref(0);
         const cardKeyFilter = ref({ productId: '', status: '', page: 1, pageSize: 20 });
         const cardKeyModalVisible = ref(false);
-        const cardKeyForm = ref({ productId: '', prefix: '', count: 10, cdkText: '' });
+        const cardKeyForm = ref({ productId: '', mode: 'auto', prefix: '', count: 10, cdkText: '', manualKeys: '' });
         const cardPrefixes = ref({});
         const editCDKModalVisible = ref(false);
         const editingCDK = ref({});
+
+        // 手动录入卡密数量
+        const manualKeyCount = computed(() => {
+          const text = cardKeyForm.value.manualKeys || '';
+          return text.trim().split('\n').map(s => s.trim()).filter(Boolean).length;
+        });
 
         const loadCardKeys = async () => {
           cardKeysLoading.value = true;
@@ -824,7 +858,7 @@
         };
 
         const openCardKeyModal = () => {
-          cardKeyForm.value = { productId: '', prefix: '', count: 10, cdkText: '' };
+          cardKeyForm.value = { productId: '', mode: 'auto', prefix: '', count: 10, cdkText: '', manualKeys: '' };
           cardKeyModalVisible.value = true;
         };
 
@@ -836,30 +870,59 @@
         const handleGenerateCardKeys = async () => {
           const f = cardKeyForm.value;
           if (!f.productId) return AdminToast.warning('请选择商品');
-          if (!f.count || f.count < 1 || f.count > 100) return AdminToast.warning('数量1-100');
 
-          // 解析 CDK 列表
-          let cdkList = [];
-          if (f.cdkText.trim()) {
-            cdkList = f.cdkText.trim().split('\n').map(s => s.trim()).filter(Boolean);
-          }
+          if (f.mode === 'manual') {
+            // 手动录入模式
+            const keys = f.manualKeys.trim().split('\n').map(s => s.trim()).filter(Boolean);
+            if (keys.length === 0) return AdminToast.warning('请输入至少一个卡密');
 
-          saving.value = true;
-          try {
-            const result = await AdminAPI.generateCardKeys({
-              productId: f.productId,
-              prefix: f.prefix,
-              count: f.count,
-              cdkList: cdkList,
-            });
-            AdminToast.success(`成功生成 ${result.length} 个卡密`);
-            cardKeyModalVisible.value = false;
-            loadCardKeys();
-            loadStats();
-          } catch (e) {
-            AdminToast.error(e.message);
-          } finally {
-            saving.value = false;
+            let cdkList = [];
+            if (f.cdkText.trim()) {
+              cdkList = f.cdkText.trim().split('\n').map(s => s.trim()).filter(Boolean);
+            }
+
+            saving.value = true;
+            try {
+              const result = await AdminAPI.manualAddCardKeys({
+                productId: f.productId,
+                keys: keys,
+                cdkList: cdkList,
+              });
+              AdminToast.success(`成功添加 ${result.length} 个卡密`);
+              cardKeyModalVisible.value = false;
+              loadCardKeys();
+              loadStats();
+            } catch (e) {
+              AdminToast.error(e.message);
+            } finally {
+              saving.value = false;
+            }
+          } else {
+            // 自动生成模式
+            if (!f.count || f.count < 1 || f.count > 100) return AdminToast.warning('数量1-100');
+
+            let cdkList = [];
+            if (f.cdkText.trim()) {
+              cdkList = f.cdkText.trim().split('\n').map(s => s.trim()).filter(Boolean);
+            }
+
+            saving.value = true;
+            try {
+              const result = await AdminAPI.generateCardKeys({
+                productId: f.productId,
+                prefix: f.prefix,
+                count: f.count,
+                cdkList: cdkList,
+              });
+              AdminToast.success(`成功生成 ${result.length} 个卡密`);
+              cardKeyModalVisible.value = false;
+              loadCardKeys();
+              loadStats();
+            } catch (e) {
+              AdminToast.error(e.message);
+            } finally {
+              saving.value = false;
+            }
           }
         };
 
@@ -1094,7 +1157,7 @@
           loadProducts, openProductModal, handleSaveProduct, handleDeleteProduct,
           // 卡密
           cardKeys, cardKeysLoading, cardKeyTotal, cardKeyFilter, cardKeyModalVisible, cardKeyForm,
-          cardPrefixes, editCDKModalVisible, editingCDK,
+          cardPrefixes, manualKeyCount, editCDKModalVisible, editingCDK,
           loadCardKeys, openCardKeyModal, openEditCDKModal,
           handleGenerateCardKeys, handleSaveCDK, handleDeleteCardKey,
           // 订单
