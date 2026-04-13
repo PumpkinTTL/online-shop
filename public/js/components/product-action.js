@@ -226,33 +226,27 @@ function registerProductAction(app) {
             <i class="fa-solid fa-message"></i> 接码登录
           </div>
 
-          <!-- 未开始接码 -->
-          <div class="sms-step" v-if="!smsLoading && !smsCode">
-            <p class="sms-step-desc">点击获取验证码，将发送至登录号码</p>
-            <button class="btn btn-primary sms-btn" @click="startSmsReceive" :disabled="smsLoading">
-              <i class="fa-solid fa-spinner fa-spin" v-if="smsLoading"></i>
-              <i class="fa-solid fa-paper-plane" v-else></i>
-              获取验证码
-            </button>
+          <!-- 显示号码 -->
+          <div class="sms-phone-display" style="margin-bottom:12px;">
+            <span style="font-size:12px;color:#666;margin-right:6px;">号码</span>
+            <span class="sms-phone-number">{{ actionResult.CDK }}</span>
           </div>
 
-          <!-- 等待验证码 -->
-          <div class="sms-step" v-else-if="smsLoading && !smsCode">
-            <div class="sms-phone-display">
-              <span class="sms-phone-number">{{ actionResult.CDK }}</span>
-            </div>
-            <p class="sms-step-desc">等待验证码中... (自动查询)</p>
-            <div class="sms-code-waiting">
-              <i class="fa-solid fa-spinner fa-spin"></i>
-              <span>正在等待验证码 {{ smsPollCountdown }}s</span>
-            </div>
+          <!-- 未获取验证码 -->
+          <div class="sms-step" v-if="!smsCode">
+            <button class="btn btn-primary sms-btn" @click="getSmsCode" :disabled="smsLoading">
+              <i class="fa-solid fa-spinner fa-spin" v-if="smsLoading"></i>
+              <i class="fa-solid fa-paper-plane" v-else></i>
+              {{ smsLoading ? '获取中...' : '获取验证码' }}
+            </button>
+            <p class="sms-step-desc" style="margin-top:8px;" v-if="smsError">
+              <i class="fa-solid fa-circle-exclamation" style="color:#ff4d4f;margin-right:4px;"></i>
+              {{ smsError }}
+            </p>
           </div>
 
           <!-- 接码成功 -->
           <div class="sms-step sms-step-success" v-else>
-            <div class="sms-phone-display">
-              <span class="sms-phone-number">{{ actionResult.CDK }}</span>
-            </div>
             <div class="cdk-card">
               <div class="cdk-card-label">
                 <i class="fa-solid fa-lock-open"></i> 验证码
@@ -297,13 +291,9 @@ function registerProductAction(app) {
       let countdownTimer = null;
 
       // --- 接码状态 ---
-      const smsPhone = ref('');
       const smsCode = ref('');
       const smsLoading = ref(false);
-      const smsPollCountdown = ref(0);
-
-      let smsPollTimer = null;
-      let smsCountdownTimer = null;
+      const smsError = ref('');
 
       // --- 倒计时文本 ---
       const countdownText = computed(() => {
@@ -458,54 +448,30 @@ function registerProductAction(app) {
         showQrModal.value = false;
         stopPolling();
         if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
-        stopSmsPoll();
       };
 
       // --- 接码逻辑 ---
-      // isCode=1 时，号码已固定为 CDK，直接开始轮询验证码
-      const startSmsReceive = () => {
+      // isCode=1 时，号码已固定为 CDK，手动获取验证码
+      const getSmsCode = async () => {
         smsLoading.value = true;
-        smsCode.value = '';
-        smsPollCountdown.value = 60;
-        startSmsPoll();
-      };
-
-      const startSmsPoll = () => {
-        stopSmsPoll();
-        smsPollTimer = setInterval(async () => {
-          if (!actionResult.value?.CDK || smsCode.value) return;
-          try {
-            const res = await axios.post('/api/pickup/get-verify-code', {
-              phone: actionResult.value.CDK,
-              keyword: props.product.smKeyWord || '',
-            });
-            if (res.data.received && res.data.code) {
-              smsCode.value = res.data.code;
-              smsLoading.value = false;
-              stopSmsPoll();
-              Toast.success('验证码已获取！');
-              emit('success', { type: 'sms', phone: actionResult.value.CDK, code: smsCode.value });
-            }
-          } catch (e) {
-            // 静默
+        smsError.value = '';
+        try {
+          const res = await axios.post('/api/pickup/get-verify-code', {
+            phone: actionResult.value.CDK,
+            keyword: props.product.smKeyWord || '',
+          });
+          if (res.data.received && res.data.code) {
+            smsCode.value = res.data.code;
+            Toast.success('验证码已获取！');
+            emit('success', { type: 'sms', phone: actionResult.value.CDK, code: smsCode.value });
+          } else {
+            smsError.value = '暂未收到验证码，请稍后重试';
           }
-          smsPollCountdown.value--;
-          if (smsPollCountdown.value <= 0) {
-            smsPollCountdown.value = 60; // 重置继续轮询
-          }
-        }, 5000); // 每5秒查询一次
-
-        // 倒计时
-        smsCountdownTimer = setInterval(() => {
-          if (smsPollCountdown.value > 0) {
-            smsPollCountdown.value--;
-          }
-        }, 1000);
-      };
-
-      const stopSmsPoll = () => {
-        if (smsPollTimer) { clearInterval(smsPollTimer); smsPollTimer = null; }
-        if (smsCountdownTimer) { clearInterval(smsCountdownTimer); smsCountdownTimer = null; }
+        } catch (err) {
+          smsError.value = err.response?.data?.error || '获取验证码失败';
+        } finally {
+          smsLoading.value = false;
+        }
       };
 
       // --- 工具方法 ---
@@ -532,16 +498,15 @@ function registerProductAction(app) {
       onUnmounted(() => {
         stopPolling();
         if (countdownTimer) clearInterval(countdownTimer);
-        stopSmsPoll();
       });
 
       return {
         contact, payMethod, redeemCode, redeeming, actionResult,
         showQrModal, qrLoading, qrError, qrImageUrl, payAmount,
         payStatus, orderNo, cdKey, countdown, countdownText, payLoading,
-        smsCode, smsLoading, smsPollCountdown,
+        smsCode, smsLoading, smsError,
         handleRedeem, startAlipayPay, closeQrModal,
-        startSmsReceive, copyText, goToRedeem,
+        getSmsCode, copyText, goToRedeem,
       };
     },
   });
