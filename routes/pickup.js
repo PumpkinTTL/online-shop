@@ -101,6 +101,20 @@ router.post('/get-verify-code', async (req, res) => {
   }
 });
 
+// 检查号码是否已有接码记录（非首次登录检测）
+router.get('/check-phone-record', async (req, res) => {
+  try {
+    const { phone } = req.query;
+    if (!phone) {
+      return res.status(400).json({ error: '手机号不能为空' });
+    }
+    const count = await pickupService.getPhoneRecordCount(phone.trim());
+    res.json({ phone: phone.trim(), exists: count > 0, count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 确认提货 — 创建订单
 router.post('/confirm', async (req, res) => {
   try {

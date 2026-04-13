@@ -1045,3 +1045,22 @@
 .pay-success .cdk-card {
   text-align: left;
 }
+
+/* 非首次登录提示 */
+.sms-repeat-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #d46b08;
+}
+
+.sms-repeat-tip i {
+  color: #fa8c16;
+  flex-shrink: 0;
+}

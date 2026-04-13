@@ -232,6 +232,12 @@ function registerProductAction(app) {
             <span class="sms-phone-number">{{ actionResult.CDK }}</span>
           </div>
 
+          <!-- 非首次登录提示 -->
+          <div class="sms-repeat-tip" v-if="isRepeatPhone">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>非首次登录，接码需额外费用 ¥0.01</span>
+          </div>
+
           <!-- 未获取验证码 -->
           <div class="sms-step" v-if="!smsCode">
             <button class="btn btn-primary sms-btn" @click="getSmsCode" :disabled="smsLoading">
@@ -294,6 +300,7 @@ function registerProductAction(app) {
       const smsCode = ref('');
       const smsLoading = ref(false);
       const smsError = ref('');
+      const isRepeatPhone = ref(false); // 非首次登录标记
 
       // --- 倒计时文本 ---
       const countdownText = computed(() => {
@@ -322,9 +329,9 @@ function registerProductAction(app) {
           localStorage.setItem('lastContact', contact.value.trim());
           actionResult.value = { type: 'redeem', CDK: response.data.CDK };
 
-          // isCode=1 且有CDK(号码)，自动开始接码
+          // isCode=1 且有CDK(号码)，检查是否非首次登录
           if (props.product.isCode && response.data.CDK) {
-            // 号码就是CDK，设置好准备接码
+            checkPhoneRecord(response.data.CDK);
           }
 
           Toast.success('兑换成功！');
@@ -413,6 +420,11 @@ function registerProductAction(app) {
               actionResult.value = { type: 'alipay', CDK: res.data.cdKey };
               emit('success', actionResult.value);
 
+              // isCode=1 检查是否非首次登录
+              if (props.product.isCode && res.data.cdKey) {
+                checkPhoneRecord(res.data.cdKey);
+              }
+
               // 关闭弹窗，在主界面显示结果/接码
               setTimeout(() => {
                 showQrModal.value = false;
@@ -451,6 +463,18 @@ function registerProductAction(app) {
       };
 
       // --- 接码逻辑 ---
+      // 检查号码是否已有接码记录（非首次登录）
+      const checkPhoneRecord = async (phone) => {
+        try {
+          const res = await axios.get('/api/pickup/check-phone-record', {
+            params: { phone },
+          });
+          isRepeatPhone.value = res.data.exists;
+        } catch (e) {
+          // 静默，不影响流程
+        }
+      };
+
       // isCode=1 时，号码已固定为 CDK，手动获取验证码
       const getSmsCode = async () => {
         smsLoading.value = true;
@@ -504,7 +528,7 @@ function registerProductAction(app) {
         contact, payMethod, redeemCode, redeeming, actionResult,
         showQrModal, qrLoading, qrError, qrImageUrl, payAmount,
         payStatus, orderNo, cdKey, countdown, countdownText, payLoading,
-        smsCode, smsLoading, smsError,
+        smsCode, smsLoading, smsError, isRepeatPhone,
         handleRedeem, startAlipayPay, closeQrModal,
         getSmsCode, copyText, goToRedeem,
       };

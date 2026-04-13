@@ -296,6 +296,12 @@ class PickupService {
 
     return { items, total };
   }
+
+  // 检查号码是否已有接码记录（非首次登录检测）
+  async getPhoneRecordCount(phone) {
+    const repo = this.getSmsRecordRepo();
+    return repo.count({ where: { phone } });
+  }
 }
 
 module.exports = new PickupService();
