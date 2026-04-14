@@ -243,6 +243,11 @@
                   <span v-else style="color: #999">-</span>
                 </template>
               </el-table-column>
+              <el-table-column label="显示" width="70" align="center">
+                <template #default="{ row }">
+                  <el-tag :type="row.show ? 'success' : 'info'" size="small">{{ row.show ? '是' : '否' }}</el-tag>
+                </template>
+              </el-table-column>
               <el-table-column label="创建时间" width="160" sortable>
                 <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
               </el-table-column>
@@ -510,6 +515,11 @@
           <div v-if="currentPage === 'smsrecords'">
             <div class="page-toolbar">
               <div style="flex:1"></div>
+              <el-select v-model="smsRecordFilter.source" placeholder="全部来源" clearable style="width:130px"
+                @change="loadSmsRecords">
+                <el-option label="免费接码" value="free" />
+                <el-option label="isCode商品" value="iscode" />
+              </el-select>
               <el-select v-model="smsRecordFilter.status" placeholder="全部状态" clearable style="width:120px"
                 @change="loadSmsRecords">
                 <el-option label="使用中" value="active" />
@@ -532,6 +542,11 @@
               <el-table-column prop="id" label="ID" width="60" sortable />
               <el-table-column label="手机号" width="130">
                 <template #default="{ row }"><code>{{ row.phone }}</code></template>
+              </el-table-column>
+              <el-table-column label="来源" width="110">
+                <template #default="{ row }">
+                  <el-tag size="small" :type="smsSourceType(row.source)">{{ smsSourceLabel(row.source) }}</el-tag>
+                </template>
               </el-table-column>
               <el-table-column label="关键词" width="100">
                 <template #default="{ row }">{{ row.keyword || '-' }}</template>
@@ -615,6 +630,9 @@
         </el-form-item>
         <el-form-item label="积分额度">
           <el-input-number v-model="editingProduct.credit" :min="0" :step="1" placeholder="可选，账号积分额度" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="首页显示">
+          <el-switch v-model="editingProduct.show" :active-value="1" :inactive-value="0" active-text="显示" inactive-text="隐藏" />
         </el-form-item>
       </el-form>
       <template #footer>

@@ -246,4 +246,39 @@ router.get('/orders', async (req, res) => {
   }
 });
 
+// ==================== isCode 商品专用接口 ====================
+
+// isCode 商品：获取验证码（关联卡密和商品）
+router.post('/iscode/get-verify-code', async (req, res) => {
+  try {
+    const { phone, keyword, cardKeyId, productId } = req.body;
+    if (!phone) {
+      return res.status(400).json({ error: '手机号不能为空' });
+    }
+    const result = await pickupService.iscodeGetVerifyCode(
+      phone,
+      keyword,
+      cardKeyId || null,
+      productId || null,
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// isCode 商品：检查接码状态（按卡密+手机号查询）
+router.get('/iscode/check-status', async (req, res) => {
+  try {
+    const { phone, cardKeyId } = req.query;
+    if (!phone) {
+      return res.status(400).json({ error: '手机号不能为空' });
+    }
+    const result = await pickupService.iscodeCheckStatus(phone.trim(), cardKeyId || null);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

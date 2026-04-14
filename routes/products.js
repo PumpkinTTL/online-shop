@@ -3,10 +3,11 @@ const productService = require('../services/ProductService');
 
 const router = express.Router();
 
-// 获取所有商品
+// 获取所有商品（前台只返回 show=1 的商品）
 router.get('/', async (req, res) => {
   try {
-    const products = await productService.findAll();
+    const all = req.query.all === '1'; // admin 用 all=1 拉全部
+    const products = all ? await productService.findAll() : await productService.findVisible();
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });

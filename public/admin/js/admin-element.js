@@ -145,7 +145,7 @@ const app = createApp({
       if (product) {
         editingProduct.value = Object.assign({}, product);
       } else {
-        editingProduct.value = { name: '', price: '', description: '', type: 'ai', sales: 0, isCode: 0, smKeyWord: '', addr: '', credit: 0 };
+        editingProduct.value = { name: '', price: '', description: '', type: 'ai', sales: 0, isCode: 0, smKeyWord: '', addr: '', credit: 0, show: 1 };
       }
       productModalVisible.value = true;
     };
@@ -487,7 +487,7 @@ const app = createApp({
     var smsRecords = ref([]);
     var smsRecordTotal = ref(0);
     var smsRecordLoading = ref(false);
-    var smsRecordFilter = ref({ status: '', phone: '', keyword: '', page: 1, pageSize: 20 });
+    var smsRecordFilter = ref({ status: '', phone: '', keyword: '', source: '', page: 1, pageSize: 20 });
 
     var loadSmsRecords = async function() {
       smsRecordLoading.value = true;
@@ -509,6 +509,14 @@ const app = createApp({
     var smsStatusLabel = function(s) {
       var map = { active: '使用中', completed: '已完成', released: '已释放', blocked: '已拉黑' };
       return map[s] || s;
+    };
+    var smsSourceLabel = function(s) {
+      var map = { free: '免费接码', iscode: 'isCode商品' };
+      return map[s] || s || '免费接码';
+    };
+    var smsSourceType = function(s) {
+      var map = { free: 'info', iscode: 'success' };
+      return map[s] || 'info';
     };
 
     // ===== 修改密码 =====
@@ -663,6 +671,8 @@ const app = createApp({
       loadSmsRecords: loadSmsRecords,
       smsStatusType: smsStatusType,
       smsStatusLabel: smsStatusLabel,
+      smsSourceLabel: smsSourceLabel,
+      smsSourceType: smsSourceType,
       // 搜索图标（供 el-input :prefix-icon 使用）
       Search: ElementPlusIconsVue.Search,
     };

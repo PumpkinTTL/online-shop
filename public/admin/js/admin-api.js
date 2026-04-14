@@ -86,7 +86,7 @@ const AdminAPI = {
 
   // 商品
   getProducts() {
-    return this.getHttp().get('/products');
+    return this.getHttp().get('/products?all=1');
   },
   getProduct(id) {
     return this.getHttp().get(`/products/${id}`);

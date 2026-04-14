@@ -32,6 +32,16 @@ const pickupApi = {
 
   // 拉黑号码
   blockPhone: (phone) => http.post('/pickup/block-phone', { phone }),
+
+  // ==================== isCode 商品专用接口 ====================
+
+  // isCode 商品：获取验证码（关联卡密和商品）
+  iscodeGetVerifyCode: (phone, keyword, cardKeyId, productId) =>
+    http.post('/pickup/iscode/get-verify-code', { phone, keyword, cardKeyId, productId }),
+
+  // isCode 商品：检查接码状态
+  iscodeCheckStatus: (phone, cardKeyId) =>
+    http.get('/pickup/iscode/check-status', { params: { phone, cardKeyId } }),
 };
 
 window.pickupApi = pickupApi;

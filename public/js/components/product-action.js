@@ -338,11 +338,11 @@ function registerProductAction(app) {
         try {
           const response = await pickupApi.redeem(redeemCode.value.trim(), props.product.id, contact.value.trim());
           localStorage.setItem('lastContact', contact.value.trim());
-          actionResult.value = { type: 'redeem', CDK: response.CDK };
+          actionResult.value = { type: 'redeem', CDK: response.CDK, cardKeyId: response.id };
 
           // isCode=1 且有CDK(号码)，检查是否非首次登录
           if (props.product.isCode && response.CDK) {
-            checkPhoneRecord(response.CDK);
+            checkPhoneRecord(response.CDK, response.id);
           }
 
           Toast.success('兑换成功！');
@@ -425,11 +425,10 @@ function registerProductAction(app) {
 
               // 设置 actionResult，让主界面切换到结果视图
               actionResult.value = { type: 'alipay', CDK: res.cdKey };
-              emit('success', actionResult.value);
 
               // isCode=1 检查是否非首次登录
               if (props.product.isCode && res.cdKey) {
-                checkPhoneRecord(res.cdKey);
+                checkPhoneRecord(res.cdKey, null);
               }
 
               // 关闭弹窗，在主界面显示结果/接码
@@ -470,22 +469,27 @@ function registerProductAction(app) {
       };
 
       // --- 接码逻辑 ---
-      // 检查号码是否已有接码记录（非首次登录）
-      const checkPhoneRecord = async (phone) => {
+      // 检查号码是否已有接码记录（非首次登录，isCode 专用接口）
+      const checkPhoneRecord = async (phone, cardKeyId) => {
         try {
-          const res = await pickupApi.checkPhoneRecord(phone);
+          const res = await pickupApi.iscodeCheckStatus(phone, cardKeyId || undefined);
           isRepeatPhone.value = res.exists;
         } catch (e) {
           // 静默，不影响流程
         }
       };
 
-      // isCode=1 时，号码已固定为 CDK，手动获取验证码
+      // isCode=1 时，号码已固定为 CDK，通过 isCode 专用接口获取验证码
       const getSmsCode = async () => {
         smsLoading.value = true;
         smsError.value = '';
         try {
-          const res = await pickupApi.getVerifyCode(actionResult.value.CDK, props.product.smKeyWord || '');
+          const res = await pickupApi.iscodeGetVerifyCode(
+            actionResult.value.CDK,
+            props.product.smKeyWord || '',
+            actionResult.value.cardKeyId || null,
+            props.product.id,
+          );
           if (res.received && res.code) {
             smsCode.value = res.code;
             Toast.success('验证码已获取！');

@@ -672,6 +672,11 @@
     <div v-if="currentPage === 'smsrecords'">
       <div class="toolbar">
         <div class="spacer"></div>
+        <select class="form-select" style="width:auto;" v-model="smsRecordFilter.source" @change="loadSmsRecords">
+          <option value="">全部来源</option>
+          <option value="free">免费接码</option>
+          <option value="iscode">isCode商品</option>
+        </select>
         <select class="form-select" style="width:auto;" v-model="smsRecordFilter.status" @change="loadSmsRecords">
           <option value="">全部状态</option>
           <option value="active">使用中</option>
@@ -699,6 +704,7 @@
               <tr>
                 <th>ID</th>
                 <th>手机号</th>
+                <th>来源</th>
                 <th>关键词</th>
                 <th>卡类型</th>
                 <th>验证码</th>
@@ -712,6 +718,7 @@
               <tr v-for="r in smsRecords" :key="r.id">
                 <td>{{ r.id }}</td>
                 <td><code>{{ r.phone }}</code></td>
+                <td><span :class="r.source === 'iscode' ? 'tag tag-green' : 'tag tag-gray'">{{ r.source === 'iscode' ? 'isCode' : '免费' }}</span></td>
                 <td>{{ r.keyword || '-' }}</td>
                 <td>{{ r.cardType || '全部' }}</td>
                 <td><code v-if="r.verifyCode" style="color:#22c55e;">{{ r.verifyCode }}</code><span v-else>-</span></td>
@@ -1150,7 +1157,7 @@
     const smsRecords = ref([]);
     const smsRecordTotal = ref(0);
     const smsRecordLoading = ref(false);
-    const smsRecordFilter = ref({ status: '', phone: '', keyword: '', page: 1, pageSize: 20 });
+    const smsRecordFilter = ref({ status: '', phone: '', keyword: '', source: '', page: 1, pageSize: 20 });
 
     const loadSmsRecords = async () => {
       smsRecordLoading.value = true;

@@ -343,11 +343,12 @@ router.delete('/orders/:id', auth, async (req, res) => {
 
 router.get('/sms-records', auth, async (req, res) => {
   try {
-    const { status, phone, keyword, page = 1, pageSize = 20 } = req.query;
+    const { status, phone, keyword, source, page = 1, pageSize = 20 } = req.query;
     const result = await pickupService.querySmsRecords({
       status: status || '',
       phone: phone || '',
       keyword: keyword || '',
+      source: source || '',
       page: parseInt(page),
       pageSize: parseInt(pageSize),
     });

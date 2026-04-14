@@ -32,6 +32,13 @@ class ProductService {
     return products;
   }
 
+  // 前台可见商品（show=1）
+  async findVisible() {
+    const products = await this.getRepository().find({ where: { show: 1 } });
+    await Promise.all(products.map(p => this.attachStock(p)));
+    return products;
+  }
+
   async findOne(id) {
     const product = await this.getRepository().findOne({ where: { id } });
     return this.attachStock(product);

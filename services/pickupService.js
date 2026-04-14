@@ -74,7 +74,7 @@ class PickupService {
       throw new Error(data.replace('ERROR:', '').trim());
     }
 
-    // 写入接码记录
+    // 写入接码记录（免费接码来源）
     const smsRecordRepo = this.getSmsRecordRepo();
     const record = smsRecordRepo.create({
       phone: String(data),
@@ -82,6 +82,7 @@ class PickupService {
       cardType: cardType || '全部',
       status: 'active',
       ip: ip || '',
+      source: 'free',
     });
     await smsRecordRepo.save(record);
 
@@ -120,7 +121,7 @@ class PickupService {
 
     const content = typeof data === 'string' ? data : JSON.stringify(data);
 
-    // 收到短信后更新接码记录
+    // 收到短信后更新/创建接码记录
     if (extractedCode || content) {
       const smsRecordRepo = this.getSmsRecordRepo();
       const record = await smsRecordRepo.findOne({
@@ -128,11 +129,22 @@ class PickupService {
         order: { createdAt: 'DESC' },
       });
       if (record) {
+        // 更新已有记录
         await smsRecordRepo.update(record.id, {
           smsContent: content,
           verifyCode: extractedCode,
           status: extractedCode ? 'completed' : 'active',
         });
+      } else {
+        // isCode商品：没有通过getPhone获取号码，直接创建记录（标记来源为iscode）
+        await smsRecordRepo.save(smsRecordRepo.create({
+          phone,
+          keyword: keyword || '',
+          smsContent: content,
+          verifyCode: extractedCode || '',
+          status: extractedCode ? 'completed' : 'active',
+          source: 'iscode',
+        }));
       }
     }
 
@@ -323,13 +335,14 @@ class PickupService {
     return { items: enrichedItems, total };
   }
 
-  // 查询接码记录（后台用）
+  // 查询接码记录（后台用，支持 source 筛选）
   async querySmsRecords(filter = {}) {
     const repo = this.getSmsRecordRepo();
     const where = {};
     if (filter.status) where.status = filter.status;
     if (filter.phone) where.phone = filter.phone;
     if (filter.keyword) where.keyword = filter.keyword;
+    if (filter.source) where.source = filter.source;
 
     const [items, total] = await repo.findAndCount({
       where: Object.keys(where).length > 0 ? where : undefined,
@@ -345,6 +358,98 @@ class PickupService {
   async getPhoneRecordCount(phone) {
     const repo = this.getSmsRecordRepo();
     return repo.count({ where: { phone } });
+  }
+
+  // ==================== isCode 商品专用方法 ====================
+
+  // isCode 商品：获取验证码（关联卡密和商品，写入 iscode 来源的接码记录）
+  async iscodeGetVerifyCode(phone, keyword, cardKeyId, productId) {
+    if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置');
+    if (!phone) throw new Error('手机号不能为空');
+
+    const url = `${MAAPI_BASE}?code=getMsg&token=${MAAPI_TOKEN}&phone=${phone}&keyWord=${encodeURIComponent(keyword || '')}`;
+    const res = await axios.get(url, { timeout: 15000 });
+    const data = res.data;
+
+    if (typeof data === 'string' && data.startsWith('ERROR:')) {
+      throw new Error(data.replace('ERROR:', '').trim());
+    }
+
+    // 尚未收到短信
+    if (typeof data === 'string' && data.includes('[尚未收到]')) {
+      return { received: false, code: '', content: '' };
+    }
+
+    // 提取验证码（4-6位数字）
+    let extractedCode = '';
+    const codeMatch = (typeof data === 'string') && data.match(/验证码[：:\s]*(\d{4,6})/);
+    if (codeMatch) {
+      extractedCode = codeMatch[1];
+    } else {
+      const numMatch = (typeof data === 'string') && data.match(/\b(\d{4,6})\b/);
+      if (numMatch) {
+        extractedCode = numMatch[1];
+      }
+    }
+
+    const content = typeof data === 'string' ? data : JSON.stringify(data);
+
+    // 收到短信后更新/创建 isCode 接码记录
+    if (extractedCode || content) {
+      const smsRecordRepo = this.getSmsRecordRepo();
+      // 优先查找同一卡密的 iscode 活跃记录
+      const where = { phone, source: 'iscode', status: 'active' };
+      if (cardKeyId) where.cardKeyId = cardKeyId;
+      const record = await smsRecordRepo.findOne({
+        where,
+        order: { createdAt: 'DESC' },
+      });
+      if (record) {
+        // 更新已有记录
+        await smsRecordRepo.update(record.id, {
+          smsContent: content,
+          verifyCode: extractedCode,
+          status: extractedCode ? 'completed' : 'active',
+        });
+      } else {
+        // 新建 isCode 接码记录
+        await smsRecordRepo.save(smsRecordRepo.create({
+          phone,
+          keyword: keyword || '',
+          smsContent: content,
+          verifyCode: extractedCode || '',
+          status: extractedCode ? 'completed' : 'active',
+          source: 'iscode',
+          cardKeyId: cardKeyId || null,
+          productId: productId || null,
+        }));
+      }
+    }
+
+    return { received: true, code: extractedCode, content };
+  }
+
+  // isCode 商品：检查接码状态（按卡密+手机号查询）
+  async iscodeCheckStatus(phone, cardKeyId) {
+    const repo = this.getSmsRecordRepo();
+    const where = { phone, source: 'iscode' };
+    if (cardKeyId) where.cardKeyId = cardKeyId;
+
+    const record = await repo.findOne({
+      where,
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!record) {
+      return { exists: false, status: null, verifyCode: null };
+    }
+
+    return {
+      exists: true,
+      status: record.status,
+      verifyCode: record.verifyCode || null,
+      smsContent: record.smsContent || null,
+    };
   }
 }
 

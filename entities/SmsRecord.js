@@ -50,6 +50,22 @@ module.exports = new EntitySchema({
       nullable: true,
       comment: '请求者IP',
     },
+    source: {
+      type: 'varchar',
+      length: 20,
+      default: 'free',
+      comment: '来源：free-免费接码 / iscode-isCode商品',
+    },
+    cardKeyId: {
+      type: 'int',
+      nullable: true,
+      comment: '关联卡密ID（isCode商品时有值）',
+    },
+    productId: {
+      type: 'int',
+      nullable: true,
+      comment: '关联商品ID（isCode商品时有值）',
+    },
     createdAt: {
       type: 'datetime',
       createDate: true,
