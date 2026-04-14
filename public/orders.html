@@ -328,7 +328,6 @@
 
     /* CDK 高亮区 */
     .cdk-highlight {
-      margin-top: 8px;
       padding: 10px 14px;
       background: linear-gradient(135deg, #f5f3ff, #ede9fe);
       border: 1px solid #ddd6fe;
@@ -337,6 +336,71 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+    }
+
+    .card-highlight {
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #ecfeff, #e0f7fa);
+      border: 1px solid #a5f3fc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .card-highlight .card-label {
+      font-size: 11px;
+      color: #0891b2;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .card-highlight .card-value {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0e7490;
+      letter-spacing: 1px;
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .credential-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 4px;
+    }
+
+    .credential-header {
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .credential-tip {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.4;
+    }
+
+    .credential-row {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #e2e8f0;
     }
 
     .cdk-highlight .cdk-label {
@@ -590,33 +654,42 @@
                 </div>
 
                 <!-- CDK 兑换码高亮区 -->
-                <div class="cdk-highlight" v-if="order.cardCDK">
-                  <span class="cdk-label">CDK 兑换码</span>
-                  <span class="cdk-value">{{ order.cardCDK }}</span>
-                  <button class="btn-copy" :class="{ copied: copiedId === 'cdk-' + order.id }" @click="copyText(order.cardCDK, 'cdk-' + order.id)" title="复制CDK">
-                    <i :class="copiedId === 'cdk-' + order.id ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
-                  </button>
-                </div>
-
-                <!-- 卡密信息 -->
-                <template v-if="order.cardCode">
-                  <hr class="order-divider">
-                  <div class="order-info-row">
-                    <span class="order-info-label">卡密</span>
-                    <span class="order-info-value copyable-field">
-                      <span class="copyable-text card-text">{{ order.cardCode }}</span>
-                      <button class="btn-copy" :class="{ copied: copiedId === 'card-' + order.id }" @click="copyText(order.cardCode, 'card-' + order.id)" title="复制卡密">
-                        <i :class="copiedId === 'card-' + order.id ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
-                      </button>
-                    </span>
+                <!-- 凭证信息容器 -->
+                <div class="credential-box" v-if="order.cardCDK || order.cardCode">
+                  <div class="credential-header">
+                    <i class="fa-solid fa-shield-halved"></i> 凭证信息
                   </div>
-                  <div class="order-info-row" v-if="order.cardKeyword">
+                  <div class="credential-tip">
+                    <i class="fa-solid fa-circle-info"></i>
+                    卡密用于查询/充值兑换码，兑换码(CDK)用于充值账号
+                  </div>
+
+                  <!-- CDK 兑换码 -->
+                  <div class="cdk-highlight" v-if="order.cardCDK">
+                    <span class="cdk-label">CDK 兑换码</span>
+                    <span class="cdk-value">{{ order.cardCDK }}</span>
+                    <button class="btn-copy" :class="{ copied: copiedId === 'cdk-' + order.id }" @click="copyText(order.cardCDK, 'cdk-' + order.id)" title="复制CDK">
+                      <i :class="copiedId === 'cdk-' + order.id ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
+                    </button>
+                  </div>
+
+                  <!-- 卡密 -->
+                  <div class="card-highlight" v-if="order.cardCode">
+                    <span class="card-label">卡密</span>
+                    <span class="card-value">{{ order.cardCode }}</span>
+                    <button class="btn-copy" :class="{ copied: copiedId === 'card-' + order.id }" @click="copyText(order.cardCode, 'card-' + order.id)" title="复制卡密">
+                      <i :class="copiedId === 'card-' + order.id ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
+                    </button>
+                  </div>
+
+                  <!-- 接码项目 -->
+                  <div class="order-info-row credential-row" v-if="order.cardKeyword">
                     <span class="order-info-label">接码项目</span>
                     <span class="order-info-value">{{ order.cardKeyword }}</span>
                   </div>
-                </template>
+                </div>
 
-                <hr class="order-divider" v-if="order.cardCode || order.cardCDK">
+                <hr class="order-divider" v-if="order.cardCDK || order.cardCode">
 
                 <div class="order-info-row">
                   <span class="order-info-label">创建时间</span>

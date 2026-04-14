@@ -145,7 +145,7 @@ const app = createApp({
       if (product) {
         editingProduct.value = Object.assign({}, product);
       } else {
-        editingProduct.value = { name: '', price: '', description: '', type: 'ai', sales: 0, isCode: 0, smKeyWord: '' };
+        editingProduct.value = { name: '', price: '', description: '', type: 'ai', sales: 0, isCode: 0, smKeyWord: '', addr: '', credit: 0 };
       }
       productModalVisible.value = true;
     };

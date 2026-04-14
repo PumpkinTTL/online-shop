@@ -100,6 +100,12 @@
                 <div class="product-badge hot">
                   <i class="fa-solid fa-fire"></i> 热门
                 </div>
+                <div class="product-badge warranty" v-if="product.warranty">
+                  <i class="fa-solid fa-shield-halved"></i> {{ product.warranty }}
+                </div>
+                <div class="product-badge credit" v-if="product.credit">
+                  <i class="fa-solid fa-coins"></i> {{ product.credit }}积分
+                </div>
                 <div class="product-badge sold-out-badge" v-if="product.stock === 0">
                   <i class="fa-solid fa-ban"></i> 售罄
                 </div>
@@ -108,9 +114,6 @@
             <div class="product-body">
               <h3 class="product-name">{{ product.name }}</h3>
               <p class="product-desc">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
-              <div class="product-warranty" v-if="product.warranty">
-                <i class="fa-solid fa-shield-halved"></i> {{ product.warranty }}
-              </div>
               <div class="product-footer">
                 <div class="product-left">
                   <div class="product-price">

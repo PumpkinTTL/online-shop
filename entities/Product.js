@@ -14,6 +14,8 @@ module.exports = new EntitySchema({
     warranty: { type: 'varchar', length: 200, nullable: true },
     isCode: { type: 'tinyint', default: 0 },
     smKeyWord: { type: 'varchar', length: 100, nullable: true },
+    addr: { type: 'varchar', length: 500, nullable: true },  // 兑换地址
+    credit: { type: 'int', nullable: true },                   // 积分额度
     createdAt: { type: 'datetime', createDate: true },
     updatedAt: { type: 'datetime', updateDate: true },
   },

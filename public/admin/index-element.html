@@ -234,6 +234,15 @@
               <el-table-column label="关键词" width="100">
                 <template #default="{ row }">{{ row.smKeyWord || '-' }}</template>
               </el-table-column>
+              <el-table-column label="兑换地址" width="140" show-overflow-tooltip>
+                <template #default="{ row }">{{ row.addr || '-' }}</template>
+              </el-table-column>
+              <el-table-column label="积分" width="80" align="center">
+                <template #default="{ row }">
+                  <el-tag v-if="row.credit" type="warning" size="small">{{ row.credit }}</el-tag>
+                  <span v-else style="color: #999">-</span>
+                </template>
+              </el-table-column>
               <el-table-column label="创建时间" width="160" sortable>
                 <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
               </el-table-column>
@@ -600,6 +609,12 @@
         </el-form-item>
         <el-form-item label="接码关键词" v-if="editingProduct.isCode">
           <el-input v-model="editingProduct.smKeyWord" placeholder="接码平台关键词" />
+        </el-form-item>
+        <el-form-item label="兑换地址">
+          <el-input v-model="editingProduct.addr" placeholder="CDK兑换页面地址，如 https://aisub.vip/" />
+        </el-form-item>
+        <el-form-item label="积分额度">
+          <el-input-number v-model="editingProduct.credit" :min="0" :step="1" placeholder="可选，账号积分额度" style="width: 100%" />
         </el-form-item>
       </el-form>
       <template #footer>

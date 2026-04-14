@@ -61,6 +61,9 @@
                   <div class="product-badge code-badge" v-if="product.isCode">
                     <i class="fa-solid fa-mobile-screen"></i> 接码登录
                   </div>
+                  <div class="product-badge credit-badge" v-if="product.credit">
+                    <i class="fa-solid fa-coins"></i> {{ product.credit }} 积分
+                  </div>
                 </div>
               </div>
             </div>

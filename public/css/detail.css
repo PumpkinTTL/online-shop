@@ -110,6 +110,12 @@
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
 }
 
+.product-badge.credit-badge {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  color: #fff;
+}
+
 /* 商品信息 */
 .product-info {
   padding: 16px;

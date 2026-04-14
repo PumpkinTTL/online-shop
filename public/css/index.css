@@ -451,6 +451,14 @@
   background: #999;
 }
 
+.product-badge.warranty {
+  background: rgba(34, 197, 94, 0.85);
+}
+
+.product-badge.credit {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
 .product-badges {
   position: absolute;
   top: 8px;

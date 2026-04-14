@@ -188,8 +188,8 @@ function registerProductAction(app) {
             <i class="fa-solid fa-arrow-up-right-from-square"></i> 前往兑换
           </button>
           <div class="redeem-url-box">
-            <input type="text" class="redeem-url-input" value="https://aisub.vip/" readonly>
-            <button class="btn btn-ghost btn-copy-url" @click="copyText('https://aisub.vip/', '网址已复制')">
+            <input type="text" class="redeem-url-input" :value="product.addr || 'https://aisub.vip/'" readonly>
+            <button class="btn btn-ghost btn-copy-url" @click="copyText(product.addr || 'https://aisub.vip/', '网址已复制')">
               <i class="fa-solid fa-copy"></i> 复制网址
             </button>
           </div>
@@ -517,7 +517,8 @@ function registerProductAction(app) {
       };
 
       const goToRedeem = () => {
-        window.open('https://aisub.vip/', '_blank');
+        const url = props.product.addr || 'https://aisub.vip/';
+        window.open(url, '_blank');
       };
 
       // 清理
