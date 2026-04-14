@@ -1,23 +1,10 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const pickupService = require('../services/pickupService');
+const dataSource = require('../config/database');
+const Product = require('../entities/Product');
+const { optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
-
-// JWT 密钥（与 users.js 保持一致）
-const JWT_SECRET = 'online-shop-secret-key-2026';
-
-// 从请求中提取当前用户ID（可选，未登录返回 null）
-const getCurrentUserId = (req) => {
-  try {
-    const token = req.cookies.token;
-    if (!token) return null;
-    const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded.userId || null;
-  } catch {
-    return null;
-  }
-};
 
 // 验证卡密
 router.post('/verify-card', async (req, res) => {
@@ -39,7 +26,7 @@ router.post('/verify-card', async (req, res) => {
 });
 
 // 兑换卡密 — 验证卡密后返回CDK，并写入订单
-router.post('/redeem', async (req, res) => {
+router.post('/redeem', optionalAuth, async (req, res) => {
   try {
     const { code, productId, contact } = req.body;
     if (!code || !code.trim()) {
@@ -49,10 +36,20 @@ router.post('/redeem', async (req, res) => {
 
     // 写入订单
     try {
+      // 查询商品价格
+      let productPrice = null;
+      try {
+        const productRepo = dataSource.getRepository(Product);
+        const product = await productRepo.findOne({ where: { id: result.productId || productId } });
+        if (product) productPrice = product.price;
+      } catch (e) {}
+
       await pickupService.createOrder({
-        userId: getCurrentUserId(req),
+        userId: req.userId || null,
         cardKeyId: result.id,
         productId: result.productId || productId,
+        amount: productPrice,
+        payMethod: '兑换',
         contact: contact || '',
         phone: '',
         verifyCode: '',
@@ -133,7 +130,7 @@ router.get('/check-phone-record', async (req, res) => {
 });
 
 // 确认提货 — 创建订单
-router.post('/confirm', async (req, res) => {
+router.post('/confirm', optionalAuth, async (req, res) => {
   try {
     const { cardKeyId, productId, contact, phone, verifyCode } = req.body;
 
@@ -156,10 +153,20 @@ router.post('/confirm', async (req, res) => {
       }
     }
 
+    // 查询商品价格
+    let productPrice = null;
+    try {
+      const productRepo = dataSource.getRepository(Product);
+      const product = await productRepo.findOne({ where: { id: productId } });
+      if (product) productPrice = product.price;
+    } catch (e) {}
+
     const order = await pickupService.createOrder({
-      userId: getCurrentUserId(req),
+      userId: req.userId || null,
       cardKeyId,
       productId,
+      amount: productPrice,
+      payMethod: '兑换',
       contact: contact.trim(),
       phone: phone.trim(),
       verifyCode: verifyCode || '',

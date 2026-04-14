@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>产品详情 - 工具商店</title>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="/http/api.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="/js/toast.js"></script>
@@ -190,8 +191,8 @@
             return;
           }
           try {
-            const response = await axios.get(`/api/products/${productId}`);
-            product.value = response.data;
+            const response = await http.get(`/products/${productId}`);
+            product.value = response;
             if (!product.value) {
               error.value = '产品不存在';
             } else {

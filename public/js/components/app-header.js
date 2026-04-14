@@ -160,12 +160,12 @@ const AppHeader = {
 
       this.authLoading = true;
       try {
-        const url = this.isLogin ? '/api/users/login' : '/api/users/register';
-        const response = await axios.post(url, {
+        const url = this.isLogin ? '/users/login' : '/users/register';
+        const response = await http.post(url, {
           username: this.authForm.username,
           password: this.authForm.password
         });
-        const { user } = response.data;
+        const { user } = response;
         this.currentUser = user;
         this.isLoggedIn = true;
         localStorage.setItem('user', JSON.stringify(user));
@@ -179,7 +179,7 @@ const AppHeader = {
     },
     async logout() {
       try {
-        await axios.post('/api/users/logout');
+        await http.post('/users/logout');
       } catch (e) { /* 忽略 */ }
       localStorage.removeItem('user');
       this.isLoggedIn = false;
@@ -187,14 +187,15 @@ const AppHeader = {
       Toast.info('已退出登录');
     },
     async checkLogin() {
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const raw = localStorage.getItem('user');
+      const user = raw && raw !== 'undefined' ? JSON.parse(raw) : null;
       if (user) {
         this.currentUser = user;
         this.isLoggedIn = true;
         try {
-          const response = await axios.get('/api/users/me');
-          this.currentUser = response.data;
-          localStorage.setItem('user', JSON.stringify(response.data));
+          const response = await http.get('/users/me');
+          this.currentUser = response;
+          localStorage.setItem('user', JSON.stringify(response));
         } catch (error) {
           localStorage.removeItem('user');
           this.isLoggedIn = false;

@@ -5,6 +5,7 @@ module.exports = new EntitySchema({
   tableName: 'payment_orders',
   columns: {
     id: { type: 'int', primary: true, generated: true },
+    userId: { type: 'int', nullable: true },                       // 关联用户ID
     orderNo: { type: 'varchar', length: 64, unique: true },       // 商户订单号
     tradeNo: { type: 'varchar', length: 64, nullable: true },      // 支付宝交易号
     productId: { type: 'int' },                                     // 商品ID

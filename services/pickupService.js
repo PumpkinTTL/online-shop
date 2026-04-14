@@ -1,6 +1,7 @@
 const dataSource = require('../config/database');
 const CardKey = require('../entities/CardKey');
 const Order = require('../entities/Order');
+const Product = require('../entities/Product');
 const SmsRecord = require('../entities/SmsRecord');
 const axios = require('axios');
 
@@ -209,7 +210,7 @@ class PickupService {
 
   // 创建订单
   async createOrder(data) {
-    const { userId, cardKeyId, productId, contact, phone, verifyCode } = data;
+    const { userId, cardKeyId, productId, contact, phone, verifyCode, amount, payMethod, tradeNo } = data;
     const orderRepo = this.getOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
 
@@ -218,6 +219,9 @@ class PickupService {
       userId: userId || null,
       cardKeyId,
       productId,
+      amount: amount || null,
+      payMethod: payMethod || '兑换',
+      tradeNo: tradeNo || null,
       contact,
       phone,
       verifyCode,
@@ -234,6 +238,14 @@ class PickupService {
         usedAt: new Date(),
         phone,
       });
+    }
+
+    // 更新商品销量
+    try {
+      const productRepo = dataSource.getRepository(Product);
+      await productRepo.increment({ id: productId }, 'sales', 1);
+    } catch (e) {
+      console.warn('[PickupService] 更新商品销量失败:', e.message);
     }
 
     return savedOrder;

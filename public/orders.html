@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>订单中心 - 工具商店</title>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="/http/api.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/components/app-header.js"></script>
@@ -703,11 +704,12 @@
 
         // 检查登录状态
         const checkLogin = async () => {
-          const user = JSON.parse(localStorage.getItem('user') || 'null');
+          const raw = localStorage.getItem('user');
+          const user = raw && raw !== 'undefined' ? JSON.parse(raw) : null;
           if (user) {
             try {
-              const response = await axios.get('/api/users/me');
-              currentUser.value = response.data;
+              const response = await http.get('/users/me');
+              currentUser.value = response;
               isLoggedIn.value = true;
               localStorage.setItem('user', JSON.stringify(response.data));
             } catch (error) {
@@ -738,9 +740,9 @@
             }
             if (statusFilter.value) params.status = statusFilter.value;
 
-            const res = await axios.get('/api/pickup/orders', { params });
-            orders.value = res.data.items;
-            total.value = res.data.total;
+            const res = await http.get('/pickup/orders', { params });
+            orders.value = res.items;
+            total.value = res.total;
             searched.value = true;
           } catch (err) {
             Toast.error(err.response?.data?.error || '查询失败');

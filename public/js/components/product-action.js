@@ -9,7 +9,7 @@
  *
  * 依赖:
  *   - Vue 3 (CDN)
- *   - axios (CDN)
+ *   - http (api.js 封装的 axios 实例，自动带 cookie)
  *   - QRCode (CDN: cdn.jsdelivr.net/npm/qrcode)
  *   - Toast (toast.js)
  *   - Font Awesome 图标
@@ -273,6 +273,7 @@ function registerProductAction(app) {
     `,
     setup(props, { emit }) {
       const { ref, computed, onUnmounted, watch } = Vue;
+      const http = window.http;
 
       // --- 基础状态 ---
       const contact = ref(localStorage.getItem('lastContact') || '');
@@ -280,13 +281,14 @@ function registerProductAction(app) {
 
       // 已登录时自动填入用户名作为联系方式
       const checkAndPrefillContact = async () => {
-        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        const raw = localStorage.getItem('user');
+        const user = raw && raw !== 'undefined' ? JSON.parse(raw) : null;
         if (user) {
           try {
-            const res = await axios.get('/api/users/me');
-            if (res.data && !contact.value.trim()) {
-              contact.value = res.data.username;
-              localStorage.setItem('lastContact', res.data.username);
+            const res = await http.get('/users/me');
+            if (res && !contact.value.trim()) {
+              contact.value = res.username;
+              localStorage.setItem('lastContact', res.username);
             }
           } catch (e) { /* 未登录，不影响 */ }
         }
@@ -336,17 +338,17 @@ function registerProductAction(app) {
         }
         redeeming.value = true;
         try {
-          const response = await axios.post('/api/pickup/redeem', {
+          const response = await http.post('/pickup/redeem', {
             code: redeemCode.value.trim(),
             productId: props.product.id,
             contact: contact.value.trim(),
           });
           localStorage.setItem('lastContact', contact.value.trim());
-          actionResult.value = { type: 'redeem', CDK: response.data.CDK };
+          actionResult.value = { type: 'redeem', CDK: response.CDK };
 
           // isCode=1 且有CDK(号码)，检查是否非首次登录
-          if (props.product.isCode && response.data.CDK) {
-            checkPhoneRecord(response.data.CDK);
+          if (props.product.isCode && response.CDK) {
+            checkPhoneRecord(response.CDK);
           }
 
           Toast.success('兑换成功！');
@@ -374,23 +376,24 @@ function registerProductAction(app) {
         qrImageUrl.value = '';
 
         try {
-          const res = await axios.post('/api/payment/create', {
+          const res = await http.post('/payment/create', {
             productId: props.product.id,
             contact: contact.value.trim(),
           });
-          orderNo.value = res.data.orderNo;
-          payAmount.value = res.data.amount;
+          orderNo.value = res.orderNo;
+          payAmount.value = res.amount;
 
           // 生成二维码图片
-          await generateQR(res.data.qrCode);
+          await generateQR(res.qrCode);
 
           // 设置倒计时
-          const expiredAt = new Date(res.data.expiredAt);
+          const expiredAt = new Date(res.expiredAt);
           countdown.value = Math.max(0, Math.floor((expiredAt - Date.now()) / 1000));
           startCountdown();
           startPolling();
         } catch (err) {
-          qrError.value = err.response?.data?.error || '创建支付订单失败';
+          console.error('[Payment/Create] Error:', err);
+          qrError.value = err.response?.data?.error || err.message || '创建支付订单失败';
         } finally {
           qrLoading.value = false;
           payLoading.value = false;
@@ -422,22 +425,22 @@ function registerProductAction(app) {
         pollTimer = setInterval(async () => {
           if (!orderNo.value || payStatus.value === 'paid') return;
           try {
-            const res = await axios.get('/api/payment/status', {
+            const res = await http.get('/payment/status', {
               params: { orderNo: orderNo.value },
             });
-            if (res.data.status === 'paid') {
+            if (res.status === 'paid') {
               payStatus.value = 'paid';
-              cdKey.value = res.data.cdKey;
+              cdKey.value = res.cdKey;
               stopPolling();
               Toast.success('支付成功！');
 
               // 设置 actionResult，让主界面切换到结果视图
-              actionResult.value = { type: 'alipay', CDK: res.data.cdKey };
+              actionResult.value = { type: 'alipay', CDK: res.cdKey };
               emit('success', actionResult.value);
 
               // isCode=1 检查是否非首次登录
-              if (props.product.isCode && res.data.cdKey) {
-                checkPhoneRecord(res.data.cdKey);
+              if (props.product.isCode && res.cdKey) {
+                checkPhoneRecord(res.cdKey);
               }
 
               // 关闭弹窗，在主界面显示结果/接码
@@ -481,10 +484,10 @@ function registerProductAction(app) {
       // 检查号码是否已有接码记录（非首次登录）
       const checkPhoneRecord = async (phone) => {
         try {
-          const res = await axios.get('/api/pickup/check-phone-record', {
+          const res = await http.get('/pickup/check-phone-record', {
             params: { phone },
           });
-          isRepeatPhone.value = res.data.exists;
+          isRepeatPhone.value = res.exists;
         } catch (e) {
           // 静默，不影响流程
         }
@@ -495,12 +498,12 @@ function registerProductAction(app) {
         smsLoading.value = true;
         smsError.value = '';
         try {
-          const res = await axios.post('/api/pickup/get-verify-code', {
+          const res = await http.post('/pickup/get-verify-code', {
             phone: actionResult.value.CDK,
             keyword: props.product.smKeyWord || '',
           });
-          if (res.data.received && res.data.code) {
-            smsCode.value = res.data.code;
+          if (res.received && res.code) {
+            smsCode.value = res.code;
             Toast.success('验证码已获取！');
             emit('success', { type: 'sms', phone: actionResult.value.CDK, code: smsCode.value });
           } else {

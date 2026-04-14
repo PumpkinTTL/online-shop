@@ -1,17 +1,16 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const userService = require('../services/UserService');
+const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
 
-// JWT 密钥（生产环境应使用环境变量）
-const JWT_SECRET = 'online-shop-secret-key-2026';
 const JWT_EXPIRES_IN = '7d';
 
 // 用户名验证正则：只能包含英文、数字、下划线，长度3-20
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
-// 生成 JWT Token
+// 生成 JWT Token（登录/注册时使用）
 const generateToken = (userId) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
@@ -108,17 +107,10 @@ router.post('/logout', (req, res) => {
   res.json({ message: '退出成功' });
 });
 
-// 获取当前用户信息（验证 token）
-router.get('/me', async (req, res) => {
+// 获取当前用户信息（需要登录）
+router.get('/me', requireAuth, async (req, res) => {
   try {
-    const token = req.cookies.token;
-    if (!token) {
-      return res.status(401).json({ error: '未登录' });
-    }
-    
-    // 验证 token
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await userService.findOne(decoded.userId);
+    const user = await userService.findOne(req.userId);
     
     if (!user) {
       return res.status(404).json({ error: '用户不存在' });
@@ -135,7 +127,7 @@ router.get('/me', async (req, res) => {
     
     res.json(userInfo);
   } catch (error) {
-    res.status(401).json({ error: '登录已过期，请重新登录' });
+    res.status(500).json({ error: error.message });
   }
 });
 

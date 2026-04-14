@@ -1,16 +1,17 @@
 const express = require('express');
 const paymentService = require('../services/paymentService');
+const { optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
 // 创建支付订单（预下单，返回二维码）
-router.post('/create', async (req, res) => {
+router.post('/create', optionalAuth, async (req, res) => {
   try {
     const { productId, contact } = req.body;
     if (!productId) {
       return res.status(400).json({ error: '请选择商品' });
     }
-    const result = await paymentService.createPayment(parseInt(productId), contact);
+    const result = await paymentService.createPayment(parseInt(productId), contact, req.userId || null);
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });

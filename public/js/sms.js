@@ -75,14 +75,14 @@ const SmsModule = {
 
     sms.value.loading = true;
     try {
-      const res = await axios.post('/api/pickup/get-phone', {
+      const res = await http.post('/pickup/get-phone', {
         cardCode: 'FREE_SMS',
         keyword: sms.value.keyWord.trim(),
         phone: String(sms.value.phoneInput || '').trim() || undefined,
         cardType: sms.value.cardType,
       });
-      sms.value.currentPhone = String(res.data.phone);
-      sms.value.phoneInput = String(res.data.phone);
+      sms.value.currentPhone = String(res.phone);
+      sms.value.phoneInput = String(res.phone);
       sms.value.isManualPhone = false;
       sms.value.smsContent = '';
       sms.value.smsTime = '';
@@ -107,15 +107,15 @@ const SmsModule = {
     }
     sms.value.smsLoading = true;
     try {
-      const res = await axios.post('/api/pickup/get-verify-code', {
+      const res = await http.post('/pickup/get-verify-code', {
         phone: sms.value.currentPhone,
         keyword: sms.value.keyWord.trim(),
       });
-      if (res.data.received) {
-        sms.value.smsContent = res.data.content || '';
+      if (res.received) {
+        sms.value.smsContent = res.content || '';
         sms.value.smsTime = new Date().toLocaleString('zh-CN');
-        sms.value.extractedCode = res.data.code || '';
-        Toast.success(res.data.code ? '获取验证码成功' : '已收到短信，但无法自动提取验证码，请查看短信原文');
+        sms.value.extractedCode = res.code || '';
+        Toast.success(res.code ? '获取验证码成功' : '已收到短信，但无法自动提取验证码，请查看短信原文');
       } else {
         Toast.info('尚未收到短信，请稍后再试');
       }
@@ -131,7 +131,7 @@ const SmsModule = {
     if (!sms.value.currentPhone) return;
     const ok = await this._confirm('确定要释放该号码吗？');
     if (!ok) return;
-    axios.post('/api/pickup/release-phone', { phone: sms.value.currentPhone }).catch(() => {});
+    http.post('/pickup/release-phone', { phone: sms.value.currentPhone }).catch(() => {});
     this._resetPhoneState(sms);
     Toast.info('已释放号码');
   },
@@ -141,7 +141,7 @@ const SmsModule = {
     if (!sms.value.currentPhone) return;
     const ok = await this._confirm('确定要拉黑该号码吗？拉黑后将无法再获取此号码');
     if (!ok) return;
-    axios.post('/api/pickup/block-phone', { phone: sms.value.currentPhone }).catch(() => {});
+    http.post('/pickup/block-phone', { phone: sms.value.currentPhone }).catch(() => {});
     this._resetPhoneState(sms);
     Toast.info('已拉黑号码');
   },

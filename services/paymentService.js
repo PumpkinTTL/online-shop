@@ -2,6 +2,7 @@ const dataSource = require('../config/database');
 const PaymentOrder = require('../entities/PaymentOrder');
 const CardKey = require('../entities/CardKey');
 const Product = require('../entities/Product');
+const Order = require('../entities/Order');
 const { getAlipaySdk } = require('../config/alipay');
 
 class PaymentService {
@@ -31,7 +32,7 @@ class PaymentService {
   }
 
   // 创建支付订单（调用支付宝预下单 alipay.trade.precreate）
-  async createPayment(productId, contact) {
+  async createPayment(productId, contact, userId = null) {
     const productRepo = this.getProductRepo();
     const paymentRepo = this.getPaymentOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
@@ -50,6 +51,7 @@ class PaymentService {
 
     const paymentOrder = paymentRepo.create({
       orderNo,
+      userId,
       productId,
       productName: product.name,
       amount: product.price,
@@ -190,7 +192,7 @@ class PaymentService {
     return true;
   }
 
-  // 支付成功处理：分配卡密
+  // 支付成功处理：分配卡密 + 创建订单记录 + 更新销量
   async processPaymentSuccess(order, tradeNo, notifyData) {
     const paymentRepo = this.getPaymentOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
@@ -219,6 +221,43 @@ class PaymentService {
 
     await paymentRepo.update(order.id, updateData);
     console.log(`[Payment] 订单 ${order.orderNo} 支付成功，${cardKey ? `已分配卡密 #${cardKey.id}` : '无可用卡密'}`);
+
+    // 同步创建 Order 记录（统一订单表，方便统计）
+    try {
+      const orderRepo = dataSource.getRepository(Order);
+      const now = new Date();
+      const ts = now.getFullYear().toString() +
+        (now.getMonth() + 1).toString().padStart(2, '0') +
+        now.getDate().toString().padStart(2, '0') +
+        now.getHours().toString().padStart(2, '0') +
+        now.getMinutes().toString().padStart(2, '0') +
+        now.getSeconds().toString().padStart(2, '0');
+      const rand = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+
+      await orderRepo.save(orderRepo.create({
+        orderNo: `ORD${ts}${rand}`,
+        userId: order.userId || null,
+        cardKeyId: cardKey ? cardKey.id : null,
+        productId: order.productId,
+        amount: order.amount,
+        payMethod: 'alipay',
+        tradeNo: tradeNo || order.orderNo,
+        contact: order.contact || '',
+        status: 'completed',
+        completedAt: new Date(),
+      }));
+      console.log(`[Payment] 已同步创建 Order 记录，关联支付单 ${order.orderNo}`);
+    } catch (e) {
+      console.warn('[Payment] 同步创建 Order 记录失败:', e.message);
+    }
+
+    // 更新商品销量
+    try {
+      const productRepo = this.getProductRepo();
+      await productRepo.increment({ id: order.productId }, 'sales', 1);
+    } catch (e) {
+      console.warn('[Payment] 更新商品销量失败:', e.message);
+    }
   }
 
   // 关闭超时订单
