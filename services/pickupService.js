@@ -214,6 +214,18 @@ class PickupService {
     const orderRepo = this.getOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
 
+    // 去重：同一个 cardKeyId 如果已有 completed 订单，直接返回已有订单（旧卡密复用场景）
+    if (cardKeyId) {
+      const existingOrder = await orderRepo.findOne({
+        where: { cardKeyId, status: 'completed' },
+        order: { id: 'DESC' },
+      });
+      if (existingOrder) {
+        console.log(`[PickupService] cardKeyId=${cardKeyId} 已有订单 #${existingOrder.id}，跳过重复创建`);
+        return existingOrder;
+      }
+    }
+
     const order = orderRepo.create({
       orderNo: this.generateOrderNo(),
       userId: userId || null,
