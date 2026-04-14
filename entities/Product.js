@@ -16,6 +16,7 @@ module.exports = new EntitySchema({
     smKeyWord: { type: 'varchar', length: 100, nullable: true },
     addr: { type: 'varchar', length: 500, nullable: true },  // 兑换地址
     credit: { type: 'int', nullable: true },                   // 积分额度
+    smsPrice: { type: 'decimal', precision: 10, scale: 2, nullable: true }, // 接码额外费用
     show: { type: 'int', default: 1 },                          // 是否在首页显示: 1显示 0隐藏
     createdAt: { type: 'datetime', createDate: true },
     updatedAt: { type: 'datetime', updateDate: true },

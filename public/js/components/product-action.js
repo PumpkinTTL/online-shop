@@ -232,15 +232,9 @@ function registerProductAction(app) {
             <span class="sms-phone-number">{{ actionResult.CDK }}</span>
           </div>
 
-          <!-- 非首次登录提示 -->
-          <div class="sms-repeat-tip" v-if="isRepeatPhone">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>非首次登录，接码需额外费用 ¥0.01</span>
-          </div>
-
           <!-- 未获取验证码 -->
           <div class="sms-step" v-if="!smsCode">
-            <button class="btn btn-primary sms-btn" @click="getSmsCode" :disabled="smsLoading">
+            <button class="btn btn-primary sms-btn" @click="getSmsCode" :disabled="smsLoading || needSmsPayment">
               <i class="fa-solid fa-spinner fa-spin" v-if="smsLoading"></i>
               <i class="fa-solid fa-paper-plane" v-else></i>
               {{ smsLoading ? '获取中...' : '获取验证码' }}
@@ -249,6 +243,11 @@ function registerProductAction(app) {
               <i class="fa-solid fa-circle-exclamation" style="color:#ff4d4f;margin-right:4px;"></i>
               {{ smsError }}
             </p>
+            <!-- 需要支付接码服务费时显示支付按钮 -->
+            <button class="btn btn-alipay sms-btn" style="margin-top:8px;width:100%;" v-if="needSmsPayment" @click="startSmsServicePay" :disabled="smsQrLoading">
+              <i class="fa-brands fa-alipay"></i>
+              支付接码服务费 ¥{{ product.smsPrice || '0.01' }}
+            </button>
           </div>
 
           <!-- 接码成功 -->
@@ -267,6 +266,58 @@ function registerProductAction(app) {
             <p class="sms-step-tip">
               <i class="fa-solid fa-circle-check"></i> 接码成功，请使用号码和验证码登录
             </p>
+          </div>
+        </div>
+
+        <!-- 接码服务支付弹窗 -->
+        <div class="pay-modal-overlay" v-if="showSmsPayModal" @click.self="closeSmsPayModal">
+          <div class="pay-modal">
+            <div class="pay-modal-header">
+              <span><i class="fa-brands fa-alipay"></i> 支付接码服务费</span>
+              <button class="pay-modal-close" @click="closeSmsPayModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- 加载中 -->
+            <div class="pay-modal-body" v-if="smsQrLoading">
+              <div class="pay-loading">
+                <i class="fa-solid fa-circle-notch"></i>
+                <p>正在创建支付订单...</p>
+              </div>
+            </div>
+
+            <!-- 错误 -->
+            <div class="pay-modal-body" v-else-if="smsQrError">
+              <div class="pay-error">
+                <i class="fa-solid fa-circle-xmark"></i>
+                <p>{{ smsQrError }}</p>
+                <button class="btn btn-primary" @click="closeSmsPayModal">关闭</button>
+              </div>
+            </div>
+
+            <!-- 二维码 -->
+            <div class="pay-modal-body" v-else-if="smsPayStatus !== 'paid'">
+              <div class="pay-product-info">
+                <span class="pay-product-name">接码服务费</span>
+                <span class="pay-product-amount">¥{{ smsPayAmount }}</span>
+              </div>
+              <div class="pay-qr">
+                <div class="qr-canvas-wrap">
+                  <img v-if="smsQrImageUrl" :src="smsQrImageUrl" alt="支付宝二维码" style="width:200px;height:200px;" />
+                </div>
+                <div class="pay-qr-tip">扫码支付后即可接码</div>
+              </div>
+            </div>
+
+            <!-- 支付成功 -->
+            <div class="pay-modal-body" v-else>
+              <div class="pay-success">
+                <div class="pay-success-icon">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="pay-success-title">支付成功</div>
+                <div class="pay-success-desc">正在获取验证码...</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -315,7 +366,18 @@ function registerProductAction(app) {
       const smsCode = ref('');
       const smsLoading = ref(false);
       const smsError = ref('');
-      const isRepeatPhone = ref(false); // 非首次登录标记
+      const needSmsPayment = ref(false); // 需要支付接码服务费
+
+      // --- 接码服务支付弹窗状态 ---
+      const showSmsPayModal = ref(false);
+      const smsQrLoading = ref(false);
+      const smsQrError = ref('');
+      const smsQrImageUrl = ref('');
+      const smsPayAmount = ref('');
+      const smsPayStatus = ref('pending');
+      const smsOrderNo = ref('');
+
+      let smsPollTimer = null;
 
       // --- 倒计时文本 ---
       const countdownText = computed(() => {
@@ -339,11 +401,6 @@ function registerProductAction(app) {
           const response = await pickupApi.redeem(redeemCode.value.trim(), props.product.id, contact.value.trim());
           localStorage.setItem('lastContact', contact.value.trim());
           actionResult.value = { type: 'redeem', CDK: response.CDK, cardKeyId: response.id };
-
-          // isCode=1 且有CDK(号码)，检查是否非首次登录
-          if (props.product.isCode && response.CDK) {
-            checkPhoneRecord(response.CDK, response.id);
-          }
 
           Toast.success('兑换成功！');
           emit('success', actionResult.value);
@@ -424,12 +481,7 @@ function registerProductAction(app) {
               Toast.success('支付成功！');
 
               // 设置 actionResult，让主界面切换到结果视图
-              actionResult.value = { type: 'alipay', CDK: res.cdKey };
-
-              // isCode=1 检查是否非首次登录
-              if (props.product.isCode && res.cdKey) {
-                checkPhoneRecord(res.cdKey, null);
-              }
+              actionResult.value = { type: 'alipay', CDK: res.cdKey, cardKeyId: res.cardKeyId || null };
 
               // 关闭弹窗，在主界面显示结果/接码
               setTimeout(() => {
@@ -492,16 +544,105 @@ function registerProductAction(app) {
           );
           if (res.received && res.code) {
             smsCode.value = res.code;
+            needSmsPayment.value = false;
             Toast.success('验证码已获取！');
             emit('success', { type: 'sms', phone: actionResult.value.CDK, code: smsCode.value });
           } else {
             smsError.value = '暂未收到验证码，请稍后重试';
           }
         } catch (err) {
-          smsError.value = err.response?.data?.error || '获取验证码失败';
+          const errMsg = err.response?.data?.error || '获取验证码失败';
+          if (errMsg === 'NEED_PURCHASE') {
+            // 需要支付接码服务费
+            smsError.value = '本次接码需要支付服务费，请点击下方按钮完成支付';
+            needSmsPayment.value = true;
+          } else {
+            smsError.value = errMsg;
+          }
         } finally {
           smsLoading.value = false;
         }
+      };
+
+      // --- 接码服务支付流程 ---
+      const startSmsServicePay = async () => {
+        needSmsPayment.value = false;
+        smsError.value = '';
+        if (!contact.value.trim()) {
+          Toast.warning('请先填写联系方式');
+          return;
+        }
+        if (!actionResult.value.cardKeyId) {
+          Toast.error('缺少卡密信息，无法创建接码订单');
+          return;
+        }
+
+        showSmsPayModal.value = true;
+        smsQrLoading.value = true;
+        smsQrError.value = '';
+        smsPayStatus.value = 'pending';
+        smsQrImageUrl.value = '';
+
+        try {
+          const smsPrice = props.product.smsPrice || 0.01;
+          const res = await paymentApi.createSms(
+            actionResult.value.cardKeyId,
+            props.product.id,
+            smsPrice,
+            contact.value.trim(),
+          );
+          smsOrderNo.value = res.orderNo;
+          smsPayAmount.value = res.amount;
+
+          // 生成二维码
+          await new Promise((resolve) => {
+            QRCode.toDataURL(res.qrCode, {
+              width: 200, margin: 2,
+              color: { dark: '#000000', light: '#ffffff' },
+            }, function (err, url) {
+              if (err) { console.error('二维码生成失败:', err); resolve(false); }
+              else { smsQrImageUrl.value = url; resolve(true); }
+            });
+          });
+
+          // 开始轮询
+          startSmsPolling();
+        } catch (err) {
+          smsQrError.value = err.response?.data?.error || err.message || '创建支付订单失败';
+        } finally {
+          smsQrLoading.value = false;
+        }
+      };
+
+      const startSmsPolling = () => {
+        stopSmsPolling();
+        smsPollTimer = setInterval(async () => {
+          if (!smsOrderNo.value || smsPayStatus.value === 'paid') return;
+          try {
+            const res = await paymentApi.getStatus(smsOrderNo.value);
+            if (res.status === 'paid') {
+              smsPayStatus.value = 'paid';
+              stopSmsPolling();
+              Toast.success('接码服务费支付成功！');
+
+              // 关闭弹窗，自动获取验证码
+              setTimeout(async () => {
+                showSmsPayModal.value = false;
+                // 自动获取验证码
+                await getSmsCode();
+              }, 800);
+            }
+          } catch (e) { /* 静默 */ }
+        }, 3000);
+      };
+
+      const stopSmsPolling = () => {
+        if (smsPollTimer) { clearInterval(smsPollTimer); smsPollTimer = null; }
+      };
+
+      const closeSmsPayModal = () => {
+        showSmsPayModal.value = false;
+        stopSmsPolling();
       };
 
       // --- 工具方法 ---
@@ -528,6 +669,7 @@ function registerProductAction(app) {
       // 清理
       onUnmounted(() => {
         stopPolling();
+        stopSmsPolling();
         if (countdownTimer) clearInterval(countdownTimer);
       });
 
@@ -535,9 +677,12 @@ function registerProductAction(app) {
         contact, payMethod, redeemCode, redeeming, actionResult,
         showQrModal, qrLoading, qrError, qrImageUrl, payAmount,
         payStatus, orderNo, cdKey, countdown, countdownText, payLoading,
-        smsCode, smsLoading, smsError, isRepeatPhone,
+        smsCode, smsLoading, smsError, needSmsPayment,
+        showSmsPayModal, smsQrLoading, smsQrError, smsQrImageUrl,
+        smsPayAmount, smsPayStatus,
         handleRedeem, startAlipayPay, closeQrModal,
-        getSmsCode, copyText, goToRedeem,
+        getSmsCode, startSmsServicePay, closeSmsPayModal,
+        copyText, goToRedeem,
       };
     },
   });

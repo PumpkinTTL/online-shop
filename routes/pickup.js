@@ -62,6 +62,7 @@ router.post('/redeem', optionalAuth, async (req, res) => {
       success: true,
       CDK: result.CDK,
       productId: result.productId,
+      id: result.id,
       message: '兑换成功',
     });
   } catch (error) {
@@ -260,6 +261,7 @@ router.post('/iscode/get-verify-code', async (req, res) => {
       keyword,
       cardKeyId || null,
       productId || null,
+      req.ip,
     );
     res.json(result);
   } catch (error) {

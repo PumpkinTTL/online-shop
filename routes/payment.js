@@ -18,6 +18,32 @@ router.post('/create', optionalAuth, async (req, res) => {
   }
 });
 
+// 创建接码服务支付订单（paySMS）
+router.post('/create-sms', optionalAuth, async (req, res) => {
+  try {
+    const { cardKeyId, productId, amount, contact } = req.body;
+    if (!cardKeyId) {
+      return res.status(400).json({ error: '缺少卡密信息' });
+    }
+    if (!productId) {
+      return res.status(400).json({ error: '缺少商品信息' });
+    }
+    if (!amount) {
+      return res.status(400).json({ error: '缺少支付金额' });
+    }
+    const result = await paymentService.createSmsPayment(
+      cardKeyId,
+      productId,
+      amount,
+      contact,
+      req.userId || null,
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // 查询支付状态（前端轮询）
 router.get('/status', async (req, res) => {
   try {

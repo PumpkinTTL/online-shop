@@ -226,10 +226,10 @@ class PickupService {
     const orderRepo = this.getOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
 
-    // 去重：同一个 cardKeyId 如果已有 completed 订单，直接返回已有订单（旧卡密复用场景）
+    // 去重：同一个 cardKeyId 如果已有订单，直接返回已有订单
     if (cardKeyId) {
       const existingOrder = await orderRepo.findOne({
-        where: { cardKeyId, status: 'completed' },
+        where: { cardKeyId },
         order: { id: 'DESC' },
       });
       if (existingOrder) {
@@ -363,9 +363,23 @@ class PickupService {
   // ==================== isCode 商品专用方法 ====================
 
   // isCode 商品：获取验证码（关联卡密和商品，写入 iscode 来源的接码记录）
-  async iscodeGetVerifyCode(phone, keyword, cardKeyId, productId) {
+  async iscodeGetVerifyCode(phone, keyword, cardKeyId, productId, ip) {
     if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置');
     if (!phone) throw new Error('手机号不能为空');
+
+    // 接码权限检查：查 Order 表该 cardKeyId 是否有 status='completed' 的订单
+    if (cardKeyId) {
+      const orderRepo = this.getOrderRepo();
+      const order = await orderRepo.findOne({
+        where: { cardKeyId, status: 'completed' },
+        order: { id: 'DESC' },
+      });
+      if (!order) {
+        const err = new Error('NEED_PURCHASE');
+        err.code = 'NEED_PURCHASE';
+        throw err;
+      }
+    }
 
     const url = `${MAAPI_BASE}?code=getMsg&token=${MAAPI_TOKEN}&phone=${phone}&keyWord=${encodeURIComponent(keyword || '')}`;
     const res = await axios.get(url, { timeout: 15000 });
@@ -422,7 +436,25 @@ class PickupService {
           source: 'iscode',
           cardKeyId: cardKeyId || null,
           productId: productId || null,
+          ip: ip || '',
         }));
+      }
+
+      // 接码成功后，将 Order 的 status 从 'completed' 改为 'pending'（下次接码需要付费）
+      if (extractedCode && cardKeyId) {
+        try {
+          const orderRepo = this.getOrderRepo();
+          const order = await orderRepo.findOne({
+            where: { cardKeyId, status: 'completed' },
+            order: { id: 'DESC' },
+          });
+          if (order) {
+            await orderRepo.update(order.id, { status: 'pending', completedAt: null });
+            console.log(`[PickupService] 接码成功，Order #${order.id} status→pending`);
+          }
+        } catch (e) {
+          console.warn('[PickupService] 更新订单状态失败:', e.message);
+        }
       }
     }
 

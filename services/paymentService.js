@@ -142,6 +142,7 @@ class PaymentService {
             amount: updatedOrder.amount,
             productName: updatedOrder.productName,
             cdKey: updatedOrder.cdKey,
+            cardKeyId: updatedOrder.cardKeyId || null,
             paidAt: updatedOrder.paidAt,
           };
         }
@@ -154,6 +155,7 @@ class PaymentService {
       amount: order.amount,
       productName: order.productName,
       cdKey: order.status === 'paid' ? order.cdKey : null,
+      cardKeyId: order.status === 'paid' ? (order.cardKeyId || null) : null,
       paidAt: order.paidAt,
     };
   }
@@ -192,15 +194,74 @@ class PaymentService {
     return true;
   }
 
-  // 支付成功处理：分配卡密 + 创建订单记录 + 更新销量
+  // 创建接码服务支付订单（paySMS：不改卡密库存，只创建支付单）
+  async createSmsPayment(cardKeyId, productId, amount, contact, userId = null) {
+    const paymentRepo = this.getPaymentOrderRepo();
+    const productRepo = this.getProductRepo();
+
+    const product = await productRepo.findOne({ where: { id: productId } });
+    const productName = product ? product.name : '冰红茶';
+
+    const orderNo = this.generateOrderNo();
+    const expiredAt = new Date(Date.now() + 30 * 60 * 1000);
+
+    const paymentOrder = paymentRepo.create({
+      orderNo,
+      userId,
+      productId,
+      productName,
+      amount,
+      contact: contact || '',
+      cardKeyId: cardKeyId || null,
+      status: 'pending',
+      expiredAt,
+    });
+    await paymentRepo.save(paymentOrder);
+
+    // 调用支付宝预下单
+    try {
+      const alipaySdk = getAlipaySdk();
+      const bizContent = {
+        out_trade_no: orderNo,
+        total_amount: String(amount),
+        subject: productName,
+        timeout_express: '30m',
+      };
+
+      const notifyUrl = process.env.ALIPAY_NOTIFY_URL || undefined;
+      const requestOptions = {
+        bizContent,
+        ...(notifyUrl ? { notifyUrl } : {}),
+      };
+
+      const result = await alipaySdk.exec('alipay.trade.precreate', requestOptions);
+
+      if (result.code === '10000' && result.qrCode) {
+        await paymentRepo.update(paymentOrder.id, { qrCode: result.qrCode });
+        return {
+          orderNo,
+          qrCode: result.qrCode,
+          amount,
+          productName,
+          expiredAt,
+        };
+      } else {
+        throw new Error(result.subMsg || result.msg || '预下单失败');
+      }
+    } catch (error) {
+      await paymentRepo.update(paymentOrder.id, { status: 'failed' });
+      const errMsg = error.subMsg || error.message || '未知错误';
+      throw new Error('创建接码支付订单失败: ' + errMsg);
+    }
+  }
+
+  // 支付成功处理：区分普通商品和接码服务
   async processPaymentSuccess(order, tradeNo, notifyData) {
     const paymentRepo = this.getPaymentOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
 
-    // 查找可用卡密
-    const cardKey = await cardKeyRepo.findOne({
-      where: { productId: order.productId, status: 'unused' },
-    });
+    // 判断是否为接码服务支付：cardKeyId 有值但 cdKey 为空（普通商品支付成功后才分配卡密）
+    const isSmsPayment = !!(order.cardKeyId && !order.cdKey);
 
     const updateData = {
       tradeNo: tradeNo || '',
@@ -209,54 +270,91 @@ class PaymentService {
       notifyData: typeof notifyData === 'string' ? notifyData : JSON.stringify(notifyData),
     };
 
-    if (cardKey) {
-      updateData.cardKeyId = cardKey.id;
-      updateData.cdKey = cardKey.CDK;
-      // 标记卡密为已使用
-      await cardKeyRepo.update(cardKey.id, {
-        status: 'used',
-        usedAt: new Date(),
-      });
-    }
-
     await paymentRepo.update(order.id, updateData);
-    console.log(`[Payment] 订单 ${order.orderNo} 支付成功，${cardKey ? `已分配卡密 #${cardKey.id}` : '无可用卡密'}`);
+    console.log(`[Payment] 订单 ${order.orderNo} 支付成功（${isSmsPayment ? '接码服务' : '普通商品'}）`);
 
-    // 同步创建 Order 记录（统一订单表，方便统计）
-    try {
-      const orderRepo = dataSource.getRepository(Order);
-      const now = new Date();
-      const ts = now.getFullYear().toString() +
-        (now.getMonth() + 1).toString().padStart(2, '0') +
-        now.getDate().toString().padStart(2, '0') +
-        now.getHours().toString().padStart(2, '0') +
-        now.getMinutes().toString().padStart(2, '0') +
-        now.getSeconds().toString().padStart(2, '0');
-      const rand = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    if (isSmsPayment) {
+      // 接码服务支付成功：将原 Order 的 status 改为 completed，允许再次接码（不新建订单）
+      try {
+        const orderRepo = dataSource.getRepository(Order);
+        const cardKeyId = order.cardKeyId;
 
-      await orderRepo.save(orderRepo.create({
-        orderNo: `ORD${ts}${rand}`,
-        userId: order.userId || null,
-        cardKeyId: cardKey ? cardKey.id : null,
-        productId: order.productId,
-        amount: order.amount,
-        payMethod: 'alipay',
-        tradeNo: tradeNo || order.orderNo,
-        contact: order.contact || '',
-        status: 'completed',
-        completedAt: new Date(),
-      }));
-      console.log(`[Payment] 已同步创建 Order 记录，关联支付单 ${order.orderNo}`);
-    } catch (e) {
-      console.warn('[Payment] 同步创建 Order 记录失败:', e.message);
-    }
+        if (cardKeyId) {
+          const originalOrder = await orderRepo.findOne({
+            where: { cardKeyId },
+            order: { id: 'DESC' },
+          });
+          if (originalOrder) {
+            await orderRepo.update(originalOrder.id, { status: 'completed', completedAt: new Date() });
+            console.log(`[Payment] 接码服务支付成功，Order #${originalOrder.id} status→completed`);
+          }
+        }
+      } catch (e) {
+        console.warn('[Payment] 更新接码订单状态失败:', e.message);
+      }
+    } else {
+      // 普通商品支付：分配卡密
+      const cardKey = await cardKeyRepo.findOne({
+        where: { productId: order.productId, status: 'unused' },
+      });
 
-    // 更新商品销量
-    try {
-      const productRepo = this.getProductRepo();
-      await productRepo.increment({ id: order.productId }, 'sales', 1);
-    } catch (e) {
-      console.warn('[Payment] 更新商品销量失败:', e.message);
+      if (cardKey) {
+        updateData.cardKeyId = cardKey.id;
+        updateData.cdKey = cardKey.CDK;
+        // 标记卡密为已使用
+        await cardKeyRepo.update(cardKey.id, {
+          status: 'used',
+          usedAt: new Date(),
+        });
+        // 更新 PaymentOrder 的 cardKeyId 和 cdKey
+        await paymentRepo.update(order.id, { cardKeyId: cardKey.id, cdKey: cardKey.CDK });
+      }
+
+      // 同步创建 Order 记录（去重：同一 cardKeyId 不重复创建）
+      try {
+        const orderRepo = dataSource.getRepository(Order);
+        const ckId = cardKey ? cardKey.id : null;
+
+        if (ckId) {
+          const existing = await orderRepo.findOne({ where: { cardKeyId: ckId } });
+          if (existing) {
+            console.log(`[Payment] cardKeyId=${ckId} 已有 Order #${existing.id}，跳过重复创建`);
+          } else {
+            const now = new Date();
+            const ts = now.getFullYear().toString() +
+              (now.getMonth() + 1).toString().padStart(2, '0') +
+              now.getDate().toString().padStart(2, '0') +
+              now.getHours().toString().padStart(2, '0') +
+              now.getMinutes().toString().padStart(2, '0') +
+              now.getSeconds().toString().padStart(2, '0');
+            const rand = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+
+            await orderRepo.save(orderRepo.create({
+              orderNo: `ORD${ts}${rand}`,
+              userId: order.userId || null,
+              cardKeyId: ckId,
+              productId: order.productId,
+              amount: order.amount,
+              payMethod: 'alipay',
+              tradeNo: tradeNo || order.orderNo,
+              contact: order.contact || '',
+              status: 'completed',
+              completedAt: new Date(),
+            }));
+            console.log(`[Payment] 已同步创建 Order 记录，关联支付单 ${order.orderNo}`);
+          }
+        }
+      } catch (e) {
+        console.warn('[Payment] 同步创建 Order 记录失败:', e.message);
+      }
+
+      // 更新商品销量
+      try {
+        const productRepo = this.getProductRepo();
+        await productRepo.increment({ id: order.productId }, 'sales', 1);
+      } catch (e) {
+        console.warn('[Payment] 更新商品销量失败:', e.message);
+      }
     }
   }
 
