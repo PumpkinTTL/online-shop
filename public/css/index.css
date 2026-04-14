@@ -1,4 +1,4 @@
-/* 首页样式 */
+/* 首页样式 - UI/UX Pro Max 优化 */
 
 /* 主布局 */
 .main-container {
@@ -15,20 +15,20 @@
 @media (min-width: 769px) {
   .main-container {
     overflow: hidden;
-    height: calc(100vh - 53px - 53px); /* 减去导航栏和页脚 */
+    height: calc(100vh - 53px - 53px);
   }
 }
 
 /* 侧边栏 */
 .sidebar {
-  width: 220px;
+  width: 230px;
   flex-shrink: 0;
 }
 
 .filter-card {
   background: var(--surface);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: var(--radius-lg);
+  padding: 18px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   height: 100%;
@@ -39,7 +39,7 @@
   flex: 1;
   min-width: 0;
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 20px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
@@ -55,9 +55,10 @@
 }
 
 .filter-title {
-  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   color: var(--text);
   display: flex;
   align-items: center;
@@ -68,7 +69,7 @@
 .filter-title-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .filter-title i {
@@ -91,7 +92,7 @@
 }
 
 .filter-group {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .filter-group:last-child {
@@ -99,37 +100,42 @@
 }
 
 .filter-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-light);
   margin-bottom: 8px;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .filter-options {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .filter-option {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 13px;
-  color: var(--text);
-  transition: all 0.2s;
+  color: var(--text-secondary);
+  transition: var(--transition);
+  font-weight: 500;
 }
 
 .filter-option:hover {
-  background: #f1f5f9;
+  background: var(--border-light);
+  color: var(--text);
 }
 
 .filter-option.active {
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--primary-bg);
   color: var(--primary);
+  font-weight: 600;
 }
 
 .filter-option i {
@@ -143,11 +149,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .content-title {
-  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text);
 }
@@ -159,14 +166,21 @@
 }
 
 .sort-select {
-  padding: 6px 12px;
+  padding: 7px 14px;
   font-size: 13px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
   outline: none;
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.sort-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
 /* 接码服务内容区 */
@@ -182,12 +196,19 @@
 
 .sms-card {
   background: var(--bg);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 20px;
   border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.sms-card:hover {
+  border-color: var(--primary-bg);
+  box-shadow: var(--shadow);
 }
 
 .sms-card .card-title {
+  font-family: 'Poppins', sans-serif;
   font-size: 15px;
   font-weight: 600;
   color: var(--text);
@@ -206,7 +227,7 @@
   font-size: 13px;
   color: var(--text);
   margin-bottom: 6px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .sms-card .required {
@@ -222,18 +243,18 @@
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   background: var(--surface);
   color: var(--text);
   outline: none;
-  transition: all 0.2s;
+  transition: var(--transition);
   margin-bottom: 8px;
 }
 
 .sms-card .form-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-bg);
+  box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
 .sms-card .hint {
@@ -244,7 +265,7 @@
 
 .phone-box {
   background: var(--surface);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 12px;
   margin-bottom: 16px;
   border: 1px solid var(--border);
@@ -272,10 +293,10 @@
   padding: 8px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 
 .btn-icon:hover {
@@ -285,7 +306,7 @@
 }
 
 .btn-danger {
-  background: rgba(255, 77, 79, 0.1) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
   border-color: var(--price) !important;
   color: var(--price) !important;
 }
@@ -307,15 +328,16 @@
   align-items: center;
   gap: 8px;
   margin-top: 16px;
-  padding: 12px;
-  background: rgba(250, 140, 22, 0.1);
-  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--cta-bg);
+  border-radius: var(--radius-md);
   font-size: 12px;
-  color: var(--accent);
+  color: var(--cta);
+  font-weight: 500;
 }
 
 .disclaimer i {
-  color: var(--accent);
+  color: var(--cta);
 }
 
 .sms-header {
@@ -354,7 +376,7 @@
 
 .sms-text-box {
   background: var(--surface);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 16px;
   border: 1px solid var(--border);
 }
@@ -381,7 +403,7 @@
 
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
+  padding: 60px 20px;
   color: var(--text-light);
 }
 
@@ -389,6 +411,7 @@
   font-size: 48px;
   margin-bottom: 12px;
   opacity: 0.3;
+  color: var(--primary);
 }
 
 .empty-state p {
@@ -398,7 +421,7 @@
 /* 商品网格 */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 16px;
 }
 
@@ -412,51 +435,57 @@
   }
 }
 
-/* 商品卡片 */
+/* 商品卡片 - Vibrant & Block-based 风格 */
 .product-card {
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow);
-  transition: all 0.2s ease;
+  transition: var(--transition);
   border: 1px solid var(--border);
   cursor: pointer;
+  position: relative;
 }
 
 .product-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-hover);
   border-color: var(--primary-bg);
 }
 
 .product-image {
-  height: 100px;
+  height: 120px;
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   position: relative;
+  overflow: hidden;
 }
 
 .product-badge {
   padding: 3px 8px;
   border-radius: 10px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   color: white;
+  letter-spacing: 0.02em;
 }
 
 .product-badge.hot {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--cta), var(--cta-light));
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.3);
 }
 
 .product-badge.sold-out-badge {
-  background: #999;
+  background: #94A3B8;
 }
 
 .product-badge.warranty {
-  background: rgba(34, 197, 94, 0.85);
+  background: linear-gradient(135deg, #22C55E, #4ADE80);
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
 }
 
 .product-badge.credit {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, #F59E0B, #FBBF24);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
 }
 
 .product-badges {
@@ -469,7 +498,7 @@
 
 /* 售罄卡片 */
 .product-card.sold-out {
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .product-card.sold-out:hover {
@@ -481,31 +510,33 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .product-body {
-  padding: 14px;
+  padding: 16px;
 }
 
 .product-name {
+  font-family: 'Poppins', sans-serif;
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text);
 }
 
 .product-desc {
   font-size: 12px;
   color: var(--text-light);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .product-footer {
@@ -528,19 +559,21 @@
 
 .price-currency {
   font-size: 12px;
-  font-weight: 600;
-  color: var(--price);
-}
-
-.price-amount {
-  font-size: 18px;
   font-weight: 700;
   color: var(--price);
 }
 
+.price-amount {
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--price);
+  letter-spacing: -0.02em;
+}
+
 .product-sales {
   font-size: 12px;
-  color: #999;
+  color: var(--text-light);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -548,7 +581,7 @@
 
 .product-sales i {
   font-size: 11px;
-  color: #bbb;
+  color: var(--text-light);
 }
 
 .product-meta {
@@ -560,7 +593,7 @@
 
 .product-stock {
   font-size: 12px;
-  color: #999;
+  color: var(--text-light);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -568,15 +601,15 @@
 
 .product-stock i {
   font-size: 11px;
-  color: #bbb;
+  color: var(--text-light);
 }
 
 .product-stock.low-stock {
-  color: var(--accent);
+  color: var(--cta);
 }
 
 .product-stock.low-stock i {
-  color: var(--accent);
+  color: var(--cta);
 }
 
 .product-stock.no-stock {
@@ -588,15 +621,18 @@
 }
 
 .btn-buy {
-  padding: 6px 12px;
+  padding: 7px 14px;
   font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
 }
 
 .btn-buy:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  background: #ccc;
-  border-color: #ccc;
+  background: var(--border);
+  border-color: var(--border);
+  color: var(--text-light);
 }
 
 /* 响应式 */
@@ -614,7 +650,7 @@
   .filter-card {
     position: static;
     margin-bottom: 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     padding: 12px;
   }
 
@@ -659,15 +695,15 @@
   .filter-option {
     padding: 8px 14px;
     border-radius: 20px;
-    background: #f1f5f9;
+    background: var(--border-light);
     font-size: 13px;
     border: 1px solid transparent;
-    transition: all 0.2s;
+    transition: var(--transition);
     white-space: nowrap;
   }
 
   .filter-option:hover {
-    background: #e2e8f0;
+    background: var(--border);
   }
 
   .filter-option.active {

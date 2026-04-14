@@ -1,42 +1,65 @@
-/* 公共样式 */
+/* 公共样式 - UI/UX Pro Max 设计系统 */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  /* 主色调 - 官方蓝色 */
-  --primary: #1677ff;
-  --primary-light: #4096ff;
-  --primary-dark: #0958d9;
-  --primary-bg: rgba(22, 119, 255, 0.1);
+  /* 主色调 - Digital Product 推荐配色 */
+  --primary: #3B82F6;
+  --primary-light: #60A5FA;
+  --primary-dark: #2563EB;
+  --primary-bg: rgba(59, 130, 246, 0.08);
+  
+  /* CTA 色 - 活力橙 */
+  --cta: #F97316;
+  --cta-light: #FB923C;
+  --cta-bg: rgba(249, 115, 22, 0.08);
   
   /* 价格色 - 红色 */
-  --price: #ff4d4f;
-  --price-light: #ff7875;
+  --price: #EF4444;
+  --price-light: #F87171;
   
-  /* 强调色 - 活力橙 */
-  --accent: #fa8c16;
-  --accent-light: #ffa940;
+  /* 强调色 */
+  --accent: #F97316;
+  --accent-light: #FB923C;
   
-  /* 中性色 */
-  --bg: #f5f5f5;
-  --surface: #ffffff;
-  --text: #1f1f1f;
-  --text-light: #8c8c8c;
-  --border: #d9d9d9;
+  /* 中性色 - Slate 色系 */
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --text: #1E293B;
+  --text-secondary: #475569;
+  --text-light: #94A3B8;
+  --border: #E2E8F0;
+  --border-light: #F1F5F9;
   
   /* 阴影 */
-  --shadow: 0 1px 2px rgba(0,0,0,0.03);
-  --shadow-hover: 0 6px 16px -4px rgba(0,0,0,0.08);
-  --shadow-primary: 0 4px 12px rgba(22, 119, 255, 0.25);
+  --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  --shadow-hover: 0 10px 25px -5px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+  --shadow-primary: 0 4px 14px rgba(59, 130, 246, 0.3);
+  --shadow-cta: 0 4px 14px rgba(249, 115, 22, 0.3);
+  
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  
+  /* 过渡 */
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html, body { height: 100%; }
 
 body {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
-  line-height: 1.5;
+  line-height: 1.6;
   font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Poppins', 'Open Sans', sans-serif;
 }
 
 #app {
@@ -57,12 +80,14 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.92);
 }
 
 .nav-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 10px 16px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -72,31 +97,34 @@ body {
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
+  gap: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text);
   text-decoration: none;
   cursor: pointer;
   flex-shrink: 0;
+  letter-spacing: -0.02em;
 }
 
 .brand-icon {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 12px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .nav-menu {
@@ -106,23 +134,25 @@ body {
 }
 
 .nav-link {
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
   text-decoration: none;
-  color: var(--text-light);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: var(--transition);
+  cursor: pointer;
 }
 
 .nav-link:hover {
-  background: #f1f5f9;
+  background: var(--border-light);
   color: var(--text);
 }
 
 .nav-link.active {
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--primary-bg);
   color: var(--primary);
+  font-weight: 600;
 }
 
 .nav-links {
@@ -135,25 +165,34 @@ body {
 .search-box {
   display: flex;
   align-items: center;
-  background: #f1f5f9;
-  border-radius: 6px;
-  padding: 0 10px;
-  height: 32px;
+  background: var(--border-light);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  height: 36px;
+  transition: var(--transition);
+}
+
+.search-box:focus-within {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
 .search-box i {
   color: var(--text-light);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .search-box input {
   border: none;
   background: transparent;
-  padding: 0 8px;
+  padding: 0 10px;
   font-size: 13px;
   outline: none;
-  width: 160px;
+  width: 180px;
   height: 100%;
+  color: var(--text);
 }
 
 .search-box input::placeholder {
@@ -162,16 +201,19 @@ body {
 
 /* 按钮 */
 .btn {
-  padding: 7px 14px;
+  padding: 8px 16px;
   font-size: 13px;
-  font-weight: 500;
-  border-radius: 8px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 6px;
+  font-family: 'Open Sans', sans-serif;
+  letter-spacing: 0.01em;
 }
 
 .btn-primary {
@@ -182,16 +224,20 @@ body {
 .btn-primary:hover {
   background: var(--primary-light);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  box-shadow: var(--shadow-primary);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--text-light);
+  color: var(--text-secondary);
 }
 
 .btn-ghost:hover {
-  background: #f1f5f9;
+  background: var(--border-light);
   color: var(--text);
 }
 
@@ -211,11 +257,12 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
 }
 
 .user-avatar {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   border-radius: 50%;
   display: flex;
@@ -223,11 +270,12 @@ body {
   justify-content: center;
   color: white;
   font-size: 12px;
+  font-weight: 600;
 }
 
 .user-name {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -238,13 +286,13 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes fadeIn {
@@ -255,18 +303,18 @@ body {
 /* 登录注册弹窗 */
 .auth-modal {
   background: var(--surface);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   width: 100%;
-  max-width: 380px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  animation: slideUp 0.3s ease;
+  max-width: 400px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
   overflow: hidden;
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -283,27 +331,28 @@ body {
 }
 
 .auth-header h3 {
+  font-family: 'Poppins', sans-serif;
   font-size: 18px;
   font-weight: 600;
   color: var(--text);
 }
 
 .modal-close {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border: none;
-  background: #f1f5f9;
-  border-radius: 6px;
+  background: var(--border-light);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-light);
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 
 .modal-close:hover {
-  background: #e2e8f0;
+  background: var(--border);
   color: var(--text);
 }
 
@@ -311,7 +360,7 @@ body {
   display: flex;
   padding: 0 24px;
   gap: 4px;
-  background: #f8fafc;
+  background: var(--border-light);
   padding-top: 16px;
 }
 
@@ -321,11 +370,11 @@ body {
   border: none;
   background: transparent;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-light);
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 
 .auth-tab.active {
@@ -342,7 +391,7 @@ body {
 }
 
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .form-group label {
@@ -350,7 +399,7 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text);
   margin-bottom: 8px;
 }
@@ -362,12 +411,14 @@ body {
 
 .form-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
-  transition: all 0.2s;
+  transition: var(--transition);
   background: var(--surface);
+  color: var(--text);
+  font-family: 'Open Sans', sans-serif;
 }
 
 .form-input:focus {
@@ -376,15 +427,19 @@ body {
   box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
+.form-input::placeholder {
+  color: var(--text-light);
+}
+
 .btn-block {
   width: 100%;
   justify-content: center;
-  padding: 10px;
+  padding: 11px;
   font-size: 14px;
 }
 
 .btn-sm {
-  padding: 4px 8px;
+  padding: 5px 10px;
   font-size: 12px;
 }
 
@@ -398,6 +453,7 @@ body {
 .loading i {
   font-size: 32px;
   animation: spin 1s linear infinite;
+  color: var(--primary);
 }
 
 @keyframes spin {
@@ -427,8 +483,8 @@ body {
   }
 
   .brand-icon {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     font-size: 11px;
   }
 
@@ -450,7 +506,15 @@ body {
   }
 
   .btn {
-    padding: 5px 10px;
+    padding: 6px 12px;
     font-size: 12px;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
