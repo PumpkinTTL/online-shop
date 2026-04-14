@@ -63,6 +63,10 @@ function registerProductAction(app) {
 
           <!-- 卡密兑换区域 -->
           <div class="method-content" v-if="payMethod === 'card'">
+            <div class="card-hint">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>旧卡密也可以在这里查询兑换</span>
+            </div>
             <div class="input-group">
               <input type="text" class="form-input" v-model="redeemCode" placeholder="请输入卡密"
                 @keyup.enter="handleRedeem">

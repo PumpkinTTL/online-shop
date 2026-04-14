@@ -237,6 +237,13 @@
               <el-table-column label="兑换地址" width="140" show-overflow-tooltip>
                 <template #default="{ row }">{{ row.addr || '-' }}</template>
               </el-table-column>
+              <el-table-column label="注意事项" width="120" show-overflow-tooltip>
+                <template #default="{ row }">
+                  <el-tag v-if="row.tips" type="danger" size="small"><i class="fa-solid fa-triangle-exclamation"></i>
+                    有</el-tag>
+                  <span v-else style="color: #999">-</span>
+                </template>
+              </el-table-column>
               <el-table-column label="积分" width="80" align="center">
                 <template #default="{ row }">
                   <el-tag v-if="row.credit" type="warning" size="small">{{ row.credit }}</el-tag>
@@ -629,10 +636,15 @@
           <el-input v-model="editingProduct.addr" placeholder="CDK兑换页面地址，如 https://aisub.vip/" />
         </el-form-item>
         <el-form-item label="积分额度">
-          <el-input-number v-model="editingProduct.credit" :min="0" :step="1" placeholder="可选，账号积分额度" style="width: 100%" />
+          <el-input-number v-model="editingProduct.credit" :min="0" :step="1" placeholder="可选，账号积分额度"
+            style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="注意事项">
+          <el-input v-model="editingProduct.tips" type="textarea" :rows="2" placeholder="可选，购买页以红色警告展示" />
         </el-form-item>
         <el-form-item label="首页显示">
-          <el-switch v-model="editingProduct.show" :active-value="1" :inactive-value="0" active-text="显示" inactive-text="隐藏" />
+          <el-switch v-model="editingProduct.show" :active-value="1" :inactive-value="0" active-text="显示"
+            inactive-text="隐藏" />
         </el-form-item>
       </el-form>
       <template #footer>
