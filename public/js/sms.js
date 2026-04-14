@@ -75,12 +75,11 @@ const SmsModule = {
 
     sms.value.loading = true;
     try {
-      const res = await http.post('/pickup/get-phone', {
-        cardCode: 'FREE_SMS',
-        keyword: sms.value.keyWord.trim(),
-        phone: String(sms.value.phoneInput || '').trim() || undefined,
-        cardType: sms.value.cardType,
-      });
+      const res = await pickupApi.getPhone(
+        sms.value.keyWord.trim(),
+        String(sms.value.phoneInput || '').trim() || undefined,
+        sms.value.cardType,
+      );
       sms.value.currentPhone = String(res.phone);
       sms.value.phoneInput = String(res.phone);
       sms.value.isManualPhone = false;
@@ -107,10 +106,7 @@ const SmsModule = {
     }
     sms.value.smsLoading = true;
     try {
-      const res = await http.post('/pickup/get-verify-code', {
-        phone: sms.value.currentPhone,
-        keyword: sms.value.keyWord.trim(),
-      });
+      const res = await pickupApi.getVerifyCode(sms.value.currentPhone, sms.value.keyWord.trim());
       if (res.received) {
         sms.value.smsContent = res.content || '';
         sms.value.smsTime = new Date().toLocaleString('zh-CN');
@@ -131,7 +127,7 @@ const SmsModule = {
     if (!sms.value.currentPhone) return;
     const ok = await this._confirm('确定要释放该号码吗？');
     if (!ok) return;
-    http.post('/pickup/release-phone', { phone: sms.value.currentPhone }).catch(() => {});
+    pickupApi.releasePhone(sms.value.currentPhone).catch(() => {});
     this._resetPhoneState(sms);
     Toast.info('已释放号码');
   },
@@ -141,7 +137,7 @@ const SmsModule = {
     if (!sms.value.currentPhone) return;
     const ok = await this._confirm('确定要拉黑该号码吗？拉黑后将无法再获取此号码');
     if (!ok) return;
-    http.post('/pickup/block-phone', { phone: sms.value.currentPhone }).catch(() => {});
+    pickupApi.blockPhone(sms.value.currentPhone).catch(() => {});
     this._resetPhoneState(sms);
     Toast.info('已拉黑号码');
   },

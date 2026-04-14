@@ -160,11 +160,9 @@ const AppHeader = {
 
       this.authLoading = true;
       try {
-        const url = this.isLogin ? '/users/login' : '/users/register';
-        const response = await http.post(url, {
-          username: this.authForm.username,
-          password: this.authForm.password
-        });
+        const response = this.isLogin
+          ? await userApi.login(this.authForm.username, this.authForm.password)
+          : await userApi.register(this.authForm.username, this.authForm.password);
         const { user } = response;
         this.currentUser = user;
         this.isLoggedIn = true;
@@ -179,7 +177,7 @@ const AppHeader = {
     },
     async logout() {
       try {
-        await http.post('/users/logout');
+        await userApi.logout();
       } catch (e) { /* 忽略 */ }
       localStorage.removeItem('user');
       this.isLoggedIn = false;
@@ -193,7 +191,7 @@ const AppHeader = {
         this.currentUser = user;
         this.isLoggedIn = true;
         try {
-          const response = await http.get('/users/me');
+          const response = await userApi.getMe();
           this.currentUser = response;
           localStorage.setItem('user', JSON.stringify(response));
         } catch (error) {

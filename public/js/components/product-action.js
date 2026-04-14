@@ -273,8 +273,6 @@ function registerProductAction(app) {
     `,
     setup(props, { emit }) {
       const { ref, computed, onUnmounted, watch } = Vue;
-      const http = window.http;
-
       // --- 基础状态 ---
       const contact = ref(localStorage.getItem('lastContact') || '');
       const payMethod = ref('alipay');
@@ -285,7 +283,7 @@ function registerProductAction(app) {
         const user = raw && raw !== 'undefined' ? JSON.parse(raw) : null;
         if (user) {
           try {
-            const res = await http.get('/users/me');
+            const res = await userApi.getMe();
             if (res && !contact.value.trim()) {
               contact.value = res.username;
               localStorage.setItem('lastContact', res.username);
@@ -338,11 +336,7 @@ function registerProductAction(app) {
         }
         redeeming.value = true;
         try {
-          const response = await http.post('/pickup/redeem', {
-            code: redeemCode.value.trim(),
-            productId: props.product.id,
-            contact: contact.value.trim(),
-          });
+          const response = await pickupApi.redeem(redeemCode.value.trim(), props.product.id, contact.value.trim());
           localStorage.setItem('lastContact', contact.value.trim());
           actionResult.value = { type: 'redeem', CDK: response.CDK };
 
@@ -376,10 +370,7 @@ function registerProductAction(app) {
         qrImageUrl.value = '';
 
         try {
-          const res = await http.post('/payment/create', {
-            productId: props.product.id,
-            contact: contact.value.trim(),
-          });
+          const res = await paymentApi.create(props.product.id, contact.value.trim());
           orderNo.value = res.orderNo;
           payAmount.value = res.amount;
 
@@ -425,9 +416,7 @@ function registerProductAction(app) {
         pollTimer = setInterval(async () => {
           if (!orderNo.value || payStatus.value === 'paid') return;
           try {
-            const res = await http.get('/payment/status', {
-              params: { orderNo: orderNo.value },
-            });
+            const res = await paymentApi.getStatus(orderNo.value);
             if (res.status === 'paid') {
               payStatus.value = 'paid';
               cdKey.value = res.cdKey;
@@ -484,9 +473,7 @@ function registerProductAction(app) {
       // 检查号码是否已有接码记录（非首次登录）
       const checkPhoneRecord = async (phone) => {
         try {
-          const res = await http.get('/pickup/check-phone-record', {
-            params: { phone },
-          });
+          const res = await pickupApi.checkPhoneRecord(phone);
           isRepeatPhone.value = res.exists;
         } catch (e) {
           // 静默，不影响流程
@@ -498,10 +485,7 @@ function registerProductAction(app) {
         smsLoading.value = true;
         smsError.value = '';
         try {
-          const res = await http.post('/pickup/get-verify-code', {
-            phone: actionResult.value.CDK,
-            keyword: props.product.smKeyWord || '',
-          });
+          const res = await pickupApi.getVerifyCode(actionResult.value.CDK, props.product.smKeyWord || '');
           if (res.received && res.code) {
             smsCode.value = res.code;
             Toast.success('验证码已获取！');

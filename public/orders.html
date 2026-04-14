@@ -7,6 +7,8 @@
   <title>订单中心 - 工具商店</title>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="/http/api.js"></script>
+  <script src="/http/user.js"></script>
+  <script src="/http/pickup.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/components/app-header.js"></script>
@@ -708,10 +710,10 @@
           const user = raw && raw !== 'undefined' ? JSON.parse(raw) : null;
           if (user) {
             try {
-              const response = await http.get('/users/me');
+              const response = await userApi.getMe();
               currentUser.value = response;
               isLoggedIn.value = true;
-              localStorage.setItem('user', JSON.stringify(response.data));
+              localStorage.setItem('user', JSON.stringify(response));
             } catch (error) {
               localStorage.removeItem('user');
               isLoggedIn.value = false;
@@ -740,7 +742,7 @@
             }
             if (statusFilter.value) params.status = statusFilter.value;
 
-            const res = await http.get('/pickup/orders', { params });
+            const res = await pickupApi.getOrders(params);
             orders.value = res.items;
             total.value = res.total;
             searched.value = true;

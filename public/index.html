@@ -7,6 +7,8 @@
   <title>工具商店</title>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="/http/api.js"></script>
+  <script src="/http/product.js"></script>
+  <script src="/http/user.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/confirmDialog.js"></script>
@@ -312,7 +314,7 @@
 
         const loadProducts = async () => {
           try {
-            const response = await http.get('/products');
+            const response = await productApi.getList();
             allProducts.value = response;
           } catch (error) {
             console.error('加载商品失败:', error);
