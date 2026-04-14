@@ -209,12 +209,13 @@ class PickupService {
 
   // 创建订单
   async createOrder(data) {
-    const { cardKeyId, productId, contact, phone, verifyCode } = data;
+    const { userId, cardKeyId, productId, contact, phone, verifyCode } = data;
     const orderRepo = this.getOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
 
     const order = orderRepo.create({
       orderNo: this.generateOrderNo(),
+      userId: userId || null,
       cardKeyId,
       productId,
       contact,
@@ -244,6 +245,7 @@ class PickupService {
 
     // 构建查询条件
     const where = {};
+    if (filter.userId) where.userId = parseInt(filter.userId);
     if (filter.contact) where.contact = filter.contact;
     if (filter.orderNo) where.orderNo = filter.orderNo;
     if (filter.phone) where.phone = filter.phone;
@@ -262,19 +264,37 @@ class PickupService {
       take: filter.pageSize || 20,
     });
 
-    // 关联查询商品名称
+    // 关联查询商品信息（名称+价格）
     const productRepo = dataSource.getRepository(require('../entities/Product'));
     const productIds = [...new Set(items.map(o => o.productId).filter(Boolean))];
     let productMap = {};
     if (productIds.length > 0) {
       const products = await productRepo.findByIds(productIds);
-      products.forEach(p => { productMap[p.id] = p.name; });
+      products.forEach(p => { productMap[p.id] = { name: p.name, price: p.price, image: p.image }; });
     }
 
-    const enrichedItems = items.map(order => ({
-      ...order,
-      productName: productMap[order.productId] || '未知商品',
-    }));
+    // 关联查询卡密信息（卡密code + CDK兑换码）
+    const cardKeyRepo = this.getCardKeyRepo();
+    const cardKeyIds = [...new Set(items.map(o => o.cardKeyId).filter(Boolean))];
+    let cardKeyMap = {};
+    if (cardKeyIds.length > 0) {
+      const cardKeys = await cardKeyRepo.findByIds(cardKeyIds);
+      cardKeys.forEach(ck => { cardKeyMap[ck.id] = { code: ck.code, CDK: ck.CDK, keyword: ck.keyword }; });
+    }
+
+    const enrichedItems = items.map(order => {
+      const product = productMap[order.productId] || {};
+      const cardKey = cardKeyMap[order.cardKeyId] || {};
+      return {
+        ...order,
+        productName: product.name || '未知商品',
+        productPrice: product.price || null,
+        productImage: product.image || null,
+        cardCode: cardKey.code || null,
+        cardCDK: cardKey.CDK || null,
+        cardKeyword: cardKey.keyword || null,
+      };
+    });
 
     return { items: enrichedItems, total };
   }

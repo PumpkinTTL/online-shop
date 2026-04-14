@@ -33,10 +33,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 提货页
-app.get('/pickup', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'pickup.html'));
-});
 
 // 订单中心
 app.get('/orders', (req, res) => {

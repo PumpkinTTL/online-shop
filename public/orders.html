@@ -248,6 +248,129 @@
       color: var(--primary);
     }
 
+    /* 可复制字段 */
+    .copyable-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copyable-text {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .copyable-text.cdk-text {
+      color: #7c3aed;
+    }
+
+    .copyable-text.card-text {
+      color: #0891b2;
+    }
+
+    .copyable-text.price-text {
+      color: #ef4444;
+    }
+
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-light);
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-copy:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #eff6ff;
+    }
+
+    .btn-copy.copied {
+      border-color: #10b981;
+      color: #10b981;
+      background: #ecfdf5;
+    }
+
+    /* CDK 高亮区 */
+    .cdk-highlight {
+      margin-top: 8px;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+      border: 1px solid #ddd6fe;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .cdk-highlight .cdk-label {
+      font-size: 11px;
+      color: #7c3aed;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .cdk-highlight .cdk-value {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #5b21b6;
+      letter-spacing: 1px;
+      word-break: break-all;
+      flex: 1;
+    }
+
+    /* 分隔线 */
+    .order-divider {
+      border: none;
+      border-top: 1px dashed var(--border);
+      margin: 8px 0;
+    }
+
+    /* 已登录提示 */
+    .logged-in-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: #1d4ed8;
+    }
+
+    .logged-in-hint i {
+      font-size: 16px;
+    }
+
+    .logged-in-hint .hint-text {
+      flex: 1;
+    }
+
+    .logged-in-hint .username-badge {
+      font-weight: 600;
+      background: #dbeafe;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
     /* 空状态 */
     .empty-state {
       text-align: center;
@@ -265,6 +388,31 @@
     .empty-state p {
       font-size: 14px;
       margin-top: 4px;
+    }
+
+    /* 加载中 */
+    .auto-loading {
+      text-align: center;
+      padding: 48px 16px;
+      color: var(--text-light);
+    }
+
+    .auto-loading i {
+      font-size: 32px;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: block;
+      animation: spin 1s linear infinite;
+    }
+
+    .auto-loading p {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     /* 分页 */
@@ -320,6 +468,13 @@
 
         <!-- 搜索区 -->
         <div class="search-card">
+          <!-- 已登录提示 -->
+          <div class="logged-in-hint" v-if="isLoggedIn">
+            <i class="fa-solid fa-circle-check"></i>
+            <span class="hint-text">已登录，直接查询您的订单（也可输入关键词查其他订单）</span>
+            <span class="username-badge">{{ currentUser?.username }}</span>
+          </div>
+
           <div class="search-tabs">
             <div :class="['search-tab', { active: searchType === 'contact' }]" @click="searchType = 'contact'">
               <i class="fa-solid fa-address-card"></i> 联系方式
@@ -341,7 +496,7 @@
                 @keyup.enter="doSearch"
                 :disabled="loading">
             </div>
-            <button class="btn-search" @click="doSearch" :disabled="loading || !keyword.trim()">
+            <button class="btn-search" @click="doSearch" :disabled="loading || (!isLoggedIn && !keyword.trim())">
               <i class="fa-solid fa-spinner fa-spin" v-if="loading"></i>
               <i class="fa-solid fa-magnifying-glass" v-else></i>
               查询
@@ -381,6 +536,12 @@
                   <span class="order-info-label">商品</span>
                   <span class="order-info-value product-name">{{ order.productName }}</span>
                 </div>
+                <div class="order-info-row" v-if="order.productPrice">
+                  <span class="order-info-label">价格</span>
+                  <span class="order-info-value copyable-field">
+                    <span class="copyable-text price-text">¥{{ order.productPrice }}</span>
+                  </span>
+                </div>
                 <div class="order-info-row">
                   <span class="order-info-label">联系方式</span>
                   <span class="order-info-value">{{ order.contact }}</span>
@@ -391,8 +552,43 @@
                 </div>
                 <div class="order-info-row" v-if="order.verifyCode">
                   <span class="order-info-label">验证码</span>
-                  <span class="order-info-value">{{ order.verifyCode }}</span>
+                  <span class="order-info-value copyable-field">
+                    <span class="copyable-text">{{ order.verifyCode }}</span>
+                    <button class="btn-copy" :class="{ copied: copiedId === 'vcode-' + order.id }" @click="copyText(order.verifyCode, 'vcode-' + order.id)" title="复制验证码">
+                      <i :class="copiedId === 'vcode-' + order.id ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
+                    </button>
+                  </span>
                 </div>
+
+                <!-- CDK 兑换码高亮区 -->
+                <div class="cdk-highlight" v-if="order.cardCDK">
+                  <span class="cdk-label">CDK 兑换码</span>
+                  <span class="cdk-value">{{ order.cardCDK }}</span>
+                  <button class="btn-copy" :class="{ copied: copiedId === 'cdk-' + order.id }" @click="copyText(order.cardCDK, 'cdk-' + order.id)" title="复制CDK">
+                    <i :class="copiedId === 'cdk-' + order.id ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
+                  </button>
+                </div>
+
+                <!-- 卡密信息 -->
+                <template v-if="order.cardCode">
+                  <hr class="order-divider">
+                  <div class="order-info-row">
+                    <span class="order-info-label">卡密</span>
+                    <span class="order-info-value copyable-field">
+                      <span class="copyable-text card-text">{{ order.cardCode }}</span>
+                      <button class="btn-copy" :class="{ copied: copiedId === 'card-' + order.id }" @click="copyText(order.cardCode, 'card-' + order.id)" title="复制卡密">
+                        <i :class="copiedId === 'card-' + order.id ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
+                      </button>
+                    </span>
+                  </div>
+                  <div class="order-info-row" v-if="order.cardKeyword">
+                    <span class="order-info-label">接码项目</span>
+                    <span class="order-info-value">{{ order.cardKeyword }}</span>
+                  </div>
+                </template>
+
+                <hr class="order-divider" v-if="order.cardCode || order.cardCDK">
+
                 <div class="order-info-row">
                   <span class="order-info-label">创建时间</span>
                   <span class="order-info-value">{{ formatTime(order.createdAt) }}</span>
@@ -422,8 +618,14 @@
           </div>
         </template>
 
-        <!-- 首次进入的提示 -->
-        <div class="empty-state" v-if="!searched">
+        <!-- 自动加载中（已登录正在查询） -->
+        <div class="auto-loading" v-if="!searched && autoSearching">
+          <i class="fa-solid fa-circle-notch"></i>
+          <p>正在查询您的订单...</p>
+        </div>
+
+        <!-- 首次进入的提示（未登录） -->
+        <div class="empty-state" v-if="!searched && !autoSearching">
           <i class="fa-solid fa-magnifying-glass"></i>
           <p>输入联系方式、订单号或手机号查询您的订单</p>
         </div>
@@ -438,10 +640,15 @@
   </div>
 
   <script>
-    const { createApp, ref, computed, watch } = Vue;
+    const { createApp, ref, computed, watch, onMounted } = Vue;
 
     const app = createApp({
       setup() {
+        // 登录状态
+        const isLoggedIn = ref(false);
+        const currentUser = ref(null);
+        const autoSearching = ref(false);
+
         // 搜索
         const searchType = ref('contact');
         const keyword = ref('');
@@ -450,6 +657,9 @@
 
         // 状态筛选
         const statusFilter = ref('');
+
+        // 复制状态
+        const copiedId = ref('');
 
         // 结果
         const orders = ref([]);
@@ -491,15 +701,41 @@
           if (searched.value) doSearch();
         });
 
+        // 检查登录状态
+        const checkLogin = async () => {
+          const user = JSON.parse(localStorage.getItem('user') || 'null');
+          if (user) {
+            try {
+              const response = await axios.get('/api/users/me');
+              currentUser.value = response.data;
+              isLoggedIn.value = true;
+              localStorage.setItem('user', JSON.stringify(response.data));
+            } catch (error) {
+              localStorage.removeItem('user');
+              isLoggedIn.value = false;
+              currentUser.value = null;
+            }
+          }
+        };
+
         const doSearch = async () => {
-          if (!keyword.value.trim()) {
+          // 确定搜索方式：已登录且 keyword 为空时用 userId 精确查
+          let searchKeyword = keyword.value.trim();
+          const useUserIdSearch = isLoggedIn.value && !searchKeyword && currentUser.value?.id;
+
+          if (!useUserIdSearch && !searchKeyword) {
             Toast.warning('请输入查询关键词');
             return;
           }
           loading.value = true;
           try {
             const params = { page: page.value, pageSize };
-            params[searchType.value] = keyword.value.trim();
+            // 已登录且无关键词：按 userId 精确查
+            if (useUserIdSearch) {
+              params.userId = currentUser.value.id;
+            } else {
+              params[searchType.value] = searchKeyword;
+            }
             if (statusFilter.value) params.status = statusFilter.value;
 
             const res = await axios.get('/api/pickup/orders', { params });
@@ -534,11 +770,44 @@
             String(d.getSeconds()).padStart(2, '0');
         };
 
+        const copyText = async (text, id) => {
+          try {
+            await navigator.clipboard.writeText(text);
+            copiedId.value = id;
+            Toast.success('已复制到剪贴板');
+            setTimeout(() => { copiedId.value = ''; }, 2000);
+          } catch {
+            // 降级方案
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            copiedId.value = id;
+            Toast.success('已复制到剪贴板');
+            setTimeout(() => { copiedId.value = ''; }, 2000);
+          }
+        };
+
+        // 页面加载：检查登录 → 自动查询
+        onMounted(async () => {
+          await checkLogin();
+          if (isLoggedIn.value && currentUser.value) {
+            // 已登录，直接按 userId 查询我的订单（不预填 keyword）
+            autoSearching.value = true;
+            await doSearch();
+            autoSearching.value = false;
+          }
+        });
+
         return {
+          isLoggedIn, currentUser, autoSearching,
           searchType, keyword, loading, searched,
-          statusFilter, orders, total, page, pageSize, totalPages,
+          statusFilter, copiedId, orders, total, page, pageSize, totalPages,
           searchIcon, searchPlaceholder,
-          doSearch, goPage, statusText, formatTime,
+          doSearch, goPage, statusText, formatTime, copyText,
         };
       }
     });

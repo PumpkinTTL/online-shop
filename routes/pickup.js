@@ -1,7 +1,23 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const pickupService = require('../services/pickupService');
 
 const router = express.Router();
+
+// JWT 密钥（与 users.js 保持一致）
+const JWT_SECRET = 'online-shop-secret-key-2026';
+
+// 从请求中提取当前用户ID（可选，未登录返回 null）
+const getCurrentUserId = (req) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return null;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded.userId || null;
+  } catch {
+    return null;
+  }
+};
 
 // 验证卡密
 router.post('/verify-card', async (req, res) => {
@@ -34,6 +50,7 @@ router.post('/redeem', async (req, res) => {
     // 写入订单
     try {
       await pickupService.createOrder({
+        userId: getCurrentUserId(req),
         cardKeyId: result.id,
         productId: result.productId || productId,
         contact: contact || '',
@@ -140,6 +157,7 @@ router.post('/confirm', async (req, res) => {
     }
 
     const order = await pickupService.createOrder({
+      userId: getCurrentUserId(req),
       cardKeyId,
       productId,
       contact: contact.trim(),
@@ -195,11 +213,12 @@ router.get('/balance', async (req, res) => {
   }
 });
 
-// 查询订单（免登录，支持多条件）
+// 查询订单（免登录，支持多条件；已登录用户可按 userId 查询）
 router.get('/orders', async (req, res) => {
   try {
-    const { contact, orderNo, phone, status, productId, page, pageSize } = req.query;
+    const { contact, orderNo, phone, status, productId, userId, page, pageSize } = req.query;
     const filter = {};
+    if (userId) filter.userId = userId;
     if (contact) filter.contact = contact.trim();
     if (orderNo) filter.orderNo = orderNo.trim();
     if (phone) filter.phone = phone.trim();

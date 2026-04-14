@@ -277,6 +277,21 @@ function registerProductAction(app) {
       // --- 基础状态 ---
       const contact = ref(localStorage.getItem('lastContact') || '');
       const payMethod = ref('alipay');
+
+      // 已登录时自动填入用户名作为联系方式
+      const checkAndPrefillContact = async () => {
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (user) {
+          try {
+            const res = await axios.get('/api/users/me');
+            if (res.data && !contact.value.trim()) {
+              contact.value = res.data.username;
+              localStorage.setItem('lastContact', res.data.username);
+            }
+          } catch (e) { /* 未登录，不影响 */ }
+        }
+      };
+      checkAndPrefillContact();
       const redeemCode = ref('');
       const redeeming = ref(false);
       const actionResult = ref(null); // { type: 'redeem'|'alipay', CDK, ... }

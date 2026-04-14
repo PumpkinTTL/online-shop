@@ -6,6 +6,7 @@ module.exports = new EntitySchema({
   columns: {
     id: { type: 'int', primary: true, generated: true },
     orderNo: { type: 'varchar', length: 64, unique: true },
+    userId: { type: 'int', nullable: true }, // 关联用户ID，已登录时自动填入
     cardKeyId: { type: 'int', nullable: true },
     productId: { type: 'int' },
     contact: { type: 'varchar', length: 100 }, // 联系方式（手机号/邮箱/QQ等）
