@@ -95,7 +95,7 @@
           <!-- 商品卡片 -->
           <div class="product-card" :class="{ 'sold-out': product.stock === 0 }" v-for="product in filteredProducts" :key="product.id"
             @click="goToDetail(product.id)" v-else>
-            <div class="product-image" style="background: url('/assets/bg.png') center/cover no-repeat;">
+            <div class="product-image" :style="{ background: product.image ? `url('/assets/images/${product.image}') center/cover no-repeat` : `url('/assets/bg.png') center/cover no-repeat` }">
               <div class="product-badges">
                 <div class="product-badge hot">
                   <i class="fa-solid fa-fire"></i> 热门

@@ -49,7 +49,7 @@
           <!-- 顶部卡片 -->
           <div class="detail-card">
             <!-- 商品封面 -->
-            <div class="product-cover" style="background: url('/assets/bg.png') center/cover no-repeat;">
+            <div class="product-cover" :style="{ background: product.image ? `url('/assets/images/${product.image}') center/cover no-repeat` : `url('/assets/bg.png') center/cover no-repeat` }">
               <div class="cover-overlay">
                 <div class="product-badges">
                   <div class="product-badge">
