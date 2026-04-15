@@ -66,6 +66,23 @@
         </div>
       </aside>
 
+      <!-- 移动端横向筛选栏 -->
+      <div class="mobile-filter-bar">
+        <div class="mobile-filter-scroll">
+          <div class="mobile-filter-chip" :class="{ active: currentCategory === cat.value }"
+            v-for="cat in categories" :key="'mc-'+cat.value" @click="currentCategory = cat.value"
+            v-show="cat.value !== 'sms'">
+            <i :class="cat.icon"></i>
+            {{ cat.label }}
+          </div>
+          <div class="mobile-filter-divider"></div>
+          <div class="mobile-filter-chip" :class="{ active: currentPriceRange === price.value }"
+            v-for="price in priceRanges" :key="'mp-'+price.value" @click="currentPriceRange = price.value">
+            <i :class="price.icon"></i>
+            {{ price.label }}
+          </div>
+        </div>
+      </div>
 
       <!-- 商品列表 -->
       <main class="content" v-if="currentCategory !== 'sms'">
