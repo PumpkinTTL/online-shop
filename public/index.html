@@ -45,7 +45,7 @@
               <div class="filter-label">分类</div>
               <div class="filter-options">
                 <div class="filter-option" :class="{ active: currentCategory === cat.value }" v-for="cat in categories"
-                  :key="cat.value" @click="currentCategory = cat.value">
+                  :key="cat.value" @click="currentCategory = cat.value" v-show="cat.value !== 'sms'">
                   <i :class="cat.icon"></i>
                   {{ cat.label }}
                 </div>
