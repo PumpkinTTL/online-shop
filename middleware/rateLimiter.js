@@ -22,6 +22,10 @@ function createLimiter(key) {
     legacyHeaders: false,
     skipSuccessfulRequests: key === 'login',
     skip: (req) => !configCache[key].enabled,
+    // 内存优化配置
+    store: new rateLimit.MemoryStore({
+      checkPeriod: config.windowMs * 1.2, // 定期清理过期记录（1.2倍窗口时间）
+    }),
   });
 
   // 如果返回的是 AsyncFunction，包装成同步函数
