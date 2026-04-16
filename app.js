@@ -10,7 +10,10 @@ const usersRouter = require('./routes/users');
 const pickupRouter = require('./routes/pickup');
 const adminRouter = require('./routes/admin');
 const paymentRouter = require('./routes/payment');
+const adminRateLimitsRouter = require('./routes/adminRateLimits');
 const adminService = require('./services/adminService');
+const rateLimitService = require('./services/rateLimitService');
+const limiters = require('./middleware/rateLimiter');
 
 const app = express();
 const PORT = process.env.PORT || 5100;
@@ -19,6 +22,9 @@ const PORT = process.env.PORT || 5100;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // 解析 Cookie
+
+// 全局速率限制
+app.use('/api', limiters.global);
 
 // 静态文件
 app.use(express.static(path.join(__dirname, 'public')));
@@ -29,6 +35,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/pickup', pickupRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/admin/rate-limits', adminRateLimitsRouter);
 app.use('/api/payment', paymentRouter);
 
 // 主页
@@ -64,10 +71,23 @@ async function bootstrap() {
     await dataSource.initialize();
     console.log('✅ 数据库连接成功');
 
+    // 等待表同步完成（开发环境）
+    if (process.env.NODE_ENV === 'development') {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
     // 初始化默认管理员
     const initResult = await adminService.initDefaultAdmin();
     if (initResult) {
       console.log('🔑 默认管理员已创建 — 用户名: admin, 密码: admin123');
+    }
+
+    // 初始化默认速率限制配置
+    try {
+      await rateLimitService.initializeDefaults();
+      console.log('🛡️ 速率限制已启用');
+    } catch (error) {
+      console.log('⚠️  速率限制配置初始化失败（将在首次访问时自动创建）');
     }
 
     app.listen(PORT, () => {

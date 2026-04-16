@@ -1,11 +1,12 @@
 const express = require('express');
 const paymentService = require('../services/paymentService');
 const { optionalAuth } = require('../middleware/auth');
+const { payment: paymentLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
 // 创建支付订单（预下单，返回二维码）
-router.post('/create', optionalAuth, async (req, res) => {
+router.post('/create', paymentLimiter, optionalAuth, async (req, res) => {
   try {
     const { productId, contact } = req.body;
     if (!productId) {
@@ -19,7 +20,7 @@ router.post('/create', optionalAuth, async (req, res) => {
 });
 
 // 创建接码服务支付订单（paySMS）
-router.post('/create-sms', optionalAuth, async (req, res) => {
+router.post('/create-sms', paymentLimiter, optionalAuth, async (req, res) => {
   try {
     const { cardKeyId, productId, amount, contact } = req.body;
     if (!cardKeyId) {

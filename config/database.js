@@ -6,6 +6,7 @@ const Order = require('../entities/Order');
 const Admin = require('../entities/Admin');
 const SmsRecord = require('../entities/SmsRecord');
 const PaymentOrder = require('../entities/PaymentOrder');
+const RateLimitConfig = require('../entities/RateLimitConfig');
 
 const dataSource = new DataSource({
   type: 'mysql',
@@ -14,7 +15,7 @@ const dataSource = new DataSource({
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || 'root',
   database: process.env.DB_DATABASE || 'online_shop',
-  entities: [Product, User, CardKey, Order, Admin, SmsRecord, PaymentOrder],
+  entities: [Product, User, CardKey, Order, Admin, SmsRecord, PaymentOrder, RateLimitConfig],
   synchronize: process.env.NODE_ENV === 'development' ? true : false,
   logging: false,
 });

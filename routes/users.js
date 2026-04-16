@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const userService = require('../services/UserService');
 const { requireAuth, JWT_SECRET } = require('../middleware/auth');
+const { login: loginLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
@@ -67,7 +68,7 @@ router.post('/register', async (req, res) => {
 });
 
 // 登录
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     
