@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/data/data/com.termux/files/home/online-shop/logs/combined/.9a77979e72a68c3396e85c25dfd1d2af213d1958-audit.json",
+    "files": [
+        {
+            "date": 1776347287452,
+            "name": "/data/data/com.termux/files/home/online-shop/logs/combined/combined-2026-04-16.log",
+            "hash": "492ee77f811d3467dcb3d81fc3a0b7f3c50d2fb7b25e8639f98359200a7dfddd"
+        }
+    ],
+    "hashType": "sha256"
+}

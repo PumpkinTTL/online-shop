@@ -15,6 +15,10 @@ const adminService = require('./services/adminService');
 const rateLimitService = require('./services/rateLimitService');
 const limiters = require('./middleware/rateLimiter');
 
+// 日志系统
+const { requestLogger, errorLogger } = require('./logger/middleware');
+const logger = require('./logger');
+
 const app = express();
 const PORT = process.env.PORT || 5100;
 
@@ -22,6 +26,9 @@ const PORT = process.env.PORT || 5100;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // 解析 Cookie
+
+// 请求日志中间件（必须在路由之前）
+app.use(requestLogger);
 
 // 全局速率限制
 app.use('/api', limiters.global);
@@ -63,6 +70,30 @@ app.get('/admin/element', (req, res) => {
 });
 app.get('/admin/login-element', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'login-element.html'));
+});
+
+
+// 错误日志中间件（必须在所有路由之后）
+app.use(errorLogger);
+
+// 全局错误处理中间件（必须最后）
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || '服务器内部错误';
+
+  // 记录错误
+  logger.error('全局错误处理', {
+    error: message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    statusCode,
+  });
+
+  res.status(statusCode).json({
+    error: message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  });
 });
 
 // 初始化数据库并启动
