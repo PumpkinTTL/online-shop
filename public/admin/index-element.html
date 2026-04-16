@@ -609,40 +609,54 @@
               </div>
             </div>
 
-            <el-card shadow="never" style="margin-top:16px;">
-              <!-- 调试信息 -->
-              <div style="margin-bottom:10px;color:#666;font-size:12px;">
-                数据加载状态: {{ rateLimitLoading ? '加载中...' : '已完成' }} |
-                数据条数: {{ rateLimitConfigs.length }}
-              </div>
+            <div v-loading="rateLimitLoading" style="margin-top:16px;">
+              <el-row :gutter="16">
+                <el-col :xs="24" :sm="12" :md="12" :lg="8" v-for="config in rateLimitConfigs" :key="config.id" style="margin-bottom:16px;">
+                  <el-card shadow="hover" style="height:100%;">
+                    <template #header>
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                          <el-icon :size="20" :color="config.enabled ? '#67C23A' : '#909399'">
+                            <CircleCheck v-if="config.enabled" />
+                            <CircleClose v-else />
+                          </el-icon>
+                          <span style="font-weight:600;font-size:15px;">{{ config.name }}</span>
+                        </div>
+                        <el-switch v-model="config.enabled" @change="toggleRateLimit(config)" size="small" />
+                      </div>
+                    </template>
 
-              <el-table :data="rateLimitConfigs" v-loading="rateLimitLoading" stripe style="width:100%">
-                <el-table-column prop="name" label="配置名称" width="150" />
-                <el-table-column prop="key" label="标识符" width="120" />
-                <el-table-column label="时间窗口" width="120">
-                  <template #default="{ row }">
-                    {{ formatWindowMs(row.windowMs) }}
-                  </template>
-                </el-table-column>
-                <el-table-column prop="maxRequests" label="最大请求数" width="120" align="center">
-                  <template #default="{ row }">
-                    {{ row.maxRequests }} 次
-                  </template>
-                </el-table-column>
-                <el-table-column prop="message" label="提示信息" min-width="180" show-overflow-tooltip />
-                <el-table-column prop="enabled" label="状态" width="100" align="center">
-                  <template #default="{ row }">
-                    <el-switch v-model="row.enabled" @change="toggleRateLimit(row)" />
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" width="100" align="center" fixed="right">
-                  <template #default="{ row }">
-                    <el-button size="small" type="primary" @click="editRateLimit(row)">编辑</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </el-card>
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
+                        <span style="color:#606266;font-size:13px;">标识符</span>
+                        <el-tag size="small" type="info">{{ config.key }}</el-tag>
+                      </div>
+
+                      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
+                        <span style="color:#606266;font-size:13px;">时间窗口</span>
+                        <span style="color:#303133;font-weight:500;font-size:14px;">{{ formatWindowMs(config.windowMs) }}</span>
+                      </div>
+
+                      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
+                        <span style="color:#606266;font-size:13px;">最大请求数</span>
+                        <span style="color:#303133;font-weight:500;font-size:14px;">{{ config.maxRequests }} 次</span>
+                      </div>
+
+                      <div style="padding:8px 0;">
+                        <div style="color:#606266;font-size:13px;margin-bottom:6px;">提示信息</div>
+                        <div style="color:#909399;font-size:12px;line-height:1.5;word-break:break-all;">{{ config.message || '\无' }}</div>
+                      </div>
+
+                      <el-button type="primary" size="small" @click="editRateLimit(config)" style="width:100%;margin-top:8px;">
+                        编辑配置
+                      </el-button>
+                    </div>
+                  </el-card>
+                </el-col>
+              </el-row>
+            </div>
           </div>
+
 
         </el-main>
       </el-container>
