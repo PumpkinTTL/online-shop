@@ -41,6 +41,7 @@ const app = createApp({
         admins: '管理员管理',
         smsrecords: '接码记录',
         ratelimits: '限速配置',
+        logs: '日志查看',
       };
       return map[currentPage.value] || '仪表盘';
     });
@@ -101,6 +102,7 @@ const app = createApp({
       else if (page === 'admins') loadAdmins();
       else if (page === 'smsrecords') loadSmsRecords();
       else if (page === 'ratelimits') loadRateLimits();
+      else if (page === 'logs') loadLogStats();
       ElMsg.success('数据已刷新');
     };
 
@@ -521,6 +523,132 @@ const app = createApp({
       return map[s] || 'info';
     };
 
+    // ===== 日志管理 =====
+    var logStats = ref({});
+    var logLoading = ref(false);
+    var showLogQueryDialog = ref(false);
+    var logFiles = ref([]);
+    var logQueryResult = ref({ total: 0, filtered: 0, logs: [] });
+    var logQueryForm = ref({
+      type: 'combined',
+      filename: '',
+      level: '',
+      keyword: '',
+      limit: 100,
+    });
+
+    var getLogTypeLabel = function(type) {
+      var map = { access: '访问日志', error: '错误日志', business: '业务日志', combined: '综合日志' };
+      return map[type] || type;
+    };
+    var getLogTypeColor = function(type) {
+      var map = { access: '#409EFF', error: '#F56C6C', business: '#E6A23C', combined: '#67C23A' };
+      return map[type] || '#909399';
+    };
+    var getLogLevelType = function(level) {
+      var value = String(level || 'info').toLowerCase();
+      var map = { error: 'danger', warn: 'warning', warning: 'warning', info: 'info', http: 'primary', debug: 'success' };
+      return map[value] || 'info';
+    };
+    var formatFileSize = function(size) {
+      var num = Number(size || 0);
+      if (num < 1024) return num + ' B';
+      if (num < 1024 * 1024) return (num / 1024).toFixed(1) + ' KB';
+      if (num < 1024 * 1024 * 1024) return (num / 1024 / 1024).toFixed(1) + ' MB';
+      return (num / 1024 / 1024 / 1024).toFixed(1) + ' GB';
+    };
+    var formatLogTime = function(row) {
+      if (!row || typeof row !== 'object') return '-';
+      return row.timestamp || row.time || row.createdAt || row.date || '-';
+    };
+    var formatLogMessage = function(row) {
+      if (!row || typeof row !== 'object') return '-';
+      return row.message || row.msg || row.event || row.url || '-';
+    };
+    var formatLogDetail = function(row) {
+      if (!row || typeof row !== 'object') return '-';
+      var detail = Object.assign({}, row);
+      delete detail.timestamp;
+      delete detail.time;
+      delete detail.createdAt;
+      delete detail.date;
+      delete detail.level;
+      delete detail.severity;
+      delete detail.message;
+      delete detail.msg;
+      delete detail.event;
+      var keys = Object.keys(detail).filter(function(key) {
+        return detail[key] !== undefined && detail[key] !== null && detail[key] !== '';
+      });
+      if (keys.length === 0) return '-';
+      var normalized = {};
+      for (var i = 0; i < keys.length; i++) {
+        normalized[keys[i]] = detail[keys[i]];
+      }
+      try {
+        return JSON.stringify(normalized);
+      } catch (e) {
+        return '-';
+      }
+    };
+
+    var loadLogFiles = async function() {
+      try {
+        var files = await AdminAPI.getLogFiles({ type: logQueryForm.value.type });
+        logFiles.value = Array.isArray(files) ? files : [];
+        if (!logFiles.value.length) {
+          logQueryForm.value.filename = '';
+          return;
+        }
+        var exists = logFiles.value.some(function(item) { return item.filename === logQueryForm.value.filename; });
+        if (!exists) {
+          logQueryForm.value.filename = logFiles.value[0].filename;
+        }
+        // 自动加载第一个文件的日志内容
+        if (logQueryForm.value.filename) {
+          await queryLogs(true);
+        }
+      } catch (e) {
+        logFiles.value = [];
+        logQueryForm.value.filename = '';
+        ElMsg.error(e.message || '加载日志文件失败');
+      }
+    };
+
+    var loadLogStats = async function() {
+      logLoading.value = true;
+      try {
+        logStats.value = await AdminAPI.getLogStats();
+      } catch (e) {
+        ElMsg.error(e.message || '加载日志统计失败');
+      } finally {
+        logLoading.value = false;
+      }
+    };
+
+    var handleLogTypeChange = async function() {
+      logQueryForm.value.filename = '';
+      await loadLogFiles();
+    };
+
+    var queryLogs = async function(autoLoad) {
+      if (!logQueryForm.value.filename) {
+        if (!autoLoad) return ElMsg.warning('请先选择日志文件');
+        return;
+      }
+      logLoading.value = true;
+      try {
+        var result = await AdminAPI.getLogContent(logQueryForm.value);
+        logQueryResult.value = result;
+        showLogQueryDialog.value = false;
+      } catch (e) {
+        logQueryResult.value = { total: 0, filtered: 0, logs: [] };
+        ElMsg.error(e.message || '查询日志失败');
+      } finally {
+        logLoading.value = false;
+      }
+    };
+
     // ===== 修改密码 =====
     var showPasswordModal = ref(false);
     var passwordForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -554,16 +682,20 @@ const app = createApp({
     };
 
     // 页面切换时加载数据
-    watch(currentPage, function(page) {
-      if (page === 'dashboard') loadStats();
-      else if (page === 'products') loadProducts();
-      else if (page === 'cardkeys') { loadProducts(); loadCardKeys(); loadCardPrefixes(); }
-      else if (page === 'orders') loadOrders();
-      else if (page === 'users') loadUsers();
-      else if (page === 'admins') loadAdmins();
-      else if (page === 'smsrecords') loadSmsRecords();
-      else if (page === 'ratelimits') loadRateLimits();
-    });
+    watch(currentPage, async function(page) {
+      if (page === 'dashboard') await loadStats();
+      else if (page === 'products') await loadProducts();
+      else if (page === 'cardkeys') { await loadProducts(); await loadCardKeys(); await loadCardPrefixes(); }
+      else if (page === 'orders') await loadOrders();
+      else if (page === 'users') await loadUsers();
+      else if (page === 'admins') await loadAdmins();
+      else if (page === 'smsrecords') await loadSmsRecords();
+      else if (page === 'ratelimits') await loadRateLimits();
+      else if (page === 'logs') {
+        await loadLogStats();
+        await loadLogFiles();
+      }
+    }, { immediate: false }); // 不立即执行，避免 onMounted 中重复调用
 
     // ===== 限速配置管理 =====
     var rateLimitConfigs = ref([]);
@@ -700,7 +832,19 @@ const app = createApp({
         return;
       }
       adminInfo.value = AdminAPI.getAdminInfo();
-      await loadStats();
+
+      // 根据当前页面加载对应数据
+      var page = currentPage.value;
+      if (page === 'dashboard') await loadStats();
+      else if (page === 'products') await loadProducts();
+      else if (page === 'cardkeys') { await loadProducts(); await loadCardKeys(); await loadCardPrefixes(); }
+      else if (page === 'orders') await loadOrders();
+      else if (page === 'users') await loadUsers();
+      else if (page === 'admins') await loadAdmins();
+      else if (page === 'smsrecords') await loadSmsRecords();
+      else if (page === 'ratelimits') await loadRateLimits();
+      else if (page === 'logs') { await loadLogStats(); await loadLogFiles(); }
+
       pageLoading.value = false;
     });
 
@@ -715,7 +859,12 @@ const app = createApp({
       handleMenuSelect: handleMenuSelect,
       refreshCurrentPage: refreshCurrentPage,
       logout: logout,
-      formatDate: formatDate,
+      formatDate: typeof formatDate !== 'undefined' ? formatDate : function(dateStr) {
+        if (!dateStr) return '-';
+        var d = new Date(dateStr);
+        var pad = function(n) { return n.toString().padStart(2, '0'); };
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      },
       userName: userName,
       userInitial: userInitial,
       getProductName: getProductName,
@@ -796,6 +945,24 @@ const app = createApp({
       smsStatusLabel: smsStatusLabel,
       smsSourceLabel: smsSourceLabel,
       smsSourceType: smsSourceType,
+      // 日志管理
+      logStats: logStats,
+      logLoading: logLoading,
+      showLogQueryDialog: showLogQueryDialog,
+      logFiles: logFiles,
+      logQueryResult: logQueryResult,
+      logQueryForm: logQueryForm,
+      loadLogStats: loadLogStats,
+      loadLogFiles: loadLogFiles,
+      handleLogTypeChange: handleLogTypeChange,
+      queryLogs: queryLogs,
+      getLogTypeLabel: getLogTypeLabel,
+      getLogTypeColor: getLogTypeColor,
+      getLogLevelType: getLogLevelType,
+      formatFileSize: formatFileSize,
+      formatLogTime: formatLogTime,
+      formatLogMessage: formatLogMessage,
+      formatLogDetail: formatLogDetail,
       // 限速配置
       rateLimitConfigs: rateLimitConfigs,
       rateLimitLoading: rateLimitLoading,

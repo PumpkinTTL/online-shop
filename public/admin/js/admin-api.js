@@ -161,4 +161,18 @@ const AdminAPI = {
   getSmsRecords(params) {
     return this.getHttp().get('/sms-records', { params });
   },
+
+  // 日志管理
+  getLogStats() {
+    return this.getHttp().get('/logs/stats');
+  },
+  getLogFiles(params) {
+    return this.getHttp().get('/logs/files', { params });
+  },
+  getLogContent(params) {
+    return this.getHttp().get('/logs/content', { params });
+  },
+  cleanupLogs(data) {
+    return this.getHttp().post('/logs/cleanup', data);
+  },
 };

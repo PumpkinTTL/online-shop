@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm *)",
+      "Bash(uipro init *)",
+      "Bash(python3 *)",
+      "WebSearch",
+      "Bash(cat)",
+      "Bash(chmod +x ~/search)",
+      "Bash(~/search 测试搜索 *)",
+      "Bash(curl -I https://api.tavily.com)",
+      "Bash(openssl version *)",
+      "Bash(redis-server *)",
+      "Bash(redis-cli *)"
+    ]
+  }
+}

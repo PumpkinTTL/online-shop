@@ -11,6 +11,7 @@ const pickupRouter = require('./routes/pickup');
 const adminRouter = require('./routes/admin');
 const paymentRouter = require('./routes/payment');
 const adminRateLimitsRouter = require('./routes/adminRateLimits');
+const logsRouter = require('./routes/logs');
 const adminService = require('./services/adminService');
 const rateLimitService = require('./services/rateLimitService');
 const limiters = require('./middleware/rateLimiter');
@@ -44,6 +45,7 @@ app.use('/api/pickup', pickupRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/admin/rate-limits', adminRateLimitsRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/admin/logs', logsRouter);
 
 // 主页
 app.get('/', (req, res) => {

@@ -101,6 +101,12 @@
               </el-icon>
               <template #title>限速配置</template>
             </el-menu-item>
+            <el-menu-item index="logs">
+              <el-icon>
+                <Document />
+              </el-icon>
+              <template #title>日志查看</template>
+            </el-menu-item>
           </el-sub-menu>
         </el-menu>
 
@@ -657,6 +663,131 @@
             </div>
           </div>
 
+          <!-- 日志查看 -->
+          <div v-if="currentPage === 'logs'">
+            <div class="page-toolbar">
+              <div style="flex:1">
+                <h2 style="font-size:18px;font-weight:600;color:#0F172A;margin:0;">日志查看</h2>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <el-button @click="loadLogStats" :icon="Refresh">刷新统计</el-button>
+                <el-button @click="loadLogFiles" :icon="Files">刷新文件</el-button>
+                <el-button type="primary" @click="showLogQueryDialog = true">查询日志</el-button>
+              </div>
+            </div>
+
+            <!-- 日志统计卡片 -->
+            <el-row :gutter="16" style="margin-top:16px;">
+              <el-col :xs="24" :sm="12" :md="6" v-for="(stat, type) in logStats" :key="type">
+                <el-card shadow="hover" style="margin-bottom:16px;">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <el-icon :size="32" :color="getLogTypeColor(type)">
+                      <Document v-if="type === 'access'" />
+                      <Warning v-else-if="type === 'error'" />
+                      <Briefcase v-else-if="type === 'business'" />
+                      <Files v-else />
+                    </el-icon>
+                    <div style="flex:1;">
+                      <div style="color:#909399;font-size:12px;margin-bottom:4px;">{{ getLogTypeLabel(type) }}</div>
+                      <div style="color:#303133;font-size:20px;font-weight:600;">
+                        {{ stat.fileCount || 0 }} 个文件
+                      </div>
+                      <div style="color:#67C23A;font-size:12px;margin-top:4px;">
+                        {{ formatFileSize(stat.totalSize) }}
+                      </div>
+                      <div style="color:#909399;font-size:12px;margin-top:4px;">
+                        {{ stat.totalLines || 0 }} 行
+                      </div>
+                    </div>
+                  </div>
+                </el-card>
+              </el-col>
+            </el-row>
+
+            <!-- 日志查询结果 -->
+            <el-card shadow="never" style="margin-top:16px;">
+              <template #header>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-weight:600;">日志查询结果</span>
+                  <span style="font-size:12px;color:#909399;">
+                    当前文件：{{ logQueryForm.filename || '未选择' }}
+                  </span>
+                </div>
+              </template>
+
+              <!-- 加载状态 -->
+              <div v-if="logLoading" v-loading="true" style="min-height:200px;"></div>
+
+              <!-- 空状态 -->
+              <div v-else-if="!logQueryResult.logs || logQueryResult.logs.length === 0" style="padding:40px;text-align:center;">
+                <el-empty description="暂无日志数据" />
+              </div>
+
+              <!-- 数据表格 -->
+              <el-table v-else :data="logQueryResult.logs" stripe style="width:100%" :row-style="{cursor:'pointer'}">
+                <el-table-column type="expand">
+                  <template #default="{ row }">
+                    <div style="padding:12px;background:#F5F7FA;margin:0 12px 12px 12px;border-radius:6px;">
+                      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px;">
+                        <div><strong>完整URL:</strong> {{ row.url || '-' }}</div>
+                        <div><strong>IP地址:</strong> {{ row.ip || '-' }}</div>
+                        <div><strong>请求头:</strong> {{ row.userAgent || '-' }}</div>
+                        <div><strong>查询参数:</strong> <code>{{ Object.keys(row.query || {}).length ? JSON.stringify(row.query) : '-' }}</code></div>
+                        <div><strong>响应大小:</strong> {{ row.contentLength || '-' }} bytes</div>
+                        <div><strong>用户ID:</strong> {{ row.userId || '-' }}</div>
+                      </div>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="时间" width="160" show-overflow-tooltip>
+                  <template #default="{ row }">
+                    {{ row.timestamp || '-' }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="级别" width="80" align="center">
+                  <template #default="{ row }">
+                    <el-tag :type="getLogLevelType(row.level)" size="small">
+                      {{ row.level || '-' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="方法" width="70" align="center">
+                  <template #default="{ row }">
+                    <el-tag :type="row.method === 'GET' ? 'success' : row.method === 'POST' ? 'primary' : row.method === 'DELETE' ? 'danger' : 'info'" size="small">
+                      {{ row.method || '-' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="状态码" width="90" align="center">
+                  <template #default="{ row }">
+                    <el-tag v-if="row.statusCode" :type="row.statusCode < 300 ? 'success' : row.statusCode < 400 ? 'warning' : 'danger'" size="small">
+                      {{ row.statusCode }}
+                    </el-tag>
+                    <span v-else style="color:#909399;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="响应时间" width="90" align="center">
+                  <template #default="{ row }">
+                    <span :style="{color: row.responseTime > 1000 ? '#EF4444' : row.responseTime > 500 ? '#F59E0B' : '#22C55E'}">
+                      {{ row.responseTime ? row.responseTime + 'ms' : '-' }}
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="消息" min-width="180" show-overflow-tooltip>
+                  <template #default="{ row }">
+                    {{ row.message || '-' }}
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <!-- 统计信息 -->
+              <div v-if="logQueryResult.logs && logQueryResult.logs.length > 0" style="margin-top:16px;text-align:center;color:#909399;font-size:12px;">
+                共 {{ logQueryResult.total }} 条记录，显示 {{ logQueryResult.filtered }} 条
+              </div>
+            </el-card>
+          </div>
+
+
 
         </el-main>
       </el-container>
@@ -861,6 +992,45 @@
         <el-button type="primary" @click="saveRateLimitConfig" :loading="saving">保存</el-button>
       </template>
     </el-dialog>
+  
+    <!-- 日志查询对话框 -->
+    <el-dialog v-model="showLogQueryDialog" title="查询日志" width="600px" destroy-on-close>
+      <el-form label-width="100px">
+        <el-form-item label="日志类型">
+          <el-select v-model="logQueryForm.type" style="width:100%" @change="handleLogTypeChange">
+            <el-option label="综合日志" value="combined" />
+            <el-option label="访问日志" value="access" />
+            <el-option label="错误日志" value="error" />
+            <el-option label="业务日志" value="business" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="日志文件">
+          <el-select v-model="logQueryForm.filename" placeholder="请选择日志文件" style="width:100%" :loading="logLoading">
+            <el-option v-for="file in logFiles" :key="file.filename" :label="file.filename" :value="file.filename" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="日志级别">
+          <el-select v-model="logQueryForm.level" placeholder="全部" clearable style="width:100%">
+            <el-option label="错误" value="error" />
+            <el-option label="警告" value="warn" />
+            <el-option label="信息" value="info" />
+            <el-option label="HTTP" value="http" />
+            <el-option label="调试" value="debug" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关键词">
+          <el-input v-model="logQueryForm.keyword" placeholder="搜索日志内容（可选）" clearable />
+        </el-form-item>
+        <el-form-item label="显示数量">
+          <el-input-number v-model="logQueryForm.limit" :min="10" :max="1000" :step="10" style="width:100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showLogQueryDialog = false">取消</el-button>
+        <el-button type="primary" @click="queryLogs" :loading="logLoading">查询</el-button>
+      </template>
+    </el-dialog>
+
   </div>
 
   <script src="/admin/js/admin-api.js"></script>
