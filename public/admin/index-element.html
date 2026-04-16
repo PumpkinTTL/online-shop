@@ -610,7 +610,13 @@
             </div>
 
             <el-card shadow="never" style="margin-top:16px;">
-              <el-table :data="rateLimitConfigs" v-loading="rateLimitLoading" style="width:100%">
+              <!-- 调试信息 -->
+              <div style="margin-bottom:10px;color:#666;font-size:12px;">
+                数据加载状态: {{ rateLimitLoading ? '加载中...' : '已完成' }} |
+                数据条数: {{ rateLimitConfigs.length }}
+              </div>
+
+              <el-table :data="rateLimitConfigs" v-loading="rateLimitLoading" stripe style="width:100%">
                 <el-table-column prop="name" label="配置名称" width="150" />
                 <el-table-column prop="key" label="标识符" width="120" />
                 <el-table-column label="时间窗口" width="120">
