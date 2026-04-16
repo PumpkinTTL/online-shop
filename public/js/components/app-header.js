@@ -42,9 +42,6 @@ const AppHeader = {
             <i class="fa-solid fa-search"></i>
             <input type="text" placeholder="搜索商品..." v-model="searchKeyword" @keyup.enter="onSearch">
           </div>
-          <button class="btn btn-ghost" @click="$emit('go-orders')" title="我的订单" v-if="showSearch">
-            <i class="fa-solid fa-box"></i>
-          </button>
           <!-- 未登录 -->
           <button class="btn btn-primary" @click="showAuthModal" v-if="showAuth && !isLoggedIn">
             <i class="fa-solid fa-user"></i> 登录
