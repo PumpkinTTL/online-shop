@@ -114,6 +114,12 @@ function registerProductAction(app) {
                 <span class="pay-product-name">{{ product.name }}</span>
                 <span class="pay-product-amount">¥{{ payAmount }}</span>
               </div>
+
+              <!-- 移动端：打开支付宝按钮 -->
+              <button v-if="isMobile && payUrl" class="btn btn-open-alipay" @click="openAlipay">
+                <i class="fa-brands fa-alipay"></i> 打开支付宝支付
+              </button>
+
               <div class="pay-qr">
                 <div class="qr-canvas-wrap">
                   <img v-if="qrImageUrl" :src="qrImageUrl" alt="支付宝二维码" style="width:200px;height:200px;" />
@@ -304,6 +310,12 @@ function registerProductAction(app) {
                 <span class="pay-product-name">接码服务费</span>
                 <span class="pay-product-amount">¥{{ smsPayAmount }}</span>
               </div>
+
+              <!-- 移动端：打开支付宝按钮 -->
+              <button v-if="isMobile && smsPayUrl" class="btn btn-open-alipay" @click="openSmsAlipay">
+                <i class="fa-brands fa-alipay"></i> 打开支付宝支付
+              </button>
+
               <div class="pay-qr">
                 <div class="qr-canvas-wrap">
                   <img v-if="smsQrImageUrl" :src="smsQrImageUrl" alt="支付宝二维码" style="width:200px;height:200px;" />
@@ -328,6 +340,13 @@ function registerProductAction(app) {
     `,
     setup(props, { emit }) {
       const { ref, computed, onUnmounted, watch } = Vue;
+
+      // --- 移动端检测 ---
+      const isMobile = computed(() => {
+        const ua = navigator.userAgent.toLowerCase();
+        return /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+      });
+
       // --- 基础状态 ---
       const contact = ref(localStorage.getItem('lastContact') || '');
       const payMethod = ref('alipay');
@@ -362,6 +381,7 @@ function registerProductAction(app) {
       const cdKey = ref('');
       const countdown = ref(0);
       const payLoading = ref(false);
+      const payUrl = ref(''); // 新增：支付链接
 
       let pollTimer = null;
       let countdownTimer = null;
@@ -380,6 +400,7 @@ function registerProductAction(app) {
       const smsPayAmount = ref('');
       const smsPayStatus = ref('pending');
       const smsOrderNo = ref('');
+      const smsPayUrl = ref(''); // 新增：接码服务支付链接
 
       let smsPollTimer = null;
 
@@ -434,6 +455,7 @@ function registerProductAction(app) {
           const res = await paymentApi.create(props.product.id, contact.value.trim());
           orderNo.value = res.orderNo;
           payAmount.value = res.amount;
+          payUrl.value = res.payUrl || ''; // 保存支付链接
 
           // 生成二维码图片
           await generateQR(res.qrCode);
@@ -597,6 +619,7 @@ function registerProductAction(app) {
           );
           smsOrderNo.value = res.orderNo;
           smsPayAmount.value = res.amount;
+          smsPayUrl.value = res.payUrl || ''; // 保存支付链接
 
           // 生成二维码
           await new Promise((resolve) => {
@@ -670,6 +693,36 @@ function registerProductAction(app) {
         window.open(url, '_blank');
       };
 
+      // --- 打开支付宝支付 ---
+      const openAlipay = () => {
+        if (!payUrl.value) {
+          Toast.error('支付链接未生成');
+          return;
+        }
+        // 尝试打开支付宝APP
+        window.location.href = payUrl.value;
+
+        // 延迟提示，如果没跳转则提示用户
+        setTimeout(() => {
+          Toast.info('如未自动跳转，请确保已安装支付宝APP');
+        }, 1000);
+      };
+
+      // --- 打开支付宝支付（接码服务）---
+      const openSmsAlipay = () => {
+        if (!smsPayUrl.value) {
+          Toast.error('支付链接未生成');
+          return;
+        }
+        // 尝试打开支付宝APP
+        window.location.href = smsPayUrl.value;
+
+        // 延迟提示，如果没跳转则提示用户
+        setTimeout(() => {
+          Toast.info('如未自动跳转，请确保已安装支付宝APP');
+        }, 1000);
+      };
+
       // 清理
       onUnmounted(() => {
         stopPolling();
@@ -684,9 +737,10 @@ function registerProductAction(app) {
         smsCode, smsLoading, smsError, needSmsPayment,
         showSmsPayModal, smsQrLoading, smsQrError, smsQrImageUrl,
         smsPayAmount, smsPayStatus,
+        isMobile, payUrl, smsPayUrl, // 新增
         handleRedeem, startAlipayPay, closeQrModal,
         getSmsCode, startSmsServicePay, closeSmsPayModal,
-        copyText, goToRedeem,
+        copyText, goToRedeem, openAlipay, openSmsAlipay, // 新增
       };
     },
   });

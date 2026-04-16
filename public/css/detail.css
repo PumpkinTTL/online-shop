@@ -471,6 +471,38 @@
   box-shadow: none;
 }
 
+/* 打开支付宝按钮（移动端） */
+.btn-open-alipay {
+  background: linear-gradient(135deg, #1677FF, #4096FF);
+  color: white;
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(22, 119, 255, 0.3);
+  font-family: 'Open Sans', sans-serif;
+  margin-bottom: 20px;
+}
+.btn-open-alipay:hover {
+  background: linear-gradient(135deg, #4096FF, #69B1FF);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 119, 255, 0.4);
+}
+.btn-open-alipay:active {
+  transform: translateY(0);
+}
+.btn-open-alipay i {
+  font-size: 18px;
+}
+
 /* 卡密兑换 */
 .input-group {
   display: flex;

@@ -82,9 +82,14 @@ class PaymentService {
       if (result.code === '10000' && result.qrCode) {
         // 预下单成功，保存二维码
         await paymentRepo.update(paymentOrder.id, { qrCode: result.qrCode });
+
+        // 生成支付链接（用于移动端直接拉起支付宝）
+        const payUrl = `alipays://platformapi/startapp?appId=20000067&url=${encodeURIComponent(result.qrCode)}`;
+
         return {
           orderNo,
           qrCode: result.qrCode,
+          payUrl, // 新增：移动端支付链接
           amount: product.price,
           productName: product.name,
           expiredAt,
@@ -238,9 +243,14 @@ class PaymentService {
 
       if (result.code === '10000' && result.qrCode) {
         await paymentRepo.update(paymentOrder.id, { qrCode: result.qrCode });
+
+        // 生成支付链接（用于移动端直接拉起支付宝）
+        const payUrl = `alipays://platformapi/startapp?appId=20000067&url=${encodeURIComponent(result.qrCode)}`;
+
         return {
           orderNo,
           qrCode: result.qrCode,
+          payUrl, // 新增：移动端支付链接
           amount,
           productName,
           expiredAt,
