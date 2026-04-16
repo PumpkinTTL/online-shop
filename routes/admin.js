@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const adminService = require('../services/adminService');
 const pickupService = require('../services/pickupService');
+const { login: loginLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
@@ -56,7 +57,7 @@ const auth = async (req, res, next) => {
 
 // ==================== 登录（不需要鉴权） ====================
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {

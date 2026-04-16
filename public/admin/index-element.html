@@ -95,6 +95,12 @@
               </el-icon>
               <template #title>接码记录</template>
             </el-menu-item>
+            <el-menu-item index="ratelimits">
+              <el-icon>
+                <Monitor />
+              </el-icon>
+              <template #title>限速配置</template>
+            </el-menu-item>
           </el-sub-menu>
         </el-menu>
 
@@ -591,6 +597,43 @@
             </div>
           </div>
 
+          <!-- 限速配置 -->
+          <div v-if="currentPage === 'ratelimits'">
+            <div class="page-toolbar">
+              <div style="flex:1">
+                <h2 style="font-size:18px;font-weight:600;color:#0F172A;margin:0;">限速配置管理</h2>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <el-button @click="loadRateLimits" :icon="Refresh">刷新</el-button>
+                <el-button type="primary" @click="resetRateLimits" :icon="RefreshLeft">重置为默认</el-button>
+              </div>
+            </div>
+
+            <el-card shadow="never" style="margin-top:16px;">
+              <el-table :data="rateLimitConfigs" v-loading="rateLimitLoading" style="width:100%">
+                <el-table-column prop="name" label="配置名称" width="140" />
+                <el-table-column prop="key" label="标识符" width="100" />
+                <el-table-column label="时间窗口" width="140">
+                  <template #default="{ row }">
+                    {{ formatWindowMs(row.windowMs) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="maxRequests" label="最大请求数" width="100" />
+                <el-table-column prop="message" label="提示信息" min-width="200" />
+                <el-table-column prop="enabled" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-switch v-model="row.enabled" @change="toggleRateLimit(row)" />
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="120" fixed="right">
+                  <template #default="{ row }">
+                    <el-button size="small" @click="editRateLimit(row)">编辑</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-card>
+          </div>
+
         </el-main>
       </el-container>
     </el-container>
@@ -765,6 +808,33 @@
       <template #footer>
         <el-button @click="showPasswordModal = false">取消</el-button>
         <el-button type="primary" @click="handleChangePassword" :loading="saving">确认修改</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 限速配置编辑对话框 -->
+    <el-dialog v-model="showRateLimitEditDialog" title="编辑限速配置" width="500px">
+      <el-form :model="rateLimitEditForm" label-width="100px">
+        <el-form-item label="配置名称">
+          <el-input v-model="rateLimitEditForm.name" disabled />
+        </el-form-item>
+        <el-form-item label="时间窗口">
+          <el-input-number v-model="rateLimitEditForm.windowMs" :min="1000" :step="1000" />
+          <span style="margin-left:8px;color:#94A3B8;font-size:12px;">毫秒</span>
+        </el-form-item>
+        <el-form-item label="最大请求数">
+          <el-input-number v-model="rateLimitEditForm.maxRequests" :min="1" />
+          <span style="margin-left:8px;color:#94A3B8;font-size:12px;">次</span>
+        </el-form-item>
+        <el-form-item label="提示信息">
+          <el-input v-model="rateLimitEditForm.message" placeholder="请求过于频繁时的提示信息" />
+        </el-form-item>
+        <el-form-item label="启用状态">
+          <el-switch v-model="rateLimitEditForm.enabled" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showRateLimitEditDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveRateLimitConfig" :loading="saving">保存</el-button>
       </template>
     </el-dialog>
   </div>

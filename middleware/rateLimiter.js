@@ -43,6 +43,13 @@ const limiters = {
   admin: createLimiter('admin'),
 };
 
+// 创建动态限速中间件（始终使用最新实例）
+const createDynamicMiddleware = (key) => {
+  return (req, res, next) => {
+    return limiters[key](req, res, next);
+  };
+};
+
 // 从数据库刷新配置（供管理API调用）
 async function refreshConfigs() {
   try {
@@ -69,5 +76,11 @@ async function refreshConfigs() {
   }
 }
 
-module.exports = limiters;
+module.exports = {
+  global: createDynamicMiddleware('global'),
+  login: createDynamicMiddleware('login'),
+  payment: createDynamicMiddleware('payment'),
+  api: createDynamicMiddleware('api'),
+  admin: createDynamicMiddleware('admin'),
+};
 module.exports.refreshConfigs = refreshConfigs;

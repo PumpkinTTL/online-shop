@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const rateLimitService = require('../services/rateLimitService');
 const dataSource = require('../config/database');
 const Admin = require('../entities/Admin');
+const { refreshConfigs } = require('../middleware/rateLimiter');
 
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'admin-secret-key-2026-!@#';
 
@@ -78,6 +79,10 @@ router.put('/:key', auth, async (req, res) => {
     if (enabled !== undefined) data.enabled = enabled;
 
     const config = await rateLimitService.updateByKey(key, data);
+
+    // 立即刷新限速器配置（无需重启服务器）
+    await refreshConfigs();
+
     res.json({
       message: '配置更新成功',
       config,
@@ -91,6 +96,10 @@ router.put('/:key', auth, async (req, res) => {
 router.post('/reset', auth, async (req, res) => {
   try {
     const configs = await rateLimitService.resetToDefaults();
+
+    // 立即刷新限速器配置（无需重启服务器）
+    await refreshConfigs();
+
     res.json({
       message: '配置已重置为默认值',
       configs,

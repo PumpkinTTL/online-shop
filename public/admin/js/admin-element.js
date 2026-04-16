@@ -40,6 +40,7 @@ const app = createApp({
         users: '用户管理',
         admins: '管理员管理',
         smsrecords: '接码记录',
+        ratelimits: '限速配置',
       };
       return map[currentPage.value] || '仪表盘';
     });
@@ -99,6 +100,7 @@ const app = createApp({
       else if (page === 'users') loadUsers();
       else if (page === 'admins') loadAdmins();
       else if (page === 'smsrecords') loadSmsRecords();
+      else if (page === 'ratelimits') loadRateLimits();
       ElMsg.success('数据已刷新');
     };
 
@@ -719,6 +721,126 @@ AdminAPI.getHttp = function() {
     );
   }
   return this._http;
+};
+
+// ===== 限速配置管理 =====
+var rateLimitConfigs = ref([]);
+var rateLimitLoading = ref(false);
+var showRateLimitEditDialog = ref(false);
+var rateLimitEditForm = ref({
+  key: '',
+  name: '',
+  windowMs: 60000,
+  maxRequests: 100,
+  message: '',
+  enabled: true
+});
+
+// 格式化时间窗口显示
+var formatWindowMs = function(ms) {
+  if (ms >= 60000 && ms < 3600000) {
+    return (ms / 60000) + '分钟';
+  } else if (ms >= 3600000 && ms < 86400000) {
+    return (ms / 3600000) + '小时';
+  } else if (ms >= 86400000) {
+    return (ms / 86400000) + '天';
+  }
+  return ms + 'ms';
+};
+
+// 加载限速配置
+var loadRateLimits = async function() {
+  rateLimitLoading.value = true;
+  try {
+    var response = await axios.get('/api/admin/rate-limits', {
+      headers: {
+        'Authorization': 'Bearer ' + AdminAPI.getToken()
+      }
+    });
+    rateLimitConfigs.value = response.data;
+  } catch (e) {
+    ElMsg.error('加载限速配置失败');
+  } finally {
+    rateLimitLoading.value = false;
+  }
+};
+
+// 编辑限速配置
+var editRateLimit = function(row) {
+  rateLimitEditForm.value = {
+    key: row.key,
+    name: row.name,
+    windowMs: row.windowMs,
+    maxRequests: row.maxRequests,
+    message: row.message || '',
+    enabled: row.enabled
+  };
+  showRateLimitEditDialog.value = true;
+};
+
+// 保存限速配置
+var saveRateLimitConfig = async function() {
+  saving.value = true;
+  try {
+    var data = {
+      windowMs: rateLimitEditForm.value.windowMs,
+      maxRequests: rateLimitEditForm.value.maxRequests,
+      message: rateLimitEditForm.value.message,
+      enabled: rateLimitEditForm.value.enabled
+    };
+    await axios.put('/api/admin/rate-limits/' + rateLimitEditForm.value.key, data, {
+      headers: {
+        'Authorization': 'Bearer ' + AdminAPI.getToken()
+      }
+    });
+    ElMsg.success('保存成功');
+    showRateLimitEditDialog.value = false;
+    await loadRateLimits();
+  } catch (e) {
+    ElMsg.error('保存失败：' + (e.response?.data?.error || e.message));
+  } finally {
+    saving.value = false;
+  }
+};
+
+// 切换限速配置状态
+var toggleRateLimit = async function(row) {
+  try {
+    var data = { enabled: row.enabled };
+    await axios.put('/api/admin/rate-limits/' + row.key, data, {
+      headers: {
+        'Authorization': 'Bearer ' + AdminAPI.getToken()
+      }
+    });
+    ElMsg.success('状态已更新');
+    await loadRateLimits();
+  } catch (e) {
+    ElMsg.error('更新失败：' + (e.response?.data?.error || e.message));
+    // 回滚UI状态
+    row.enabled = !row.enabled;
+  }
+};
+
+// 重置为默认配置
+var resetRateLimits = async function() {
+  try {
+    await ElementPlus.ElMessageBox.confirm('确定要重置所有限速配置为默认值吗？此操作不可撤销。', '确认重置', {
+      confirmButtonText: '确定重置',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+    await axios.post('/api/admin/rate-limits/reset', {}, {
+      headers: {
+        'Authorization': 'Bearer ' + AdminAPI.getToken()
+      }
+    });
+    ElMsg.success('已重置为默认配置');
+    await loadRateLimits();
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMsg.error('重置失败：' + (e.response?.data?.error || e.message));
+    }
+  }
 };
 
 // 注册所有 Element Plus Icons

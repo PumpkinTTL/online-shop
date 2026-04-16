@@ -1,5 +1,8 @@
-module.exports = {
+const { EntitySchema } = require('typeorm');
+
+module.exports = new EntitySchema({
   name: 'RateLimitConfig',
+  tableName: 'rate_limit_configs',
   columns: {
     id: {
       type: 'int',
@@ -44,4 +47,4 @@ module.exports = {
       updateDate: true
     }
   }
-};
+});
