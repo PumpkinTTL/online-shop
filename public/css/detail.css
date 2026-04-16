@@ -599,6 +599,8 @@
   border-radius: 10px;
   padding: 14px;
   border: 1px solid #E2E8F0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .cdk-label {
@@ -614,9 +616,12 @@
 .cdk-row {
   display: flex;
   gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 .cdk-input {
   flex: 1;
+  min-width: 0;
   padding: 9px 12px;
   border: 1px solid #E2E8F0;
   border-radius: 8px;
@@ -705,6 +710,8 @@
   border-radius: 10px;
   padding: 14px;
   border: 1px solid #E2E8F0;
+  max-width: 100%;
+  overflow: hidden;
 }
 .cdk-card-label {
   font-size: 12px;
@@ -718,9 +725,12 @@
 .cdk-card-value {
   display: flex;
   gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 .cdk-card-value input {
   flex: 1;
+  min-width: 0;
   padding: 9px 12px;
   border: 1px solid #E2E8F0;
   border-radius: 8px;
