@@ -631,6 +631,8 @@
   color: #1E293B;
   background: white;
   outline: none;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 .success-actions {
@@ -739,6 +741,8 @@
   font-weight: 600;
   color: #1E293B;
   background: white;
+  overflow-wrap: break-word;
+  word-break: break-all;
   outline: none;
 }
 .btn-copy {
@@ -1110,11 +1114,11 @@
 
 @media (max-width: 640px) {
   .main {
-    padding: 16px 12px 32px;
+    padding: 8px 8px 16px;
   }
 
   .detail-container {
-    padding: 0 12px;
+    padding: 0 8px;
   }
 
   .product-cover {
