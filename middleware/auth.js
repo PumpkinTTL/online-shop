@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
-// JWT 密钥（与 users.js 登录时签名保持一致）
-const JWT_SECRET = 'online-shop-secret-key-2026';
+// JWT 密钥（从环境变量读取）
+const JWT_SECRET = process.env.JWT_SECRET || 'online-shop-secret-key-2026';
 
 /**
  * 从请求中提取 JWT token

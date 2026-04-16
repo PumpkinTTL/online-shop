@@ -1,3 +1,6 @@
+// 加载环境变量
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -10,7 +13,7 @@ const paymentRouter = require('./routes/payment');
 const adminService = require('./services/adminService');
 
 const app = express();
-const PORT = 5100;
+const PORT = process.env.PORT || 5100;
 
 // 中间件
 app.use(express.json());

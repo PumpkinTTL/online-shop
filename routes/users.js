@@ -18,7 +18,7 @@ const generateToken = (userId) => {
 // Cookie 配置
 const COOKIE_OPTIONS = {
   httpOnly: true,      // 防止 XSS 攻击
-  secure: false,       // 生产环境应为 true（需要 HTTPS）
+  secure: process.env.NODE_ENV === 'production',  // 生产环境需要 HTTPS
   sameSite: 'lax',     // lax: 允许顶级导航携带 cookie（strict 会导致页面跳转后登录丢失）
   maxAge: 7 * 24 * 60 * 60 * 1000  // 7天（毫秒）
 };
