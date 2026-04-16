@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const dataSource = require('../config/database');
 const User = require('../entities/User');
 
