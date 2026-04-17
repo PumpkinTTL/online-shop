@@ -1,7 +1,7 @@
 // Element Plus 版后台管理 - 逻辑层
 // 复用 AdminAPI（admin-api.js）和 AdminAuth（admin-common.js）
 
-const { createApp, ref, computed, onMounted, watch } = Vue;
+const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
 const app = createApp({
   setup() {
@@ -34,6 +34,7 @@ const app = createApp({
     var pageTitle = computed(function() {
       var map = {
         dashboard: '仪表盘',
+        categories: '商品类别',
         products: '商品管理',
         cardkeys: '卡密管理',
         orders: '订单管理',
@@ -68,13 +69,15 @@ const app = createApp({
     };
 
     var getProductLabel = function(p) {
-      return p.name + ' (ID:' + p.id + ')';
+      var categoryName = p.category && p.category.name ? p.category.name : '未分类';
+      return p.name + ' [' + categoryName + '] (ID:' + p.id + ')';
     };
 
-    var getProductTypeTag = function(type) {
-      if (type === 'ai') return 'primary';
-      if (type === 'remote') return 'warning';
-      return 'success';
+    var getProductTypeTag = function(product) {
+      var code = product && product.category && product.category.code ? product.category.code : '';
+      if (code === 'AI') return 'primary';
+      if (code === 'SMS') return 'success';
+      return 'warning';
     };
 
     // ===== 顶部下拉菜单 =====
@@ -95,7 +98,8 @@ const app = createApp({
     var refreshCurrentPage = function() {
       var page = currentPage.value;
       if (page === 'dashboard') loadStats();
-      else if (page === 'products') loadProducts();
+      else if (page === 'categories') loadCategories();
+      else if (page === 'products') { loadCategories(); loadProducts(); }
       else if (page === 'cardkeys') { loadProducts(); loadCardKeys(); }
       else if (page === 'orders') loadOrders();
       else if (page === 'users') loadUsers();
@@ -128,6 +132,70 @@ const app = createApp({
       }
     };
 
+    // ===== 商品类别管理 =====
+    var categories = ref([]);
+    var categoriesLoading = ref(false);
+    var categoryModalVisible = ref(false);
+    var categoryForm = ref({});
+
+    var loadCategories = async function() {
+      categoriesLoading.value = true;
+      try {
+        categories.value = await AdminAPI.getCategories();
+      } catch (e) {
+        ElMsg.error('加载类别失败');
+      } finally {
+        categoriesLoading.value = false;
+      }
+    };
+
+    var openCategoryModal = function(category) {
+      categoryForm.value = category ? { ...category } : {
+        name: '',
+        code: '',
+        description: '',
+        smsPrice: null,
+        smsPaymentName: '',
+        smKeyWord: '',
+        sort: 0,
+        show: 1,
+      };
+      categoryModalVisible.value = true;
+    };
+
+    var handleSaveCategory = async function() {
+      var data = categoryForm.value;
+      if (!data.name) return ElMsg.warning('请输入类别名称');
+      if (!data.code) return ElMsg.warning('请输入类别代号');
+
+      saving.value = true;
+      try {
+        if (data.id) {
+          await AdminAPI.updateCategory(data.id, data);
+          ElMsg.success('更新成功');
+        } else {
+          await AdminAPI.createCategory(data);
+          ElMsg.success('添加成功');
+        }
+        categoryModalVisible.value = false;
+        loadCategories();
+      } catch (e) {
+        ElMsg.error(e.message);
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    var handleDeleteCategory = async function(id) {
+      try {
+        await AdminAPI.deleteCategory(id);
+        ElMsg.success('删除成功');
+        loadCategories();
+      } catch (e) {
+        ElMsg.error(e.message);
+      }
+    };
+
     // ===== 商品管理 =====
     var products = ref([]);
     var productsLoading = ref(false);
@@ -149,7 +217,7 @@ const app = createApp({
       if (product) {
         editingProduct.value = Object.assign({}, product);
       } else {
-        editingProduct.value = { name: '', price: '', description: '', type: 'ai', sales: 0, isCode: 0, smKeyWord: '', addr: '', credit: 0, tips: '', show: 1 };
+        editingProduct.value = { name: '', code: '', price: '', description: '', categoryId: null, sales: 0, warranty: '', credit: null, tips: '', show: 1 };
       }
       productModalVisible.value = true;
     };
@@ -190,9 +258,9 @@ const app = createApp({
       }
     };
 
-    var productTypeLabel = function(type) {
-      var map = { ai: 'AI账号', remote: '远程服务', sms: '接码服务' };
-      return map[type] || type || '未分类';
+    var productTypeLabel = function(product) {
+      if (product && product.category && product.category.name) return product.category.name;
+      return '未分类';
     };
 
     // ===== 卡密管理 =====
@@ -699,7 +767,8 @@ const app = createApp({
     // 页面切换时加载数据
     watch(currentPage, async function(page) {
       if (page === 'dashboard') await loadStats();
-      else if (page === 'products') await loadProducts();
+      else if (page === 'categories') await loadCategories();
+      else if (page === 'products') { await loadCategories(); await loadProducts(); }
       else if (page === 'cardkeys') { await loadProducts(); await loadCardKeys(); await loadCardPrefixes(); }
       else if (page === 'orders') await loadOrders();
       else if (page === 'users') await loadUsers();
@@ -855,7 +924,8 @@ const app = createApp({
       // 根据当前页面加载对应数据
       var page = currentPage.value;
       if (page === 'dashboard') await loadStats();
-      else if (page === 'products') await loadProducts();
+      else if (page === 'categories') await loadCategories();
+      else if (page === 'products') { await loadCategories(); await loadProducts(); }
       else if (page === 'cardkeys') { await loadProducts(); await loadCardKeys(); await loadCardPrefixes(); }
       else if (page === 'orders') await loadOrders();
       else if (page === 'users') await loadUsers();
@@ -899,6 +969,15 @@ const app = createApp({
       // 仪表盘
       stats: stats,
       statCards: statCards,
+      // 商品类别
+      categories: categories,
+      categoriesLoading: categoriesLoading,
+      categoryModalVisible: categoryModalVisible,
+      categoryForm: categoryForm,
+      loadCategories: loadCategories,
+      openCategoryModal: openCategoryModal,
+      handleSaveCategory: handleSaveCategory,
+      handleDeleteCategory: handleDeleteCategory,
       // 商品
       products: products,
       productsLoading: productsLoading,

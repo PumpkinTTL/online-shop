@@ -18,6 +18,13 @@ class PaymentService {
     return dataSource.getRepository(Product);
   }
 
+  // 获取商品显示名称（优先使用代号 code，避免敏感信息）
+  getDisplayName(product) {
+    if (product.code) return product.code;
+    if (product.category?.smsPaymentName) return product.category.smsPaymentName;
+    return product.name || '商品';
+  }
+
   // 生成支付订单号
   generateOrderNo() {
     const now = new Date();
@@ -37,8 +44,11 @@ class PaymentService {
     const paymentRepo = this.getPaymentOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
 
-    // 查询商品
-    const product = await productRepo.findOne({ where: { id: productId } });
+    // 查询商品（关联类别）
+    const product = await productRepo.findOne({
+      where: { id: productId },
+      relations: ['category'],
+    });
     if (!product) throw new Error('商品不存在');
 
     // 检查库存（可用卡密数量）
@@ -48,12 +58,13 @@ class PaymentService {
     // 创建支付订单
     const orderNo = this.generateOrderNo();
     const expiredAt = new Date(Date.now() + 30 * 60 * 1000); // 30分钟超时
+    const displayName = this.getDisplayName(product);
 
     const paymentOrder = paymentRepo.create({
       orderNo,
       userId,
       productId,
-      productName: product.name,
+      productName: displayName,
       amount: product.price,
       contact: contact || '',
       status: 'pending',
@@ -67,7 +78,7 @@ class PaymentService {
       const bizContent = {
         out_trade_no: orderNo,
         total_amount: String(product.price),
-        subject: product.name,
+        subject: displayName,
         timeout_express: '30m',
       };
 
@@ -91,7 +102,7 @@ class PaymentService {
           qrCode: result.qrCode,
           payUrl, // 新增：移动端支付链接
           amount: product.price,
-          productName: product.name,
+          productName: displayName,
           expiredAt,
         };
       } else {
@@ -204,11 +215,16 @@ class PaymentService {
     const paymentRepo = this.getPaymentOrderRepo();
     const productRepo = this.getProductRepo();
 
-    const product = await productRepo.findOne({ where: { id: productId } });
-    const productName = product ? product.name : '冰红茶';
+    // 查询商品（关联类别）
+    const product = await productRepo.findOne({
+      where: { id: productId },
+      relations: ['category'],
+    });
 
-    // 从商品表获取接码服务价格，忽略前端传来的金额
-    const amount = product && product.smsPrice ? product.smsPrice : 0.01;
+    // 从类别获取接码服务价格和显示名称
+    const category = product?.category;
+    const displayName = category?.smsPaymentName || product?.code || '增值服务';
+    const amount = category?.smsPrice || 0.01;
 
     const orderNo = this.generateOrderNo();
     const expiredAt = new Date(Date.now() + 30 * 60 * 1000);
@@ -217,7 +233,7 @@ class PaymentService {
       orderNo,
       userId,
       productId,
-      productName,
+      productName: displayName,
       amount,
       contact: contact || '',
       cardKeyId: cardKeyId || null,
@@ -232,7 +248,7 @@ class PaymentService {
       const bizContent = {
         out_trade_no: orderNo,
         total_amount: String(amount),
-        subject: productName,
+        subject: displayName,
         timeout_express: '30m',
       };
 
@@ -255,7 +271,7 @@ class PaymentService {
           qrCode: result.qrCode,
           payUrl, // 新增：移动端支付链接
           amount,
-          productName,
+          productName: displayName,
           expiredAt,
         };
       } else {
@@ -264,7 +280,7 @@ class PaymentService {
     } catch (error) {
       await paymentRepo.update(paymentOrder.id, { status: 'failed' });
       const errMsg = error.subMsg || error.message || '未知错误';
-      throw new Error('创建接码支付订单失败: ' + errMsg);
+      throw new Error('创建支付订单失败: ' + errMsg);
     }
   }
 

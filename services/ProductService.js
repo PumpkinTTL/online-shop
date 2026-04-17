@@ -11,6 +11,18 @@ class ProductService {
     return dataSource.getRepository(CardKey);
   }
 
+  normalizeProduct(product) {
+    if (!product) return product;
+
+    const categoryCode = product.category?.code || '';
+    product.isCode = categoryCode === 'SMS';
+    product.type = categoryCode ? categoryCode.toLowerCase() : 'uncategorized';
+    product.smKeyWord = product.category?.smKeyWord || '';
+    product.smsPrice = product.category?.smsPrice || null;
+    product.smsPaymentName = product.category?.smsPaymentName || '';
+    return product;
+  }
+
   // 计算商品库存（基于未使用的卡密数量）
   async calcStock(productId) {
     const cardKeyRepo = this.getCardKeyRepo();
@@ -22,11 +34,11 @@ class ProductService {
   async attachStock(product) {
     if (!product) return product;
     product.stock = await this.calcStock(product.id);
-    return product;
+    return this.normalizeProduct(product);
   }
 
   async findAll() {
-    const products = await this.getRepository().find();
+    const products = await this.getRepository().find({ relations: ['category'] });
     // 并行计算所有商品库存
     await Promise.all(products.map(p => this.attachStock(p)));
     return products;
@@ -34,13 +46,19 @@ class ProductService {
 
   // 前台可见商品（show=1）
   async findVisible() {
-    const products = await this.getRepository().find({ where: { show: 1 } });
+    const products = await this.getRepository().find({
+      where: { show: 1 },
+      relations: ['category'],
+    });
     await Promise.all(products.map(p => this.attachStock(p)));
     return products;
   }
 
   async findOne(id) {
-    const product = await this.getRepository().findOne({ where: { id } });
+    const product = await this.getRepository().findOne({
+      where: { id },
+      relations: ['category'],
+    });
     return this.attachStock(product);
   }
 

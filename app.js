@@ -78,15 +78,13 @@ app.get('/orders', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'orders.html'));
 });
 
-// 后台管理页（原版）
+// 后台管理（Element Plus 版）
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'index-element.html'));
 });
 app.get('/admin/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'login-element.html'));
 });
-
-// 后台管理页（Element Plus 版）
 app.get('/admin/element', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index-element.html'));
 });
@@ -145,8 +143,7 @@ async function bootstrap() {
 
     app.listen(PORT, () => {
       console.log(`🛒 在线商品小站已启动: http://localhost:${PORT}`);
-      console.log(`🔧 后台管理（原版）: http://localhost:${PORT}/admin`);
-      console.log(`🎨 后台管理（Element Plus）: http://localhost:${PORT}/admin/element`);
+      console.log(`🎨 后台管理: http://localhost:${PORT}/admin`);
     });
   } catch (error) {
     console.error('❌ 数据库连接失败:', error.message);

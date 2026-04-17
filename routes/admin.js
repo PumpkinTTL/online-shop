@@ -190,6 +190,54 @@ router.delete('/products/:id', auth, async (req, res) => {
   }
 });
 
+// ==================== 商品类别管理 ====================
+
+router.get('/categories', auth, async (req, res) => {
+  try {
+    const categories = await adminService.getCategories();
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/categories/:id', auth, async (req, res) => {
+  try {
+    const category = await adminService.getCategory(parseInt(req.params.id));
+    if (!category) return res.status(404).json({ error: '类别不存在' });
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/categories', auth, async (req, res) => {
+  try {
+    const category = await adminService.createCategory(req.body);
+    res.status(201).json(category);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put('/categories/:id', auth, async (req, res) => {
+  try {
+    const category = await adminService.updateCategory(parseInt(req.params.id), req.body);
+    res.json(category);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.delete('/categories/:id', auth, async (req, res) => {
+  try {
+    await adminService.deleteCategory(parseInt(req.params.id));
+    res.json({ message: '删除成功' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ==================== 用户管理 ====================
 
 router.get('/users', auth, async (req, res) => {

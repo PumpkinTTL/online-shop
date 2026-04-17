@@ -1,5 +1,6 @@
 const { DataSource } = require('typeorm');
 const Product = require('../entities/Product');
+const ProductCategory = require('../entities/ProductCategory');
 const User = require('../entities/User');
 const CardKey = require('../entities/CardKey');
 const Order = require('../entities/Order');
@@ -15,7 +16,7 @@ const dataSource = new DataSource({
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || 'root',
   database: process.env.DB_DATABASE || 'online_shop',
-  entities: [Product, User, CardKey, Order, Admin, SmsRecord, PaymentOrder, RateLimitConfig],
+  entities: [Product, ProductCategory, User, CardKey, Order, Admin, SmsRecord, PaymentOrder, RateLimitConfig],
   synchronize: process.env.NODE_ENV === 'development' ? true : false,
   logging: false,
 });

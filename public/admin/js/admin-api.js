@@ -146,6 +146,23 @@ const AdminAPI = {
     return this.getHttp().delete(`/orders/${id}`);
   },
 
+  // 商品类别
+  getCategories() {
+    return this.getHttp().get('/categories');
+  },
+  getCategory(id) {
+    return this.getHttp().get(`/categories/${id}`);
+  },
+  createCategory(data) {
+    return this.getHttp().post('/categories', data);
+  },
+  updateCategory(id, data) {
+    return this.getHttp().put(`/categories/${id}`, data);
+  },
+  deleteCategory(id) {
+    return this.getHttp().delete(`/categories/${id}`);
+  },
+
   // 管理员
   getAdmins() {
     return this.getHttp().get('/admins');

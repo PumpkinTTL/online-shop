@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const dataSource = require('../config/database');
 const Admin = require('../entities/Admin');
 const Product = require('../entities/Product');
+const ProductCategory = require('../entities/ProductCategory');
 const User = require('../entities/User');
 const CardKey = require('../entities/CardKey');
 const Order = require('../entities/Order');
@@ -152,21 +153,41 @@ class AdminService {
 
   // ==================== 商品管理 ====================
 
+  normalizeProduct(product) {
+    if (!product) return product;
+
+    const categoryCode = product.category?.code || '';
+    product.isCode = categoryCode === 'SMS';
+    product.type = categoryCode ? categoryCode.toLowerCase() : 'uncategorized';
+    product.smKeyWord = product.category?.smKeyWord || '';
+    product.smsPrice = product.category?.smsPrice || null;
+    product.smsPaymentName = product.category?.smsPaymentName || '';
+    return product;
+  }
+
   async getProducts() {
-    const products = await dataSource.getRepository(Product).find({ order: { id: 'DESC' } });
+    const products = await dataSource.getRepository(Product).find({
+      relations: ['category'],
+      order: { id: 'DESC' },
+    });
     // 附加库存（卡密动态计算）
     const cardKeyRepo = dataSource.getRepository(CardKey);
     for (const p of products) {
       p.stock = await cardKeyRepo.count({ where: { productId: p.id, status: 'unused' } });
+      this.normalizeProduct(p);
     }
     return products;
   }
 
   async getProduct(id) {
-    const product = await dataSource.getRepository(Product).findOne({ where: { id } });
+    const product = await dataSource.getRepository(Product).findOne({
+      where: { id },
+      relations: ['category'],
+    });
     if (product) {
       const cardKeyRepo = dataSource.getRepository(CardKey);
       product.stock = await cardKeyRepo.count({ where: { productId: product.id, status: 'unused' } });
+      this.normalizeProduct(product);
     }
     return product;
   }
@@ -351,6 +372,50 @@ class AdminService {
     const order = await repo.findOne({ where: { id } });
     if (!order) throw new Error('订单不存在');
     await repo.remove(order);
+    return true;
+  }
+
+  // ==================== 商品类别管理 ====================
+
+  async getCategories() {
+    const repo = dataSource.getRepository(ProductCategory);
+    return await repo.find({ order: { sort: 'ASC', id: 'ASC' } });
+  }
+
+  async getCategory(id) {
+    const repo = dataSource.getRepository(ProductCategory);
+    return await repo.findOne({ where: { id } });
+  }
+
+  async createCategory(data) {
+    const repo = dataSource.getRepository(ProductCategory);
+    delete data.credit;
+    const category = repo.create(data);
+    return await repo.save(category);
+  }
+
+  async updateCategory(id, data) {
+    const repo = dataSource.getRepository(ProductCategory);
+    const category = await repo.findOne({ where: { id } });
+    if (!category) throw new Error('类别不存在');
+    delete data.credit;
+    Object.assign(category, data);
+    return await repo.save(category);
+  }
+
+  async deleteCategory(id) {
+    const repo = dataSource.getRepository(ProductCategory);
+    const category = await repo.findOne({ where: { id } });
+    if (!category) throw new Error('类别不存在');
+
+    // 检查是否有商品使用该类别
+    const productRepo = dataSource.getRepository(Product);
+    const count = await productRepo.count({ where: { categoryId: id } });
+    if (count > 0) {
+      throw new Error(`该类别下还有 ${count} 个商品，无法删除`);
+    }
+
+    await repo.remove(category);
     return true;
   }
 }

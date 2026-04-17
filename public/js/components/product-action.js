@@ -2,7 +2,7 @@
  * product-action 组件 — 商品购买操作面板
  *
  * Props:
- *   product  Object   商品对象（必须包含 id, name, price, isCode）
+ *   product  Object   商品对象（必须包含 id, name, price，可包含 category）
  *
  * Events:
  *   @success  成功完成（兑换/支付+接码）
@@ -52,7 +52,7 @@ function registerProductAction(app) {
           <div class="method-content" v-if="payMethod === 'alipay'">
             <div class="alipay-info">
               <i class="fa-brands fa-alipay"></i>
-              <span>扫码支付，自动发放{{ product.isCode ? '登录号码' : '兑换码' }}</span>
+              <span>扫码支付，自动发放{{ isSmsProduct ? '登录号码' : '兑换码' }}</span>
             </div>
             <button class="btn btn-alipay" @click="startAlipayPay" :disabled="payLoading">
               <i class="fa-solid fa-spinner fa-spin" v-if="payLoading"></i>
@@ -143,13 +143,13 @@ function registerProductAction(app) {
                   <i class="fa-solid fa-check"></i>
                 </div>
                 <div class="pay-success-title">支付成功</div>
-                <div class="pay-success-desc" v-if="product.isCode">
+                <div class="pay-success-desc" v-if="isSmsProduct">
                   <i class="fa-solid fa-spinner fa-spin"></i> 正在加载接码流程...
                 </div>
                 <div class="pay-success-desc" v-else>{{ product.name }}</div>
 
-                <!-- isCode=0: 显示CDK -->
-                <template v-if="!product.isCode">
+                <!-- 非接码商品：显示CDK -->
+                <template v-if="!isSmsProduct">
                   <div class="cdk-card" v-if="cdKey">
                     <div class="cdk-card-label">
                       <i class="fa-solid fa-key"></i> 兑换码 (CDK)
@@ -175,8 +175,8 @@ function registerProductAction(app) {
         </div>
       </div>
 
-      <!-- 兑换成功（卡密兑换 isCode=0 的情况） -->
-      <div class="success-card" v-else-if="actionResult && !product.isCode">
+      <!-- 兑换成功（非接码商品） -->
+      <div class="success-card" v-else-if="actionResult && !isSmsProduct">
         <div class="success-header">
           <div class="success-icon">
             <i class="fa-solid fa-circle-check"></i>
@@ -198,8 +198,8 @@ function registerProductAction(app) {
             <i class="fa-solid fa-arrow-up-right-from-square"></i> 前往兑换
           </button>
           <div class="redeem-url-box">
-            <input type="text" class="redeem-url-input" :value="product.addr || 'https://aisub.vip/'" readonly>
-            <button class="btn btn-ghost btn-copy-url" @click="copyText(product.addr || 'https://aisub.vip/', '网址已复制')">
+            <input type="text" class="redeem-url-input" :value="redeemUrl" readonly>
+            <button class="btn btn-ghost btn-copy-url" @click="copyText(redeemUrl, '网址已复制')">
               <i class="fa-solid fa-copy"></i> 复制网址
             </button>
           </div>
@@ -210,8 +210,8 @@ function registerProductAction(app) {
         </div>
       </div>
 
-      <!-- 成功 + isCode=1: 显示号码+接码（支付宝或卡密兑换） -->
-      <div class="success-card" v-else-if="actionResult && product.isCode">
+      <!-- 成功 + 接码商品：显示号码+接码（支付宝或卡密兑换） -->
+      <div class="success-card" v-else-if="actionResult && isSmsProduct">
         <div class="success-header">
           <div class="success-icon">
             <i class="fa-solid fa-circle-check"></i>
@@ -256,7 +256,7 @@ function registerProductAction(app) {
             <!-- 需要支付接码服务费时显示支付按钮 -->
             <button class="btn btn-alipay sms-btn" style="margin-top:8px;width:100%;" v-if="needSmsPayment" @click="startSmsServicePay" :disabled="smsQrLoading">
               <i class="fa-brands fa-alipay"></i>
-              支付接码服务费 ¥{{ product.smsPrice || '0.01' }}
+              支付接码服务费 ¥{{ smsPriceText }}
             </button>
           </div>
 
@@ -340,6 +340,12 @@ function registerProductAction(app) {
     `,
     setup(props, { emit }) {
       const { ref, computed, onUnmounted, watch } = Vue;
+      const isSmsProduct = computed(() => props.product && props.product.category && props.product.category.code === 'SMS');
+      const redeemUrl = computed(() => props.product.addr || 'https://aisub.vip/');
+      const smsPriceText = computed(() => {
+        const value = props.product && props.product.category ? props.product.category.smsPrice : null;
+        return value || props.product.smsPrice || '0.01';
+      });
 
       // --- 移动端检测 ---
       const isMobile = computed(() => {
@@ -686,8 +692,7 @@ function registerProductAction(app) {
       };
 
       const goToRedeem = () => {
-        const url = props.product.addr || 'https://aisub.vip/';
-        window.open(url, '_blank');
+        window.open(redeemUrl.value, '_blank');
       };
 
       // --- 打开支付宝支付 ---
@@ -734,7 +739,7 @@ function registerProductAction(app) {
         smsCode, smsLoading, smsError, needSmsPayment,
         showSmsPayModal, smsQrLoading, smsQrError, smsQrImageUrl,
         smsPayAmount, smsPayStatus,
-        isMobile, payUrl, smsPayUrl, // 新增
+        isMobile, payUrl, smsPayUrl, isSmsProduct, redeemUrl, smsPriceText,
         handleRedeem, startAlipayPay, closeQrModal,
         getSmsCode, startSmsServicePay, closeSmsPayModal,
         copyText, goToRedeem, openAlipay, openSmsAlipay, // 新增

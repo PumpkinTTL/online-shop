@@ -382,13 +382,16 @@ class PickupService {
         err.code = 'NEED_PURCHASE';
         throw err;
       }
-      // 从订单获取商品ID和商品信息
+      // 从订单获取商品ID和商品信息（关联类别）
       actualProductId = order.productId;
       const productRepo = this.getProductRepo();
-      const product = await productRepo.findOne({ where: { id: actualProductId } });
-      if (product && product.smKeyWord) {
-        // 使用商品配置的关键字，忽略前端传来的
-        actualKeyword = product.smKeyWord;
+      const product = await productRepo.findOne({
+        where: { id: actualProductId },
+        relations: ['category'],
+      });
+      // 从类别获取配置的关键字，忽略前端传来的
+      if (product?.category?.smKeyWord) {
+        actualKeyword = product.category.smKeyWord;
       }
     }
 

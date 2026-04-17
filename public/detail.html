@@ -62,7 +62,7 @@
                     <div class="product-badge warranty" v-if="product.warranty">
                       <i class="fa-solid fa-shield-halved"></i> 质保：{{ product.warranty }}
                     </div>
-                    <div class="product-badge code-badge" v-if="product.isCode">
+                    <div class="product-badge code-badge" v-if="product.category && product.category.code === 'SMS'">
                       <i class="fa-solid fa-mobile-screen"></i> 接码登录
                     </div>
                     <div class="product-badge credit-badge" v-if="product.credit">
@@ -168,7 +168,7 @@
                 </div>
                 <div class="card-body">
                   <div class="notice-text">
-                    <template v-if="product.isCode">
+                    <template v-if="product.category && product.category.code === 'SMS'">
                       本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
                     </template>
                     <template v-else-if="product.warranty">
