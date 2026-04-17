@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken');
 
-// JWT 密钥（从环境变量读取）
-const JWT_SECRET = process.env.JWT_SECRET || 'online-shop-secret-key-2026';
+// JWT 密钥（从环境变量读取，必须配置）
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET 环境变量未配置，请设置后重启服务');
+}
 
 /**
  * 从请求中提取 JWT token

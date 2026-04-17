@@ -7,7 +7,10 @@ const { login: loginLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 // JWT 配置（后台独立密钥，与前台用户区分）
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'admin-secret-key-2026-!@#';
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
+if (!ADMIN_JWT_SECRET) {
+  throw new Error('ADMIN_JWT_SECRET 环境变量未配置，请设置后重启服务');
+}
 const ADMIN_JWT_EXPIRES = '24h';
 
 // 生成 Token

@@ -7,7 +7,7 @@ const axios = require('axios');
 
 // MAAPI 配置
 const MAAPI_BASE = 'http://api.ejiema.com/zc/data.php';
-const MAAPI_TOKEN = process.env.MAAPI_TOKEN || '3a6cf615a7524b218f116eb3c1df5728';
+const MAAPI_TOKEN = process.env.MAAPI_TOKEN;
 
 class PickupService {
   getCardKeyRepo() {

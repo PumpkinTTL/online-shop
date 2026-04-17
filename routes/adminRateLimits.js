@@ -5,7 +5,10 @@ const dataSource = require('../config/database');
 const Admin = require('../entities/Admin');
 const { refreshConfigs } = require('../middleware/rateLimiter');
 
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'admin-secret-key-2026-!@#';
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
+if (!ADMIN_JWT_SECRET) {
+  throw new Error('ADMIN_JWT_SECRET 环境变量未配置，请设置后重启服务');
+}
 
 // 管理员认证中间件（与 admin.js 保持一致）
 const auth = async (req, res, next) => {
