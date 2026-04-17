@@ -6,7 +6,6 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const cors = require('cors');
-const xss = require('xss-clean');
 const dataSource = require('./config/database');
 const productsRouter = require('./routes/products');
 const usersRouter = require('./routes/users');
@@ -47,7 +46,6 @@ app.use(cors({
 // 中间件
 app.use(express.json({ limit: '1mb' })); // 限制请求体大小
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-app.use(xss()); // XSS 防护：清洗用户输入
 app.use(cookieParser()); // 解析 Cookie
 
 // 请求日志中间件（必须在路由之前）
