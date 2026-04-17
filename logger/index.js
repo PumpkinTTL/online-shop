@@ -58,18 +58,13 @@ const logger = winston.createLogger({
     }),
 
     // 访问日志
-    createTransport('access/combined-%DATE%.log', {
+    createTransport('access/access-%DATE%.log', {
       level: 'http',
     }),
 
     // 错误日志
     createTransport('error/error-%DATE%.log', {
       level: 'error',
-    }),
-
-    // 业务日志
-    createTransport('business/business-%DATE%.log', {
-      level: 'info',
     }),
 
     // 所有日志

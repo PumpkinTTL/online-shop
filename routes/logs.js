@@ -49,6 +49,8 @@ const LOG_DIRS = {
   error: path.join(__dirname, '../logs/error'),
   business: path.join(__dirname, '../logs/business'),
   combined: path.join(__dirname, '../logs/combined'),
+  exceptions: path.join(__dirname, '../logs/exceptions'),
+  rejections: path.join(__dirname, '../logs/rejections'),
 };
 
 // 读取日志文件列表

@@ -526,7 +526,7 @@ const app = createApp({
     // ===== 日志管理 =====
     var logStats = ref({});
     var logLoading = ref(false);
-    var showLogQueryDialog = ref(false);
+    var currentLogType = ref('combined');
     var logFiles = ref([]);
     var logQueryResult = ref({ total: 0, filtered: 0, logs: [] });
     var logQueryForm = ref({
@@ -537,12 +537,36 @@ const app = createApp({
       limit: 100,
     });
 
+    // 选择日志类型
+    var selectLogType = async function(type) {
+      currentLogType.value = type;
+      logQueryForm.value.type = type;
+      logQueryForm.value.filename = '';
+      logQueryForm.value.level = '';
+      logQueryForm.value.keyword = '';
+      await loadLogFiles();
+    };
+
     var getLogTypeLabel = function(type) {
-      var map = { access: '访问日志', error: '错误日志', business: '业务日志', combined: '综合日志' };
+      var map = {
+        access: '访问日志',
+        error: '错误日志',
+        business: '业务日志',
+        combined: '综合日志',
+        exceptions: '异常日志',
+        rejections: '拒绝日志'
+      };
       return map[type] || type;
     };
     var getLogTypeColor = function(type) {
-      var map = { access: '#409EFF', error: '#F56C6C', business: '#E6A23C', combined: '#67C23A' };
+      var map = {
+        access: '#409EFF',
+        error: '#F56C6C',
+        business: '#E6A23C',
+        combined: '#67C23A',
+        exceptions: '#F59E0B',
+        rejections: '#8B5CF6'
+      };
       return map[type] || '#909399';
     };
     var getLogLevelType = function(level) {
@@ -594,23 +618,20 @@ const app = createApp({
 
     var loadLogFiles = async function() {
       try {
-        var files = await AdminAPI.getLogFiles({ type: logQueryForm.value.type });
+        var files = await AdminAPI.getLogFiles({ type: currentLogType.value });
         logFiles.value = Array.isArray(files) ? files : [];
         if (!logFiles.value.length) {
           logQueryForm.value.filename = '';
+          logQueryResult.value = { total: 0, filtered: 0, logs: [] };
           return;
         }
-        var exists = logFiles.value.some(function(item) { return item.filename === logQueryForm.value.filename; });
-        if (!exists) {
-          logQueryForm.value.filename = logFiles.value[0].filename;
-        }
-        // 自动加载第一个文件的日志内容
-        if (logQueryForm.value.filename) {
-          await queryLogs(true);
-        }
+        // 选择最新文件
+        logQueryForm.value.filename = logFiles.value[0].filename;
+        await queryLogs(true);
       } catch (e) {
         logFiles.value = [];
         logQueryForm.value.filename = '';
+        logQueryResult.value = { total: 0, filtered: 0, logs: [] };
         ElMsg.error(e.message || '加载日志文件失败');
       }
     };
@@ -626,11 +647,6 @@ const app = createApp({
       }
     };
 
-    var handleLogTypeChange = async function() {
-      logQueryForm.value.filename = '';
-      await loadLogFiles();
-    };
-
     var queryLogs = async function(autoLoad) {
       if (!logQueryForm.value.filename) {
         if (!autoLoad) return ElMsg.warning('请先选择日志文件');
@@ -640,7 +656,6 @@ const app = createApp({
       try {
         var result = await AdminAPI.getLogContent(logQueryForm.value);
         logQueryResult.value = result;
-        showLogQueryDialog.value = false;
       } catch (e) {
         logQueryResult.value = { total: 0, filtered: 0, logs: [] };
         ElMsg.error(e.message || '查询日志失败');
@@ -693,7 +708,11 @@ const app = createApp({
       else if (page === 'ratelimits') await loadRateLimits();
       else if (page === 'logs') {
         await loadLogStats();
-        await loadLogFiles();
+        // 自动选择第一个有数据的日志类型
+        var types = Object.keys(logStats.value);
+        if (types.length > 0) {
+          await selectLogType(currentLogType.value);
+        }
       }
     }, { immediate: false }); // 不立即执行，避免 onMounted 中重复调用
 
@@ -843,7 +862,13 @@ const app = createApp({
       else if (page === 'admins') await loadAdmins();
       else if (page === 'smsrecords') await loadSmsRecords();
       else if (page === 'ratelimits') await loadRateLimits();
-      else if (page === 'logs') { await loadLogStats(); await loadLogFiles(); }
+      else if (page === 'logs') {
+        await loadLogStats();
+        var types = Object.keys(logStats.value);
+        if (types.length > 0) {
+          await selectLogType(currentLogType.value);
+        }
+      }
 
       pageLoading.value = false;
     });
@@ -948,13 +973,13 @@ const app = createApp({
       // 日志管理
       logStats: logStats,
       logLoading: logLoading,
-      showLogQueryDialog: showLogQueryDialog,
+      currentLogType: currentLogType,
       logFiles: logFiles,
       logQueryResult: logQueryResult,
       logQueryForm: logQueryForm,
       loadLogStats: loadLogStats,
       loadLogFiles: loadLogFiles,
-      handleLogTypeChange: handleLogTypeChange,
+      selectLogType: selectLogType,
       queryLogs: queryLogs,
       getLogTypeLabel: getLogTypeLabel,
       getLogTypeColor: getLogTypeColor,
