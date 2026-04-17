@@ -564,7 +564,6 @@ function registerProductAction(app) {
         try {
           const res = await pickupApi.iscodeGetVerifyCode(
             actionResult.value.CDK,
-            props.product.smKeyWord || '',
             actionResult.value.cardKeyId || null,
             props.product.id,
           );

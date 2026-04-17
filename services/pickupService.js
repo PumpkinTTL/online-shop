@@ -363,9 +363,12 @@ class PickupService {
   // ==================== isCode 商品专用方法 ====================
 
   // isCode 商品：获取验证码（关联卡密和商品，写入 iscode 来源的接码记录）
-  async iscodeGetVerifyCode(phone, keyword, cardKeyId, productId, ip) {
+  async iscodeGetVerifyCode(phone, cardKeyId, productId, ip) {
     if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置');
     if (!phone) throw new Error('手机号不能为空');
+
+    let actualKeyword = '';
+    let actualProductId = productId;
 
     // 接码权限检查：查 Order 表该 cardKeyId 是否有 status='completed' 的订单
     if (cardKeyId) {
@@ -379,9 +382,17 @@ class PickupService {
         err.code = 'NEED_PURCHASE';
         throw err;
       }
+      // 从订单获取商品ID和商品信息
+      actualProductId = order.productId;
+      const productRepo = this.getProductRepo();
+      const product = await productRepo.findOne({ where: { id: actualProductId } });
+      if (product && product.smKeyWord) {
+        // 使用商品配置的关键字，忽略前端传来的
+        actualKeyword = product.smKeyWord;
+      }
     }
 
-    const url = `${MAAPI_BASE}?code=getMsg&token=${MAAPI_TOKEN}&phone=${phone}&keyWord=${encodeURIComponent(keyword || '')}`;
+    const url = `${MAAPI_BASE}?code=getMsg&token=${MAAPI_TOKEN}&phone=${phone}&keyWord=${encodeURIComponent(actualKeyword || '')}`;
     const res = await axios.get(url, { timeout: 15000 });
     const data = res.data;
 
@@ -429,13 +440,13 @@ class PickupService {
         // 新建 isCode 接码记录
         await smsRecordRepo.save(smsRecordRepo.create({
           phone,
-          keyword: keyword || '',
+          keyword: actualKeyword || '',
           smsContent: content,
           verifyCode: extractedCode || '',
           status: extractedCode ? 'completed' : 'active',
           source: 'iscode',
           cardKeyId: cardKeyId || null,
-          productId: productId || null,
+          productId: actualProductId || null,
           ip: ip || '',
         }));
       }

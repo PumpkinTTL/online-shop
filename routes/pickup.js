@@ -252,13 +252,12 @@ router.get('/orders', async (req, res) => {
 // isCode 商品：获取验证码（关联卡密和商品）
 router.post('/iscode/get-verify-code', async (req, res) => {
   try {
-    const { phone, keyword, cardKeyId, productId } = req.body;
+    const { phone, cardKeyId, productId } = req.body;
     if (!phone) {
       return res.status(400).json({ error: '手机号不能为空' });
     }
     const result = await pickupService.iscodeGetVerifyCode(
       phone,
-      keyword,
       cardKeyId || null,
       productId || null,
       req.ip,
