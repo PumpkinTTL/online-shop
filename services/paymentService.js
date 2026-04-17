@@ -200,12 +200,15 @@ class PaymentService {
   }
 
   // 创建接码服务支付订单（paySMS：不改卡密库存，只创建支付单）
-  async createSmsPayment(cardKeyId, productId, amount, contact, userId = null) {
+  async createSmsPayment(cardKeyId, productId, contact, userId = null) {
     const paymentRepo = this.getPaymentOrderRepo();
     const productRepo = this.getProductRepo();
 
     const product = await productRepo.findOne({ where: { id: productId } });
     const productName = product ? product.name : '冰红茶';
+
+    // 从商品表获取接码服务价格，忽略前端传来的金额
+    const amount = product && product.smsPrice ? product.smsPrice : 0.01;
 
     const orderNo = this.generateOrderNo();
     const expiredAt = new Date(Date.now() + 30 * 60 * 1000);

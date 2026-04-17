@@ -8,7 +8,13 @@ const router = express.Router();
 // 创建支付订单（预下单，返回二维码）
 router.post('/create', paymentLimiter, optionalAuth, async (req, res) => {
   try {
-    const { productId, contact } = req.body;
+    const { productId, contact, amount: frontendAmount } = req.body;
+
+    // 安全检测：前端如果传了金额参数，记录警告但不阻止（向后兼容）
+    if (frontendAmount !== undefined) {
+      console.warn(`[Security] 检测到前端传递金额参数: productId=${productId}, frontendAmount=${frontendAmount}, ip=${req.ip}`);
+    }
+
     if (!productId) {
       return res.status(400).json({ error: '请选择商品' });
     }
@@ -22,20 +28,22 @@ router.post('/create', paymentLimiter, optionalAuth, async (req, res) => {
 // 创建接码服务支付订单（paySMS）
 router.post('/create-sms', paymentLimiter, optionalAuth, async (req, res) => {
   try {
-    const { cardKeyId, productId, amount, contact } = req.body;
+    const { cardKeyId, productId, contact, amount: frontendAmount } = req.body;
+
+    // 安全检测：前端如果传了金额参数，记录警告但不阻止（向后兼容）
+    if (frontendAmount !== undefined) {
+      console.warn(`[Security] 检测到前端传递金额参数: cardKeyId=${cardKeyId}, productId=${productId}, frontendAmount=${frontendAmount}, ip=${req.ip}`);
+    }
+
     if (!cardKeyId) {
       return res.status(400).json({ error: '缺少卡密信息' });
     }
     if (!productId) {
       return res.status(400).json({ error: '缺少商品信息' });
     }
-    if (!amount) {
-      return res.status(400).json({ error: '缺少支付金额' });
-    }
     const result = await paymentService.createSmsPayment(
       cardKeyId,
       productId,
-      amount,
       contact,
       req.userId || null,
     );

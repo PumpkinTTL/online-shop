@@ -609,11 +609,9 @@ function registerProductAction(app) {
         smsQrImageUrl.value = '';
 
         try {
-          const smsPrice = props.product.smsPrice || 0.01;
           const res = await paymentApi.createSms(
             actionResult.value.cardKeyId,
             props.product.id,
-            smsPrice,
             contact.value.trim(),
           );
           smsOrderNo.value = res.orderNo;

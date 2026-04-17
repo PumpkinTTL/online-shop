@@ -7,8 +7,8 @@ const paymentApi = {
   create: (productId, contact) => http.post('/payment/create', { productId, contact }),
 
   // 创建接码服务支付订单（paySMS）
-  createSms: (cardKeyId, productId, amount, contact) =>
-    http.post('/payment/create-sms', { cardKeyId, productId, amount, contact }),
+  createSms: (cardKeyId, productId, contact) =>
+    http.post('/payment/create-sms', { cardKeyId, productId, contact }),
 
   // 查询支付状态（前端轮询）
   getStatus: (orderNo) => http.get('/payment/status', { params: { orderNo } }),
