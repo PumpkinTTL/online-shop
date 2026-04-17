@@ -4,6 +4,8 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const cors = require('cors');
 const dataSource = require('./config/database');
 const productsRouter = require('./routes/products');
 const usersRouter = require('./routes/users');
@@ -23,9 +25,27 @@ const logger = require('./logger');
 const app = express();
 const PORT = process.env.PORT || 5100;
 
+// 安全中间件
+app.use(helmet({
+  contentSecurityPolicy: false, // 前端使用内联脚本，暂时禁用CSP
+  hsts: process.env.NODE_ENV === 'production' ? {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  } : false,
+}));
+
+// CORS 配置：只允许同源访问（生产环境可配置允许的域名）
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? (process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:5100')
+    : true, // 开发环境允许所有来源
+  credentials: true,
+}));
+
 // 中间件
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' })); // 限制请求体大小
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser()); // 解析 Cookie
 
 // 请求日志中间件（必须在路由之前）
