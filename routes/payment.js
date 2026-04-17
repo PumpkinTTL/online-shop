@@ -67,14 +67,29 @@ router.get('/status', async (req, res) => {
   }
 });
 
-// 更新联系方式
+// 更新联系方式（需要订单号匹配，如果订单有userId则需要登录认证）
 router.post('/update-contact', async (req, res) => {
   try {
     const { orderNo, contact } = req.body;
     if (!orderNo || !contact) {
       return res.status(400).json({ error: '参数不完整' });
     }
+
     const paymentRepo = paymentService.getPaymentOrderRepo();
+    const order = await paymentRepo.findOne({ where: { orderNo } });
+
+    if (!order) {
+      return res.status(404).json({ error: '订单不存在' });
+    }
+
+    // 如果订单关联了用户，则需要验证登录状态
+    if (order.userId) {
+      const userId = req.userId || null;
+      if (!userId || userId !== order.userId) {
+        return res.status(403).json({ error: '无权操作此订单' });
+      }
+    }
+
     await paymentRepo.update({ orderNo }, { contact: contact.trim() });
     res.json({ success: true });
   } catch (error) {
@@ -98,9 +113,22 @@ router.post('/notify', async (req, res) => {
   }
 });
 
-// 关闭超时订单（可定时调用）
+// 关闭超时订单（内部调用，需要 ADMIN_INTERNAL_KEY）
 router.post('/close-expired', async (req, res) => {
   try {
+    const { internalKey } = req.body;
+    const validKey = process.env.ADMIN_INTERNAL_KEY;
+
+    // 环境变量未配置时，拒绝所有请求
+    if (!validKey || validKey.trim() === '') {
+      return res.status(500).json({ error: '内部密钥未配置' });
+    }
+
+    // 验证请求中的密钥
+    if (!internalKey || internalKey !== validKey) {
+      return res.status(403).json({ error: '无权访问' });
+    }
+
     const closed = await paymentService.closeExpiredOrders();
     res.json({ message: `已关闭 ${closed} 个超时订单` });
   } catch (error) {

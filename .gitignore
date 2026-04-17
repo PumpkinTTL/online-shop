@@ -12,4 +12,5 @@ node_modules/
 # 数据库文件
 *.db
 *.sqlite
-*.sqlite3logs/*.log
+*.sqlite3
+logs/*.log
