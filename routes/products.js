@@ -1,7 +1,20 @@
 const express = require('express');
 const productService = require('../services/ProductService');
+const dataSource = require('../config/database');
+const ProductCategory = require('../entities/ProductCategory');
 
 const router = express.Router();
+
+// 获取前台可见类别（show=1）
+router.get('/categories', async (req, res) => {
+  try {
+    const repo = dataSource.getRepository(ProductCategory);
+    const categories = await repo.find({ where: { show: 1 }, order: { sort: 'ASC', id: 'ASC' } });
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // 获取所有商品（前台只返回 show=1 的商品）
 router.get('/', async (req, res) => {

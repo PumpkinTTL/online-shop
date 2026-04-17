@@ -3,6 +3,9 @@
  */
 
 const productApi = {
+  // 获取前台可见类别
+  getCategories: () => http.get('/products/categories'),
+
   // 获取商品列表
   getList: () => http.get('/products'),
 

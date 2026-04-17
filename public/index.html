@@ -12,7 +12,6 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/confirmDialog.js"></script>
-  <script src="/js/sms.js"></script>
   <script src="/js/components/app-header.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -44,21 +43,14 @@
             <div class="filter-group">
               <div class="filter-label">分类</div>
               <div class="filter-options">
-                <div class="filter-option" :class="{ active: currentCategory === cat.value }" v-for="cat in categories"
-                  :key="cat.value" @click="currentCategory = cat.value">
-                  <i :class="cat.icon"></i>
-                  {{ cat.label }}
+                <div class="filter-option" :class="{ active: currentCategory === 'all' }" @click="currentCategory = 'all'">
+                  <i class="fa-solid fa-border-all"></i>
+                  全部商品
                 </div>
-              </div>
-            </div>
-
-            <div class="filter-group">
-              <div class="filter-label">价格区间</div>
-              <div class="filter-options">
-                <div class="filter-option" :class="{ active: currentPriceRange === price.value }"
-                  v-for="price in priceRanges" :key="price.value" @click="currentPriceRange = price.value">
-                  <i :class="price.icon"></i>
-                  {{ price.label }}
+                <div class="filter-option" :class="{ active: currentCategory === cat.id }" v-for="cat in categories"
+                  :key="cat.id" @click="currentCategory = cat.id">
+                  <i :class="getCategoryIcon(cat.code)"></i>
+                  {{ cat.name }}
                 </div>
               </div>
             </div>
@@ -69,16 +61,14 @@
       <!-- 移动端横向筛选栏 -->
       <div class="mobile-filter-bar">
         <div class="mobile-filter-scroll">
-          <div class="mobile-filter-chip" :class="{ active: currentCategory === cat.value }"
-            v-for="cat in categories" :key="'mc-'+cat.value" @click="currentCategory = cat.value">
-            <i :class="cat.icon"></i>
-            {{ cat.label }}
+          <div class="mobile-filter-chip" :class="{ active: currentCategory === 'all' }" @click="currentCategory = 'all'">
+            <i class="fa-solid fa-border-all"></i>
+            全部
           </div>
-          <div class="mobile-filter-divider"></div>
-          <div class="mobile-filter-chip" :class="{ active: currentPriceRange === price.value }"
-            v-for="price in priceRanges" :key="'mp-'+price.value" @click="currentPriceRange = price.value">
-            <i :class="price.icon"></i>
-            {{ price.label }}
+          <div class="mobile-filter-chip" :class="{ active: currentCategory === cat.id }"
+            v-for="cat in categories" :key="'mc-'+cat.id" @click="currentCategory = cat.id">
+            <i :class="getCategoryIcon(cat.code)"></i>
+            {{ cat.name }}
           </div>
         </div>
       </div>
@@ -156,86 +146,6 @@
         </div>
       </main>
 
-      <!-- 接码服务内容 -->
-      <main class="content sms-content-area" v-if="false">
-        <div class="sms-cards">
-          <!-- 获取号码 -->
-          <div class="sms-card">
-            <h2 class="card-title"><i class="fa-solid fa-mobile-screen"></i> 获取号码</h2>
-
-            <label>短信关键词 <span class="required">*</span></label>
-            <input type="text" v-model="sms.keyWord" placeholder="例如：Google、淘宝" class="form-input">
-            <div class="hint">短信【括号】里的名字</div>
-
-            <label>指定号码 <span class="optional">(可选)</span></label>
-            <input type="text" v-model="sms.phoneInput" placeholder="不填则随机获取" class="form-input" @input="markManualPhone">
-
-            <!-- 当前号码 -->
-            <div class="phone-box" v-if="sms.currentPhone">
-              <label>当前号码</label>
-              <div class="phone-row">
-                <input type="text" v-model="sms.currentPhone" class="form-input phone-input" readonly>
-                <button class="btn btn-icon" @click="copyPhone" title="复制"><i class="fa-solid fa-copy"></i></button>
-                <button class="btn btn-sm btn-danger" @click="blockPhone" title="拉黑"><i class="fa-solid fa-ban"></i></button>
-              </div>
-            </div>
-
-            <label>卡类型</label>
-            <select v-model="sms.cardType" class="form-input">
-              <option value="全部">全部</option>
-              <option value="实卡">实卡</option>
-              <option value="虚卡">虚卡</option>
-            </select>
-
-            <button class="btn btn-primary btn-get" @click="getPhone" :disabled="sms.loading">
-              <i class="fa-solid fa-phone" v-if="!sms.loading"></i>
-              <i class="fa-solid fa-spinner fa-spin" v-else></i>
-              {{ sms.loading ? '获取中' : '获取号码' }}
-            </button>
-
-            <!-- 免责声明 -->
-            <div class="disclaimer">
-              <i class="fa-solid fa-exclamation-triangle"></i>
-              <span>本服务仅用于测试用途，严禁用于任何非法用途</span>
-            </div>
-          </div>
-
-          <!-- 短信内容 -->
-          <div class="sms-card">
-            <div class="sms-header">
-              <h2 class="card-title"><i class="fa-solid fa-message"></i> 短信内容</h2>
-              <button class="btn btn-sm btn-primary" @click="getMsg" :disabled="!sms.currentPhone || sms.smsLoading">
-                <i class="fa-solid fa-sync" v-if="!sms.smsLoading"></i>
-                <i class="fa-solid fa-spinner fa-spin" v-else></i>
-                {{ sms.smsLoading ? '获取中' : '获取短信' }}
-              </button>
-            </div>
-
-            <!-- 验证码 -->
-            <div class="code-box" v-if="sms.extractedCode">
-              <label>验证码</label>
-              <div class="code-input-row">
-                <input type="text" v-model="sms.extractedCode" class="form-input code-input" readonly>
-                <button class="btn btn-icon" @click="copyCode" title="复制">
-                  <i class="fa-solid fa-copy"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- 短信原文 -->
-            <div class="sms-text-box" v-if="sms.smsContent">
-              <label>短信原文</label>
-              <div class="sms-content">{{ sms.smsContent }}</div>
-              <div class="sms-time">{{ sms.smsTime }}</div>
-            </div>
-
-            <div class="empty-state" v-else>
-              <i class="fa-solid fa-inbox"></i>
-              <p>暂无短信</p>
-            </div>
-          </div>
-        </div>
-      </main>
     </div>
 
     <!-- 页脚 -->
@@ -252,47 +162,33 @@
       setup() {
         // 状态
         const allProducts = ref([]);
+        const categories = ref([]);
         const loading = ref(true);
         const searchKeyword = ref('');
         const currentCategory = ref('all');
-        const currentPriceRange = ref('all');
         const currentSort = ref('default');
         const filterExpanded = ref(true);
-
-        // 接码服务状态（从模块创建）
-        const sms = ref(SmsModule.createState());
 
         // 切换筛选栏
         const toggleFilter = () => {
           filterExpanded.value = !filterExpanded.value;
         };
 
-        // 分类选项
-        const categories = [
-          { label: '全部商品', value: 'all', icon: 'fa-solid fa-border-all' },
-          { label: 'AI绘画', value: 'ai', icon: 'fa-solid fa-robot' },
-          { label: '接码服务', value: 'sms', icon: 'fa-solid fa-mobile-screen' },
-        ];
-
-        // 价格区间
-        const priceRanges = [
-          { label: '全部价格', value: 'all', icon: 'fa-solid fa-coins' },
-          { label: '¥50 以下', value: '0-50', icon: 'fa-solid fa-tag' },
-          { label: '¥50 - ¥100', value: '50-100', icon: 'fa-solid fa-tags' },
-          { label: '¥100 以上', value: '100+', icon: 'fa-solid fa-crown' },
-        ];
+        // 根据类别代号返回图标
+        const getCategoryIcon = (code) => {
+          const iconMap = {
+            'AI': 'fa-solid fa-robot',
+            'SMS': 'fa-solid fa-mobile-screen',
+          };
+          return iconMap[code] || 'fa-solid fa-box';
+        };
 
         // 筛选后的商品
         const filteredProducts = computed(() => {
           let result = allProducts.value.filter(p => {
-            const categoryCode = ((p.category && p.category.code) || '').toLowerCase();
-            if (currentCategory.value !== 'all' && categoryCode !== currentCategory.value) return false;
-
-            if (currentPriceRange.value !== 'all') {
-              const price = parseFloat(p.price);
-              if (currentPriceRange.value === '0-50' && price >= 50) return false;
-              if (currentPriceRange.value === '50-100' && (price < 50 || price > 100)) return false;
-              if (currentPriceRange.value === '100+' && price < 100) return false;
+            if (currentCategory.value !== 'all') {
+              const catId = p.category && p.category.id;
+              if (catId !== currentCategory.value) return false;
             }
 
             if (searchKeyword.value.trim()) {
@@ -323,15 +219,6 @@
           return sales + ' 已售';
         };
 
-        // 接码服务方法（代理到模块）
-        const getPhone = () => SmsModule.getPhone(sms, Toast);
-        const getMsg = () => SmsModule.getMsg(sms, Toast);
-        const releasePhone = () => SmsModule.releasePhone(sms, Toast);
-        const blockPhone = () => SmsModule.blockPhone(sms, Toast);
-        const copyPhone = () => SmsModule.copyPhone(sms, Toast);
-        const copyCode = () => SmsModule.copyCode(sms, Toast);
-        const markManualPhone = () => SmsModule.markManualPhone(sms);
-
         const loadProducts = async () => {
           try {
             const response = await productApi.getList();
@@ -343,15 +230,24 @@
           }
         };
 
+        const loadCategories = async () => {
+          try {
+            const response = await productApi.getCategories();
+            categories.value = response;
+          } catch (error) {
+            console.error('加载类别失败:', error);
+          }
+        };
+
         onMounted(() => {
+          loadCategories();
           loadProducts();
         });
 
         return {
-          allProducts, loading, searchKeyword, currentCategory, currentPriceRange, currentSort, filterExpanded,
-          categories, priceRanges, filteredProducts, sms,
-          onSearch, goToDetail, goToOrders, toggleFilter, formatSales,
-          getPhone, getMsg, releasePhone, blockPhone, copyPhone, copyCode, markManualPhone
+          allProducts, categories, loading, searchKeyword, currentCategory, currentSort, filterExpanded,
+          filteredProducts,
+          onSearch, goToDetail, goToOrders, toggleFilter, formatSales, getCategoryIcon
         };
       }
     });
