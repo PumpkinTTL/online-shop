@@ -340,7 +340,7 @@ function registerProductAction(app) {
     `,
     setup(props, { emit }) {
       const { ref, computed, onUnmounted, watch } = Vue;
-      const isSmsProduct = computed(() => props.product && props.product.category && props.product.category.code === 'SMS');
+      const isSmsProduct = computed(() => props.product && props.product.category && props.product.category.smsEnabled === 1);
       const redeemUrl = computed(() => props.product.addr || 'https://aisub.vip/');
       const smsPriceText = computed(() => {
         const value = props.product && props.product.category ? props.product.category.smsPrice : null;

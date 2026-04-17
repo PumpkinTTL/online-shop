@@ -156,12 +156,13 @@ class AdminService {
   normalizeProduct(product) {
     if (!product) return product;
 
-    const categoryCode = product.category?.code || '';
-    product.isCode = categoryCode === 'SMS';
+    const category = product.category;
+    const categoryCode = category?.code || '';
+    product.isCode = category?.smsEnabled === 1;
     product.type = categoryCode ? categoryCode.toLowerCase() : 'uncategorized';
-    product.smKeyWord = product.category?.smKeyWord || '';
-    product.smsPrice = product.category?.smsPrice || null;
-    product.smsPaymentName = product.category?.smsPaymentName || '';
+    product.smKeyWord = category?.smKeyWord || '';
+    product.smsPrice = category?.smsPrice || null;
+    product.smsPaymentName = category?.smsPaymentName || '';
     return product;
   }
 

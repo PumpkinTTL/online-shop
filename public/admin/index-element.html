@@ -219,7 +219,7 @@
                     <th style="width:140px;">类别名称</th>
                     <th style="width:120px;">类别代号</th>
                     <th>说明</th>
-                    <th style="width:260px;">属性</th>
+                    <th style="width:280px;">接码</th>
                     <th style="width:80px;">排序</th>
                     <th style="width:90px;">状态</th>
                     <th style="width:140px;">操作</th>
@@ -235,14 +235,15 @@
                     <td><code>{{ row.code }}</code></td>
                     <td :title="row.description || '-'">{{ row.description || '-' }}</td>
                     <td>
-                      <span v-if="row.smsPrice || row.smsPaymentName || row.smKeyWord">
+                      <span v-if="row.smsEnabled === 1">
+                        <el-tag type="success" size="small">已启用</el-tag>
                         {{ [
-                          row.smsPrice ? '接码费: ' + row.smsPrice : '',
+                          row.smsPrice ? '¥' + row.smsPrice : '',
                           row.smsPaymentName ? row.smsPaymentName : '',
                           row.smKeyWord ? '关键词: ' + row.smKeyWord : ''
                         ].filter(Boolean).join(' / ') }}
                       </span>
-                      <span v-else style="color:#999">-</span>
+                      <span v-else style="color:#999">未启用</span>
                     </td>
                     <td>{{ row.sort }}</td>
                     <td>
@@ -277,13 +278,16 @@
                 <el-form-item label="说明">
                   <el-input v-model="categoryForm.description" type="textarea" :rows="2" />
                 </el-form-item>
-                <el-form-item label="接码价格">
+                <el-form-item label="接码服务">
+                  <el-switch v-model="categoryForm.smsEnabled" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="关闭" />
+                </el-form-item>
+                <el-form-item label="接码价格" v-show="categoryForm.smsEnabled === 1">
                   <el-input-number v-model="categoryForm.smsPrice" :precision="2" :step="0.01" :min="0" style="width:100%" />
                 </el-form-item>
-                <el-form-item label="接码支付名">
+                <el-form-item label="接码支付名" v-show="categoryForm.smsEnabled === 1">
                   <el-input v-model="categoryForm.smsPaymentName" placeholder="如：增值服务" />
                 </el-form-item>
-                <el-form-item label="接码关键词">
+                <el-form-item label="接码关键词" v-show="categoryForm.smsEnabled === 1">
                   <el-input v-model="categoryForm.smKeyWord" />
                 </el-form-item>
                 <el-form-item label="排序">

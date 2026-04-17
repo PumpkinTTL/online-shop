@@ -76,7 +76,7 @@ const app = createApp({
     var getProductTypeTag = function(product) {
       var code = product && product.category && product.category.code ? product.category.code : '';
       if (code === 'AI') return 'primary';
-      if (code === 'SMS') return 'success';
+      if (product && product.category && product.category.smsEnabled === 1) return 'success';
       return 'warning';
     };
 
@@ -154,6 +154,7 @@ const app = createApp({
         name: '',
         code: '',
         description: '',
+        smsEnabled: 0,
         smsPrice: null,
         smsPaymentName: '',
         smKeyWord: '',
@@ -167,9 +168,16 @@ const app = createApp({
       var data = categoryForm.value;
       if (!data.name) return ElMsg.warning('请输入类别名称');
       if (!data.code) return ElMsg.warning('请输入类别代号');
+      if (data.smsEnabled === 1 && !data.smsPrice) return ElMsg.warning('启用接码服务时必须设置接码价格');
 
       saving.value = true;
       try {
+        // 关闭接码时清空接码相关字段
+        if (data.smsEnabled !== 1) {
+          data.smsPrice = null;
+          data.smsPaymentName = '';
+          data.smKeyWord = '';
+        }
         if (data.id) {
           await AdminAPI.updateCategory(data.id, data);
           ElMsg.success('更新成功');

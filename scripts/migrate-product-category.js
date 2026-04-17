@@ -25,6 +25,7 @@ async function migrate() {
       name: '接码服务',
       code: 'SMS',
       description: '接码类商品（isCode）',
+      smsEnabled: 1,
       smsPrice: 0.01,
       smsPaymentName: '增值服务',
       smKeyWord: '',
