@@ -306,33 +306,47 @@ class PaymentService {
         console.warn('[Payment] 更新接码订单状态失败:', e.message);
       }
     } else {
-      // 普通商品支付：分配卡密
-      const cardKey = await cardKeyRepo.findOne({
-        where: { productId: order.productId, status: 'unused' },
-      });
-
-      if (cardKey) {
-        updateData.cardKeyId = cardKey.id;
-        updateData.cdKey = cardKey.CDK;
-        // 标记卡密为已使用
-        await cardKeyRepo.update(cardKey.id, {
-          status: 'used',
-          usedAt: new Date(),
-        });
-        // 更新 PaymentOrder 的 cardKeyId 和 cdKey
-        await paymentRepo.update(order.id, { cardKeyId: cardKey.id, cdKey: cardKey.CDK });
-      }
-
-      // 同步创建 Order 记录（去重：同一 cardKeyId 不重复创建）
+      // 普通商品支付：使用事务+行锁分配卡密（防止并发超卖）
       try {
-        const orderRepo = dataSource.getRepository(Order);
-        const ckId = cardKey ? cardKey.id : null;
+        await dataSource.transaction(async (transactionalEntityManager) => {
+          // 加行锁查询卡密（悲观锁，防止并发）
+          const cardKey = await transactionalEntityManager.findOne(CardKey, {
+            where: { productId: order.productId, status: 'unused' },
+            lock: { mode: 'pessimistic_write' },
+          });
 
-        if (ckId) {
-          const existing = await orderRepo.findOne({ where: { cardKeyId: ckId } });
-          if (existing) {
-            console.log(`[Payment] cardKeyId=${ckId} 已有 Order #${existing.id}，跳过重复创建`);
-          } else {
+          if (!cardKey) {
+            // 无可用卡密：记录异常日志，便于客服处理退款
+            const logger = require('../logger');
+            logger.error('支付成功但无可用卡密', {
+              orderNo: order.orderNo,
+              productId: order.productId,
+              productName: order.productName,
+              amount: order.amount,
+              tradeNo: tradeNo,
+              contact: order.contact,
+              severity: 'HIGH',
+              actionRequired: '需要人工退款',
+            });
+            throw new Error('商品已售罄，请联系客服退款');
+          }
+
+          // 原子操作：分配卡密
+          await transactionalEntityManager.update(CardKey, cardKey.id, {
+            status: 'used',
+            usedAt: new Date(),
+          });
+          await transactionalEntityManager.update(PaymentOrder, order.id, {
+            cardKeyId: cardKey.id,
+            cdKey: cardKey.CDK,
+          });
+
+          console.log(`[Payment] 订单 ${order.orderNo} 分配卡密 ${cardKey.code}`);
+
+          // 同步创建 Order 记录（在事务内执行，保证一致性）
+          const orderRepo = transactionalEntityManager.getRepository(Order);
+          const existing = await orderRepo.findOne({ where: { cardKeyId: cardKey.id } });
+          if (!existing) {
             const now = new Date();
             const ts = now.getFullYear().toString() +
               (now.getMonth() + 1).toString().padStart(2, '0') +
@@ -345,7 +359,7 @@ class PaymentService {
             await orderRepo.save(orderRepo.create({
               orderNo: `ORD${ts}${rand}`,
               userId: order.userId || null,
-              cardKeyId: ckId,
+              cardKeyId: cardKey.id,
               productId: order.productId,
               amount: order.amount,
               payMethod: 'alipay',
@@ -356,17 +370,23 @@ class PaymentService {
             }));
             console.log(`[Payment] 已同步创建 Order 记录，关联支付单 ${order.orderNo}`);
           }
-        }
-      } catch (e) {
-        console.warn('[Payment] 同步创建 Order 记录失败:', e.message);
-      }
+        });
 
-      // 更新商品销量
-      try {
-        const productRepo = this.getProductRepo();
-        await productRepo.increment({ id: order.productId }, 'sales', 1);
-      } catch (e) {
-        console.warn('[Payment] 更新商品销量失败:', e.message);
+        // 事务成功后更新销量（非关键操作，放在事务外）
+        try {
+          const productRepo = this.getProductRepo();
+          await productRepo.increment({ id: order.productId }, 'sales', 1);
+        } catch (e) {
+          console.warn('[Payment] 更新商品销量失败:', e.message);
+        }
+      } catch (error) {
+        // 事务失败或无卡密
+        console.error('[Payment] 分配卡密失败:', error.message);
+
+        // 更新订单状态为异常，便于后续处理
+        await paymentRepo.update(order.id, { status: 'failed' });
+
+        throw error;
       }
     }
   }
