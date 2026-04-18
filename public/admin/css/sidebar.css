@@ -28,7 +28,7 @@
   --sidebar-light-submenu-bg: #F8FAFC;
 }
 
-/* ===== 侧边栏容器 ===== */
+/* ===== 桌面端侧边栏容器 ===== */
 .sidebar-wrap {
   background: var(--sidebar-dark-bg);
   border-right: 1px solid var(--sidebar-dark-border);
@@ -36,13 +36,31 @@
   flex-direction: column;
   overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 100;
 }
 
 .sidebar-wrap.theme-light {
   background: var(--sidebar-light-bg);
   border-right-color: var(--sidebar-light-border);
+}
+
+/* 移动端隐藏桌面侧边栏 */
+@media (max-width: 768px) {
+  .sidebar-wrap {
+    display: none;
+  }
+}
+
+/* ===== 移动端抽屉内容 ===== */
+.mobile-sidebar-content {
+  background: var(--sidebar-dark-bg);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.mobile-sidebar-content.theme-light {
+  background: var(--sidebar-light-bg);
 }
 
 /* ===== Logo区域 ===== */
@@ -247,36 +265,59 @@
   display: none;
 }
 
-/* ===== 响应式设计 ===== */
+/* ===== 移动端抽屉样式覆盖 ===== */
+/* 覆盖Element Plus抽屉默认样式 */
+.mobile-sidebar-drawer .el-drawer__body {
+  padding: 0;
+}
+
+.mobile-sidebar-drawer .el-drawer.ltr {
+  /* 保持默认的从左滑入动画 */
+}
+
+/* 移动端内容区的主题切换按钮 */
+.mobile-sidebar-content .theme-toggle-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: inherit;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mobile-sidebar-content.theme-light .theme-toggle-btn {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 移动端版本信息 */
+.mobile-sidebar-content .version-info {
+  padding: 12px 20px;
+  border-top: 1px solid var(--sidebar-dark-border);
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.mobile-sidebar-content.theme-light .version-info {
+  border-top-color: var(--sidebar-light-border);
+}
+
+.mobile-sidebar-content .version-info div {
+  font-size: 11px;
+  color: var(--sidebar-dark-text);
+}
+
+.mobile-sidebar-content.theme-light .version-info div {
+  color: var(--sidebar-light-text);
+}
+
+/* ===== 移动端抽屉显示 ===== */
 @media (max-width: 768px) {
-  .sidebar-wrap {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    z-index: 1000;
-    transform: translateX(-100%);
-    will-change: transform;
-  }
-
-  .sidebar-wrap.mobile-open {
-    transform: translateX(0);
-  }
-
-  /* 遮罩层 */
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-  }
-
-  .sidebar-overlay.show {
-    display: block;
+  .mobile-sidebar-drawer {
+    display: block !important;
   }
 }
 

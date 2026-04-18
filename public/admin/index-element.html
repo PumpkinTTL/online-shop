@@ -29,11 +29,8 @@
 <body>
   <div id="app">
     <el-container style="height:100vh">
-      <!-- 移动端侧边栏遮罩 -->
-      <div class="sidebar-overlay" :class="{ show: isMobileSidebarOpen }" @click="closeMobileSidebar"></div>
-
-      <!-- 侧边栏 -->
-      <el-aside :width="isCollapsed ? '72px' : '240px'" class="sidebar-wrap" :class="{ 'theme-light': isLightTheme, 'mobile-open': isMobileSidebarOpen }">
+      <!-- 桌面端侧边栏 -->
+      <el-aside :width="isCollapsed ? '72px' : '240px'" class="sidebar-wrap desktop-sidebar" :class="{ 'theme-light': isLightTheme }">
         <!-- 主题切换按钮 -->
         <button class="theme-toggle-btn" @click="toggleTheme" v-if="!isCollapsed">
           <el-icon :size="16">
@@ -135,6 +132,116 @@
           <div>v2.0 Element Plus</div>
         </div>
       </el-aside>
+
+      <!-- 移动端侧边栏抽屉 -->
+      <el-drawer
+        v-model="isMobileSidebarOpen"
+        direction="ltr"
+        :with-header="false"
+        :size="260"
+        class="mobile-sidebar-drawer">
+        <div class="mobile-sidebar-content" :class="{ 'theme-light': isLightTheme }">
+          <!-- 主题切换按钮 -->
+          <button class="theme-toggle-btn" @click="toggleTheme">
+            <el-icon :size="16">
+              <sunny v-if="isLightTheme"></sunny>
+              <moon v-else></moon>
+            </el-icon>
+          </button>
+
+          <div class="sidebar-logo">
+            <el-icon :size="26">
+              <promotion></promotion>
+            </el-icon>
+            <span class="logo-title">工具商店</span>
+          </div>
+
+          <el-menu :default-active="currentPage" @select="handleMobileMenuSelect" class="sidebar-menu" background-color="transparent"
+            text-color="#94A3B8" active-text-color="#3B82F6">
+            <el-menu-item index="dashboard">
+              <el-icon>
+                <data-analysis></data-analysis>
+              </el-icon>
+              <template #title>仪表盘</template>
+            </el-menu-item>
+            <el-sub-menu index="manage">
+              <template #title>
+                <el-icon>
+                  <grid></grid>
+                </el-icon>
+                <span>业务管理</span>
+              </template>
+              <el-menu-item index="categories">
+                <el-icon>
+                  <grid></grid>
+                </el-icon>
+                <template #title>商品类别</template>
+              </el-menu-item>
+              <el-menu-item index="products">
+                <el-icon>
+                  <goods></goods>
+                </el-icon>
+                <template #title>商品管理</template>
+              </el-menu-item>
+              <el-menu-item index="cardkeys">
+                <el-icon>
+                  <key></key>
+                </el-icon>
+                <template #title>卡密管理</template>
+              </el-menu-item>
+              <el-menu-item index="orders">
+                <el-icon>
+                  <document></document>
+                </el-icon>
+                <template #title>订单管理</template>
+              </el-menu-item>
+            </el-sub-menu>
+            <el-sub-menu index="system">
+              <template #title>
+                <el-icon>
+                  <setting></setting>
+                </el-icon>
+                <span>系统管理</span>
+              </template>
+              <el-menu-item index="users">
+                <el-icon>
+                  <user></user>
+                </el-icon>
+                <template #title>用户管理</template>
+              </el-menu-item>
+              <el-menu-item index="admins">
+                <el-icon>
+                  <user-filled></user-filled>
+                </el-icon>
+                <template #title>管理员</template>
+              </el-menu-item>
+              <el-menu-item index="smsrecords">
+                <el-icon>
+                  <iphone></iphone>
+                </el-icon>
+                <template #title>接码记录</template>
+              </el-menu-item>
+              <el-menu-item index="ratelimits">
+                <el-icon>
+                  <monitor></monitor>
+                </el-icon>
+                <template #title>限速配置</template>
+              </el-menu-item>
+              <el-menu-item index="logs">
+                <el-icon>
+                  <document></document>
+                </el-icon>
+                <template #title>日志查看</template>
+              </el-menu-item>
+            </el-sub-menu>
+          </el-menu>
+
+          <!-- 侧边栏底部版本信息 -->
+          <div class="version-info">
+            <div>v2.0 Element Plus</div>
+          </div>
+        </div>
+      </el-drawer>
 
       <!-- 右侧主体 -->
       <el-container>

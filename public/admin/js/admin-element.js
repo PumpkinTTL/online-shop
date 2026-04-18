@@ -127,6 +127,12 @@ const app = createApp({
       currentPage.value = index;
     };
 
+    // 移动端菜单切换（选择后关闭抽屉）
+    var handleMobileMenuSelect = function(index) {
+      currentPage.value = index;
+      isMobileSidebarOpen.value = false;
+    };
+
     // ===== 刷新当前页面数据 =====
     var refreshCurrentPage = function() {
       var page = currentPage.value;
@@ -1161,6 +1167,7 @@ const app = createApp({
       openMenus: openMenus,
       pageTitle: pageTitle,
       handleMenuSelect: handleMenuSelect,
+      handleMobileMenuSelect: handleMobileMenuSelect,
       refreshCurrentPage: refreshCurrentPage,
       logout: logout,
       // 主题切换
