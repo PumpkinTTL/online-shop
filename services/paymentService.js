@@ -4,6 +4,7 @@ const CardKey = require('../entities/CardKey');
 const Product = require('../entities/Product');
 const Order = require('../entities/Order');
 const { getAlipaySdk } = require('../config/alipay');
+const { business, system } = require('../logger');
 
 class PaymentService {
   getPaymentOrderRepo() {
@@ -133,6 +134,7 @@ class PaymentService {
       return null;
     } catch (error) {
       console.warn('[PaymentService] 查询支付宝交易状态失败:', error.message);
+      system.warn('查询支付宝交易状态失败', { error: error.message });
       return null;
     }
   }
@@ -177,12 +179,14 @@ class PaymentService {
   }
 
   // 支付宝异步回调处理
-  async handleNotify(params) {
+  async handleNotify(params, ctx = {}) {
+    const { ip } = ctx;
     // 验签
     const alipaySdk = getAlipaySdk();
     const verified = alipaySdk.checkNotifySignV2(params);
     if (!verified) {
       console.warn('[PaymentNotify] 验签失败');
+      business.error('payment.callback', { reason: '验签失败', ip });
       return false;
     }
 
@@ -194,6 +198,7 @@ class PaymentService {
     const order = await paymentRepo.findOne({ where: { orderNo } });
     if (!order) {
       console.warn('[PaymentNotify] 订单不存在:', orderNo);
+      business.warn('payment.callback', { orderNo, reason: '订单不存在', ip });
       return false;
     }
 
@@ -204,7 +209,7 @@ class PaymentService {
 
     // 支付成功
     if (tradeStatus === 'TRADE_SUCCESS' || tradeStatus === 'TRADE_FINISHED') {
-      await this.processPaymentSuccess(order, tradeNo, params);
+      await this.processPaymentSuccess(order, tradeNo, params, ctx);
     }
 
     return true;
@@ -285,11 +290,12 @@ class PaymentService {
   }
 
   // 支付成功处理：区分普通商品和接码服务
-  async processPaymentSuccess(order, tradeNo, notifyData) {
+  async processPaymentSuccess(order, tradeNo, notifyData, ctx = {}) {
+    const { ip } = ctx;
     const paymentRepo = this.getPaymentOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
 
-    // 判断是否为接码服务支付：cardKeyId 有值但 cdKey 为空（普通商品支付成功后才分配卡密）
+    // 判断是否为接码服务支付：cardKeyId 有值但 cdK 为空（普通商品支付成功后才分配卡密）
     const isSmsPayment = !!(order.cardKeyId && !order.cdKey);
 
     const updateData = {
@@ -301,6 +307,15 @@ class PaymentService {
 
     await paymentRepo.update(order.id, updateData);
     console.log(`[Payment] 订单 ${order.orderNo} 支付成功（${isSmsPayment ? '接码服务' : '普通商品'}）`);
+    business.success('payment.alipay', {
+      orderNo: order.orderNo,
+      tradeNo,
+      amount: order.amount,
+      type: isSmsPayment ? '接码服务' : '普通商品',
+      userId: order.userId || null,
+      ip: ip || null,
+      payMethod: 'alipay',
+    });
 
     if (isSmsPayment) {
       // 接码服务支付成功：将原 Order 的 status 改为 completed，允许再次接码（不新建订单）
@@ -316,10 +331,15 @@ class PaymentService {
           if (originalOrder) {
             await orderRepo.update(originalOrder.id, { status: 'completed', completedAt: new Date() });
             console.log(`[Payment] 接码服务支付成功，Order #${originalOrder.id} status→completed`);
+            business.success('payment.sms', {
+              orderNo: order.orderNo,
+              ip: ip || null,
+            });
           }
         }
       } catch (e) {
         console.warn('[Payment] 更新接码订单状态失败:', e.message);
+        system.warn('更新接码订单状态失败', { error: e.message });
       }
     } else {
       // 普通商品支付：使用事务+行锁分配卡密（防止并发超卖）
@@ -333,14 +353,12 @@ class PaymentService {
 
           if (!cardKey) {
             // 无可用卡密：记录异常日志，便于客服处理退款
-            const logger = require('../logger');
-            logger.error('支付成功但无可用卡密', {
+            business.error('payment.allocate', {
               orderNo: order.orderNo,
-              productId: order.productId,
-              productName: order.productName,
               amount: order.amount,
               tradeNo: tradeNo,
-              contact: order.contact,
+              userId: order.userId || null,
+              ip: ip || null,
               severity: 'HIGH',
               actionRequired: '需要人工退款',
             });
@@ -358,6 +376,16 @@ class PaymentService {
           });
 
           console.log(`[Payment] 订单 ${order.orderNo} 分配卡密 ${cardKey.code}`);
+          business.success('cardkey.allocate', {
+            orderNo: order.orderNo,
+            cardKeyId: cardKey.id,
+            productId: order.productId,
+            productName: order.productName || null,
+            amount: order.amount || null,
+            userId: order.userId || null,
+            contact: order.contact || null,
+            ip: ip || null,
+          });
 
           // 同步创建 Order 记录（在事务内执行，保证一致性）
           const orderRepo = transactionalEntityManager.getRepository(Order);
@@ -385,6 +413,14 @@ class PaymentService {
               completedAt: new Date(),
             }));
             console.log(`[Payment] 已同步创建 Order 记录，关联支付单 ${order.orderNo}`);
+            business.success('order.create', {
+              orderNo: order.orderNo,
+              payMethod: 'alipay',
+              tradeNo,
+              amount: order.amount || null,
+              userId: order.userId || null,
+              ip: ip || null,
+            });
           }
         });
 
@@ -394,10 +430,12 @@ class PaymentService {
           await productRepo.increment({ id: order.productId }, 'sales', 1);
         } catch (e) {
           console.warn('[Payment] 更新商品销量失败:', e.message);
+          system.warn('更新商品销量失败', { error: e.message, productId: order.productId });
         }
       } catch (error) {
         // 事务失败或无卡密
         console.error('[Payment] 分配卡密失败:', error.message);
+        system.error('分配卡密失败', { error: error.message, orderNo: order.orderNo });
 
         // 更新订单状态为异常，便于后续处理
         await paymentRepo.update(order.id, { status: 'failed' });

@@ -3,6 +3,7 @@ const { body, query, validationResult } = require('express-validator');
 const paymentService = require('../services/paymentService');
 const { optionalAuth } = require('../middleware/auth');
 const { payment: paymentLimiter } = require('../middleware/rateLimiter');
+const { business, system } = require('../logger');
 
 const router = express.Router();
 
@@ -33,6 +34,7 @@ router.post('/create', paymentLimiter, [
     // 安全检测：前端如果传了金额参数，记录警告但不阻止（向后兼容）
     if (frontendAmount !== undefined) {
       console.warn(`[Security] 检测到前端传递金额参数: productId=${productId}, frontendAmount=${frontendAmount}, ip=${req.ip}`);
+      system.warn('前端传递金额参数', { productId, frontendAmount, ip: req.ip });
     }
 
     const result = await paymentService.createPayment(parseInt(productId), contact, req.userId || null);
@@ -63,6 +65,7 @@ router.post('/create-sms', paymentLimiter, [
     // 安全检测：前端如果传了金额参数，记录警告但不阻止（向后兼容）
     if (frontendAmount !== undefined) {
       console.warn(`[Security] 检测到前端传递金额参数: cardKeyId=${cardKeyId}, productId=${productId}, frontendAmount=${frontendAmount}, ip=${req.ip}`);
+      system.warn('前端传递金额参数', { cardKeyId, productId, frontendAmount, ip: req.ip });
     }
 
     const result = await paymentService.createSmsPayment(
@@ -135,7 +138,7 @@ router.post('/update-contact', [
 router.post('/notify', async (req, res) => {
   try {
     const params = req.body;
-    const success = await paymentService.handleNotify(params);
+    const success = await paymentService.handleNotify(params, { ip: req.ip });
     if (success) {
       res.send('success'); // 支付宝要求返回 success
     } else {
@@ -143,6 +146,7 @@ router.post('/notify', async (req, res) => {
     }
   } catch (error) {
     console.error('[PaymentNotify] 处理失败:', error.message);
+    system.error('支付回调处理失败', { error: error.message });
     res.status(500).send('fail');
   }
 });

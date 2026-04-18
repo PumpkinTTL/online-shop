@@ -4,6 +4,7 @@ const dataSource = require('../config/database');
 const Product = require('../entities/Product');
 const { optionalAuth } = require('../middleware/auth');
 const { pickupVerify, pickupRedeem, pickup } = require('../middleware/rateLimiter');
+const { action, system } = require('../logger');
 
 const router = express.Router();
 
@@ -54,9 +55,10 @@ router.post('/redeem', pickupRedeem, optionalAuth, async (req, res) => {
         contact: contact || '',
         phone: '',
         verifyCode: '',
-      });
+      }, { ip: req.ip });
     } catch (orderErr) {
       console.warn('[Redeem] 写入订单失败:', orderErr.message);
+      system.warn('兑换写入订单失败', { error: orderErr.message, code: code.trim() });
     }
 
     res.json({
@@ -172,7 +174,7 @@ router.post('/confirm', pickup, optionalAuth, async (req, res) => {
       contact: contact.trim(),
       phone: phone.trim(),
       verifyCode: verifyCode || '',
-    });
+    }, { ip: req.ip });
 
     res.json({
       orderNo: order.orderNo,
@@ -262,6 +264,7 @@ router.post('/iscode/get-verify-code', pickup, async (req, res) => {
       cardKeyId || null,
       productId || null,
       req.ip,
+      { ip: req.ip },
     );
     res.json(result);
   } catch (error) {

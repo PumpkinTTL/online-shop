@@ -2,9 +2,16 @@ const winston = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
 
-const { customFormat, consoleFormat } = require('./config/formats');
+// 自定义日志级别：error > warn > success > info > debug
+const customLevels = {
+  error:   0,
+  warn:    1,
+  success: 2,
+  info:    3,
+  debug:   4,
+};
 
-// 日志配置
+// 日志通用配置
 const LOG_CONFIG = {
   level: process.env.LOG_LEVEL || 'info',
   dirname: path.join(__dirname, '../logs'),
@@ -19,9 +26,7 @@ const sensitiveFields = ['password', 'token', 'secret', 'authorization', 'apiKey
 
 function maskSensitiveData(obj) {
   if (!obj || typeof obj !== 'object') return obj;
-
   const masked = Array.isArray(obj) ? [...obj] : { ...obj };
-
   for (const key in masked) {
     if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
       masked[key] = '***MASKED***';
@@ -29,9 +34,29 @@ function maskSensitiveData(obj) {
       masked[key] = maskSensitiveData(masked[key]);
     }
   }
-
   return masked;
 }
+
+// 统一日志格式
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.splat(),
+  winston.format.json()
+);
+
+// 控制台格式（开发环境）
+const consoleFormat = winston.format.combine(
+  winston.format.colorize({ colors: { error: 'red', warn: 'yellow', success: 'green', info: 'blue', debug: 'gray' } }),
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.printf(({ timestamp, level, message, ...meta }) => {
+    let msg = `${timestamp} [${level}]: ${message}`;
+    if (Object.keys(meta).length > 0) {
+      msg += ` ${JSON.stringify(meta)}`;
+    }
+    return msg;
+  })
+);
 
 // 创建日志传输器
 function createTransport(filename, options = {}) {
@@ -41,110 +66,86 @@ function createTransport(filename, options = {}) {
     maxSize: LOG_CONFIG.maxSize,
     maxFiles: LOG_CONFIG.maxFiles,
     zippedArchive: LOG_CONFIG.zippedArchive,
-    format: customFormat,
+    format: logFormat,
     ...options,
   });
 }
 
-// 主 Logger
-const logger = winston.createLogger({
+// 控制台传输器
+const consoleTransport = new winston.transports.Console({
+  format: consoleFormat,
+  silent: process.env.NODE_ENV === 'production',
+});
+
+// ========== access 日志（请求访问） ==========
+const access = winston.createLogger({
+  levels: customLevels,
   level: LOG_CONFIG.level,
-  format: customFormat,
+  format: logFormat,
   transports: [
-    // 控制台输出（开发环境）
-    new winston.transports.Console({
-      format: consoleFormat,
-      silent: process.env.NODE_ENV === 'production',
-    }),
-
-    // 访问日志
-    createTransport('access/access-%DATE%.log', {
-      level: 'http',
-    }),
-
-    // 错误日志
-    createTransport('error/error-%DATE%.log', {
-      level: 'error',
-    }),
-
-    // 所有日志
-    createTransport('combined/combined-%DATE%.log'),
+    consoleTransport,
+    createTransport('access/access-%DATE%.log'),
   ],
+});
 
-  // 异常处理
+// ========== business 日志（金钱业务：订单/支付/充值/退款） ==========
+const business = winston.createLogger({
+  levels: customLevels,
+  level: LOG_CONFIG.level,
+  format: logFormat,
+  transports: [
+    consoleTransport,
+    createTransport('business/business-%DATE%.log'),
+  ],
+});
+
+// ========== action 日志（用户操作：登录/注册/兑换卡密/管理员操作等） ==========
+const action = winston.createLogger({
+  levels: customLevels,
+  level: LOG_CONFIG.level,
+  format: logFormat,
+  transports: [
+    consoleTransport,
+    createTransport('action/action-%DATE%.log'),
+  ],
+});
+
+// ========== system 日志（系统状态：启停/异常/超时/数据库等） ==========
+const system = winston.createLogger({
+  levels: customLevels,
+  level: LOG_CONFIG.level,
+  format: logFormat,
+  transports: [
+    consoleTransport,
+    createTransport('system/system-%DATE%.log'),
+  ],
+  // 未捕获异常 → system
   exceptionHandlers: [
-    createTransport('exceptions/exceptions-%DATE%.log'),
-    new winston.transports.Console({
-      format: consoleFormat,
-    }),
+    createTransport('system/system-%DATE%.log'),
+    consoleTransport,
   ],
-
-  // 未处理的 Promise rejection
+  // 未处理的 Promise rejection → system
   rejectionHandlers: [
-    createTransport('rejections/rejections-%DATE%.log'),
-    new winston.transports.Console({
-      format: consoleFormat,
-    }),
+    createTransport('system/system-%DATE%.log'),
+    consoleTransport,
   ],
 });
 
-// 业务日志（记录到特定文件）
-const businessLogger = winston.createLogger({
-  level: 'info',
-  format: customFormat,
-  transports: [
-    createTransport('business/order-%DATE%.log', {
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
-    }),
-  ],
-});
-
-// 创建子logger
-function createChildLogger(context) {
-  const childLogger = logger.child({ context });
-
+// 为每个 logger 添加脱敏包装
+function wrapLogger(logr) {
   return {
-    info: (message, meta = {}) => childLogger.info(message, maskSensitiveData(meta)),
-    warn: (message, meta = {}) => childLogger.warn(message, maskSensitiveData(meta)),
-    error: (message, meta = {}) => childLogger.error(message, maskSensitiveData(meta)),
-    debug: (message, meta = {}) => childLogger.debug(message, maskSensitiveData(meta)),
+    error:   (message, meta = {}) => logr.error(message, maskSensitiveData(meta)),
+    warn:    (message, meta = {}) => logr.warn(message, maskSensitiveData(meta)),
+    success: (message, meta = {}) => logr.success(message, maskSensitiveData(meta)),
+    info:    (message, meta = {}) => logr.info(message, maskSensitiveData(meta)),
+    debug:   (message, meta = {}) => logr.debug(message, maskSensitiveData(meta)),
   };
 }
 
-// 订单日志
-const orderLogger = createChildLogger('order');
-
-// 支付日志
-const paymentLogger = createChildLogger('payment');
-
-// 用户日志
-const userLogger = createChildLogger('user');
-
-// 管理员日志
-const adminLogger = createChildLogger('admin');
-
 module.exports = {
-  // 主logger
-  logger,
-
-  // 业务logger
-  business: businessLogger,
-  order: orderLogger,
-  payment: paymentLogger,
-  user: userLogger,
-  admin: adminLogger,
-
-  // 辅助函数
-  createChildLogger,
+  access:   wrapLogger(access),
+  business: wrapLogger(business),
+  action:   wrapLogger(action),
+  system:   wrapLogger(system),
   maskSensitiveData,
-
-  // 快捷方法
-  info: (message, meta) => logger.info(message, maskSensitiveData(meta)),
-  warn: (message, meta) => logger.warn(message, maskSensitiveData(meta)),
-  error: (message, meta) => logger.error(message, maskSensitiveData(meta)),
-  debug: (message, meta) => logger.debug(message, maskSensitiveData(meta)),
-  http: (message, meta) => logger.http(message, maskSensitiveData(meta)),
 };

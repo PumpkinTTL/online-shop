@@ -1001,11 +1001,9 @@
                   <div style="display:flex;align-items:center;gap:12px;">
                     <el-icon :size="28" :color="getLogTypeColor(type)">
                       <document v-if="type === 'access'"></document>
-                      <warning v-else-if="type === 'error'"></warning>
-                      <briefcase v-else-if="type === 'business'"></briefcase>
-                      <files v-else-if="type === 'combined'"></files>
-                      <circle-close v-else-if="type === 'exceptions'"></circle-close>
-                      <warning v-else-if="type === 'rejections'"></warning>
+                      <coin v-else-if="type === 'business'"></coin>
+                      <user v-else-if="type === 'action'"></user>
+                      <monitor v-else-if="type === 'system'"></monitor>
                       <document v-else></document>
                     </el-icon>
                     <div style="flex:1;">
@@ -1043,8 +1041,8 @@
                       @change="queryLogs(false)">
                       <el-option label="错误" value="error"></el-option>
                       <el-option label="警告" value="warn"></el-option>
+                      <el-option label="成功" value="success"></el-option>
                       <el-option label="信息" value="info"></el-option>
-                      <el-option label="HTTP" value="http"></el-option>
                       <el-option label="调试" value="debug"></el-option>
                     </el-select>
                     <el-input v-model="logQueryForm.keyword" placeholder="搜索关键词" clearable style="width:160px"
@@ -1077,28 +1075,45 @@
                   <template #default="{ row }">
                     <div style="padding:12px;background:#F5F7FA;margin:0 12px 12px 12px;border-radius:6px;">
                       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px;">
+                        <!-- 已知字段的友好展示 -->
                         <div v-if="row.url"><strong>完整URL:</strong> {{ row.url }}</div>
                         <div v-if="row.ip"><strong>IP地址:</strong> {{ row.ip }}</div>
-                        <div v-if="row.userAgent"><strong>请求头:</strong> {{ row.userAgent }}</div>
+                        <div v-if="row.userAgent"><strong>UserAgent:</strong> <span style="word-break:break-all">{{ row.userAgent }}</span></div>
                         <div v-if="row.query && Object.keys(row.query).length"><strong>查询参数:</strong>
                           <code>{{ JSON.stringify(row.query) }}</code>
                         </div>
                         <div v-if="row.contentLength"><strong>响应大小:</strong> {{ row.contentLength }} bytes</div>
+                        <div v-if="row.responseTime"><strong>响应耗时:</strong> {{ row.responseTime }}ms</div>
                         <div v-if="row.userId"><strong>用户ID:</strong> {{ row.userId }}</div>
-                        <div v-if="row.adminId"><strong>管理员ID:</strong> {{ row.adminId }}</div>
-                        <div v-if="row.productId"><strong>商品ID:</strong> {{ row.productId }}</div>
-                        <div v-if="row.orderId"><strong>订单ID:</strong> {{ row.orderId }}</div>
-                        <div v-if="row.stack"><strong>堆栈:</strong>
-                          <pre
-                            style="margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;">{{ row.stack }}</pre>
+                        <div v-if="row.username"><strong>操作者:</strong> {{ row.username }}</div>
+                        <div v-if="row.orderNo"><strong>订单号:</strong> <code>{{ row.orderNo }}</code></div>
+                        <div v-if="row.tradeNo"><strong>交易流水号:</strong> <code>{{ row.tradeNo }}</code></div>
+                        <div v-if="row.amount != null"><strong>金额:</strong> <span style="color:#EF4444;font-weight:600">¥{{ row.amount }}</span></div>
+                        <div v-if="row.payMethod"><strong>支付方式:</strong> {{ row.payMethod }}</div>
+                        <div v-if="row.cardKeyId"><strong>卡密ID:</strong> {{ row.cardKeyId }}</div>
+                        <div v-if="row.type"><strong>类型:</strong> {{ row.type }}</div>
+                        <div v-if="row.reason"><strong>原因:</strong> <span style="color:#F56C6C">{{ row.reason }}</span></div>
+                        <div v-if="row.stack"><strong>堆栈信息:</strong>
+                          <pre style="margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;color:#E74C3C">{{ row.stack }}</pre>
                         </div>
                         <div v-if="row.code"><strong>错误码:</strong> {{ row.code }}</div>
                         <div v-if="row.action"><strong>操作:</strong> {{ row.action }}</div>
-                        <div v-if="row.target"><strong>目标:</strong> {{ row.target }}</div>
+                        <div v-if="row.target"><strong>目标对象:</strong> {{ row.target }}</div>
+                        <div v-if="row.event"><strong>事件:</strong> {{ row.event }}</div>
                         <div v-if="row.details"><strong>详情:</strong>
-                          <pre
-                            style="margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;">{{ typeof row.details === 'object' ? JSON.stringify(row.details, null, 2) : row.details }}</pre>
+                          <pre style="margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;">{{ typeof row.details === 'object' ? JSON.stringify(row.details, null, 2) : row.details }}</pre>
                         </div>
+                        <!-- 动态展示未匹配的其余字段 -->
+                        <template v-for="(val, key) in row" :key="key">
+                          <div v-if="!['timestamp','level','message','method','statusCode','url','ip','userAgent','query','contentLength','responseTime','userId','username','orderNo','tradeNo','amount','payMethod','cardKeyId','type','reason','stack','code','action','target','event','details'].includes(key) && val !== null && val !== undefined && val !== '' && typeof val !== 'object'">
+                            <strong>{{ key }}:</strong> {{ typeof val === 'string' && val.length > 100 ? val.substring(0,100)+'...' : val }}
+                          </div>
+                          <div v-if="!['timestamp','level','message','method','statusCode','url','ip','userAgent','query','contentLength','responseTime','userId','username','orderNo','tradeNo','amount','payMethod','cardKeyId','type','reason','stack','code','action','target','event','details'].includes(key) && val !== null && val !== undefined && typeof val === 'object' && Object.keys(val).length > 0"
+                            style="grid-column: span 2;">
+                            <strong>{{ key }}:</strong>
+                            <pre style="margin:2px 0 0 0;white-space:pre-wrap;word-break:break-all;font-size:11px;background:#fff;padding:6px;border-radius:4px;border:1px solid #E4E7ED;">{{ JSON.stringify(val, null, 2) }}</pre>
+                          </div>
+                        </template>
                       </div>
                     </div>
                   </template>
@@ -1117,14 +1132,15 @@
                 </el-table-column>
                 <el-table-column label="方法" width="70" align="center">
                   <template #default="{ row }">
-                    <el-tag
+                    <el-tag v-if="row.method"
                       :type="row.method === 'GET' ? 'success' : row.method === 'POST' ? 'primary' : row.method === 'DELETE' ? 'danger' : 'info'"
                       size="small">
-                      {{ row.method || '-' }}
+                      {{ row.method }}
                     </el-tag>
+                    <span v-else style="color:#909399;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column label="状态码" width="90" align="center">
+                <el-table-column label="状态码" width="80" align="center">
                   <template #default="{ row }">
                     <el-tag v-if="row.statusCode"
                       :type="row.statusCode < 300 ? 'success' : row.statusCode < 400 ? 'warning' : 'danger'"
@@ -1134,22 +1150,60 @@
                     <span v-else style="color:#909399;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column label="响应时间" width="90" align="center">
+                <el-table-column label="响应时间" width="85" align="center">
                   <template #default="{ row }">
-                    <span
+                    <span v-if="row.responseTime"
                       :style="{color: row.responseTime > 1000 ? '#EF4444' : row.responseTime > 500 ? '#F59E0B' : '#22C55E'}">
-                      {{ row.responseTime ? row.responseTime + 'ms' : '-' }}
+                      {{ row.responseTime + 'ms' }}
                     </span>
+                    <span v-else style="color:#909399;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column label="消息/内容" min-width="200" show-overflow-tooltip>
+                <el-table-column label="操作/消息" min-width="140" show-overflow-tooltip>
                   <template #default="{ row }">
-                    <span v-if="row.message">{{ row.message }}</span>
+                    <span v-if="currentLogType === 'business' || currentLogType === 'action'" style="font-weight:600;color:#303133">{{ row.message || '-' }}</span>
+                    <span v-else-if="row.message">{{ row.message }}</span>
                     <span v-else-if="row.error" style="color:#F56C6C;">{{ row.error }}</span>
                     <span v-else-if="row.event">{{ row.event }}</span>
                     <span v-else-if="row.url" style="color:#606266;">{{ row.url }}</span>
-                    <code v-else
-                      style="color:#909399;font-size:11px;">{{ JSON.stringify(row).substring(0, 100) }}...</code>
+                    <code v-else style="color:#909399;font-size:11px;">{{ JSON.stringify(row).substring(0, 100) }}...</code>
+                  </template>
+                </el-table-column>
+                <el-table-column label="摘要" min-width="180" show-overflow-tooltip>
+                  <template #default="{ row }">
+                    <!-- 业务日志摘要 -->
+                    <template v-if="currentLogType === 'business'">
+                      <span v-if="row.orderNo" style="color:#606266">订单: <code style="font-size:11px">{{ row.orderNo }}</code></span>
+                      <span v-else-if="row.tradeNo" style="color:#606266">交易: <code style="font-size:11px">{{ row.tradeNo }}</code></span>
+                      <span v-else-if="row.cardKeyId">卡密ID: {{ row.cardKeyId }}</span>
+                      <span v-else-if="row.amount != null"><span style="color:#EF4444;font-weight:600">¥{{ row.amount }}</span><span v-if="row.type"> · {{ row.type }}</span><span v-if="row.payMethod"> · {{ row.payMethod }}</span></span>
+                      <span v-else-if="row.reason" style="color:#F56C6C">{{ row.reason }}</span>
+                      <span v-else style="color:#94A3B8;">-</span>
+                    </template>
+                    <!-- 操作日志摘要 -->
+                    <template v-else-if="currentLogType === 'action'">
+                      <span v-if="row.username" style="color:#606266">{{ row.username }}</span>
+                      <span v-if="row.username && (row.target || row.action)"> · </span>
+                      <span v-if="row.target">{{ row.target }}</span>
+                      <span v-if="row.target && row.action"> / </span>
+                      <span v-if="row.action">{{ row.action }}</span>
+                      <span v-if="row.reason" style="color:#F56C6C"> ({{ row.reason }})</span>
+                      <span v-if="!(row.username || row.target || row.action || row.reason)" style="color:#94A3B8">-</span>
+                    </template>
+                    <!-- 访问日志摘要 -->
+                    <template v-else-if="currentLogType === 'access'">
+                      <span v-if="row.method"><el-tag :type="row.method==='GET'?'success':row.method==='POST'?'primary':'info'" size="small">{{ row.method }}</el-tag></span>
+                      <span v-if="row.url" style="color:#606266;margin-left:4px">{{ row.url.substring(0, 60) }}{{ row.url.length > 60 ? '...' : '' }}</span>
+                      <span v-else style="color:#94A3B8">-</span>
+                    </template>
+                    <!-- 系统日志摘要 -->
+                    <template v-else>
+                      <span v-if="row.event" style="font-weight:500">{{ row.event }}</span>
+                      <span v-if="row.message" style="color:#606266;margin-left:4px">{{ row.message }}</span>
+                      <span v-if="row.error" style="color:#F56C6C;margin-left:4px">{{ row.error }}</span>
+                      <span v-if="row.stack" style="color:#E74C3C;margin-left:4px">(有堆栈)</span>
+                      <span v-if="!(!row.event&&!row.message&&!row.error) && !row.event && !row.message && !row.error" style="color:#94A3B8">-</span>
+                    </template>
                   </template>
                 </el-table-column>
               </el-table>

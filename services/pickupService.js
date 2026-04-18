@@ -4,6 +4,7 @@ const Order = require('../entities/Order');
 const Product = require('../entities/Product');
 const SmsRecord = require('../entities/SmsRecord');
 const axios = require('axios');
+const { action, business, system } = require('../logger');
 
 // MAAPI 配置
 const MAAPI_BASE = 'http://api.ejiema.com/zc/data.php';
@@ -159,6 +160,7 @@ class PickupService {
       await axios.get(url, { timeout: 10000 });
     } catch (e) {
       console.warn('释放号码失败:', e.message);
+      system.warn('释放号码失败', { phone, error: e.message });
     }
     // 更新接码记录状态
     try {
@@ -181,6 +183,7 @@ class PickupService {
       await axios.get(url, { timeout: 10000 });
     } catch (e) {
       console.warn('拉黑号码失败:', e.message);
+      system.warn('拉黑号码失败', { phone, error: e.message });
     }
     // 更新接码记录状态
     try {
@@ -221,8 +224,9 @@ class PickupService {
   }
 
   // 创建订单
-  async createOrder(data) {
+  async createOrder(data, ctx = {}) {
     const { userId, cardKeyId, productId, contact, phone, verifyCode, amount, payMethod, tradeNo } = data;
+    const { ip } = ctx;
     const orderRepo = this.getOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
 
@@ -234,6 +238,7 @@ class PickupService {
       });
       if (existingOrder) {
         console.log(`[PickupService] cardKeyId=${cardKeyId} 已有订单 #${existingOrder.id}，跳过重复创建`);
+        action.info('order.duplicate', { cardKeyId, ip: ip || null });
         return existingOrder;
       }
     }
@@ -255,6 +260,14 @@ class PickupService {
 
     const savedOrder = await orderRepo.save(order);
 
+    // 记录业务日志
+    business.success('order.create', {
+      orderNo: savedOrder.orderNo,
+      amount: amount || null,
+      userId: userId || null,
+      ip: ip || null,
+    });
+
     // 标记卡密为已使用
     if (cardKeyId) {
       await cardKeyRepo.update(cardKeyId, {
@@ -270,6 +283,7 @@ class PickupService {
       await productRepo.increment({ id: productId }, 'sales', 1);
     } catch (e) {
       console.warn('[PickupService] 更新商品销量失败:', e.message);
+      system.warn('更新商品销量失败', { error: e.message, productId });
     }
 
     return savedOrder;
@@ -363,7 +377,7 @@ class PickupService {
   // ==================== isCode 商品专用方法 ====================
 
   // isCode 商品：获取验证码（关联卡密和商品，写入 iscode 来源的接码记录）
-  async iscodeGetVerifyCode(phone, cardKeyId, productId, ip) {
+  async iscodeGetVerifyCode(phone, cardKeyId, productId, ip, ctx = {}) {
     if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置');
     if (!phone) throw new Error('手机号不能为空');
 
@@ -465,9 +479,11 @@ class PickupService {
           if (order) {
             await orderRepo.update(order.id, { status: 'pending', completedAt: null });
             console.log(`[PickupService] 接码成功，Order #${order.id} status→pending`);
+            action.success('sms.iscode', { cardKeyId, ip });
           }
         } catch (e) {
           console.warn('[PickupService] 更新订单状态失败:', e.message);
+          system.warn('更新订单状态失败', { error: e.message, cardKeyId });
         }
       }
     }

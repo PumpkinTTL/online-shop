@@ -4,7 +4,7 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const dataSource = require('../config/database');
 const Admin = require('../entities/Admin');
-const logger = require('../logger');
+const { system } = require('../logger');
 
 const router = express.Router();
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
@@ -46,31 +46,27 @@ const auth = async (req, res, next) => {
   }
 };
 
-// 日志目录配置
+// 日志目录配置（4个模块）
 const LOG_DIRS = {
-  access: path.join(__dirname, '../logs/access'),
-  error: path.join(__dirname, '../logs/error'),
+  access:   path.join(__dirname, '../logs/access'),
   business: path.join(__dirname, '../logs/business'),
-  combined: path.join(__dirname, '../logs/combined'),
-  exceptions: path.join(__dirname, '../logs/exceptions'),
-  rejections: path.join(__dirname, '../logs/rejections'),
+  action:   path.join(__dirname, '../logs/action'),
+  system:   path.join(__dirname, '../logs/system'),
 };
 
 // 读取日志文件列表
 router.get('/files', auth, async (req, res) => {
   try {
-    const { type = 'combined' } = req.query;
-    const logDir = LOG_DIRS[type] || LOG_DIRS.combined;
+    const { type = 'system' } = req.query;
+    const logDir = LOG_DIRS[type] || LOG_DIRS.system;
 
     const files = await fs.readdir(logDir);
     const logFiles = files
       .filter(f => f.endsWith('.log'))
       .map(f => {
-        const filePath = path.join(logDir, f);
         return {
           filename: f,
           type: type,
-          // 从文件名提取日期
           date: f.match(/(\d{4}-\d{2}-\d{2})/)?.[1] || null,
         };
       })
@@ -78,7 +74,7 @@ router.get('/files', auth, async (req, res) => {
 
     res.json(logFiles);
   } catch (error) {
-    logger.error('获取日志文件列表失败', { error: error.message });
+    system.error('获取日志文件列表失败', { error: error.message });
     res.status(500).json({ error: '获取日志文件列表失败' });
   }
 });
@@ -86,8 +82,8 @@ router.get('/files', auth, async (req, res) => {
 // 读取日志文件内容
 router.get('/content', auth, async (req, res) => {
   try {
-    const { type = 'combined', filename, limit = 100, level, keyword } = req.query;
-    const logDir = LOG_DIRS[type] || LOG_DIRS.combined;
+    const { type = 'system', filename, limit = 100, level, keyword } = req.query;
+    const logDir = LOG_DIRS[type] || LOG_DIRS.system;
     const filePath = path.join(logDir, filename);
 
     // 验证文件路径，防止目录遍历攻击
@@ -99,15 +95,14 @@ router.get('/content', auth, async (req, res) => {
     const content = await fs.readFile(filePath, 'utf8');
     const lines = content.split('\n').filter(line => line.trim());
 
-    // 解析日志并统一字段，避免前端渲染时出现空时间/空消息
     let logs = lines.map(line => {
       try {
         const parsed = JSON.parse(line);
         return {
           ...parsed,
-          timestamp: parsed.timestamp || parsed.time || parsed.createdAt || parsed.date || '',
-          level: parsed.level || parsed.severity || 'info',
-          message: parsed.message || parsed.msg || parsed.event || parsed.url || line,
+          timestamp: parsed.timestamp || '',
+          level: parsed.level || 'info',
+          message: parsed.message || line,
         };
       } catch {
         return {
@@ -141,7 +136,7 @@ router.get('/content', auth, async (req, res) => {
       logs,
     });
   } catch (error) {
-    logger.error('读取日志文件失败', { error: error.message });
+    system.error('读取日志文件失败', { error: error.message });
     res.status(500).json({ error: '读取日志文件失败' });
   }
 });
@@ -164,7 +159,6 @@ router.get('/stats', auth, async (req, res) => {
           const stat = await fs.stat(filePath);
           totalSize += stat.size;
 
-          // 计算行数（只读取前1000行估算）
           try {
             const content = await fs.readFile(filePath, 'utf8');
             totalLines += content.split('\n').length;
@@ -184,7 +178,7 @@ router.get('/stats', auth, async (req, res) => {
 
     res.json(stats);
   } catch (error) {
-    logger.error('获取日志统计失败', { error: error.message });
+    system.error('获取日志统计失败', { error: error.message });
     res.status(500).json({ error: '获取日志统计失败' });
   }
 });
@@ -192,8 +186,8 @@ router.get('/stats', auth, async (req, res) => {
 // 清理旧日志
 router.post('/cleanup', auth, async (req, res) => {
   try {
-    const { type = 'combined', days = 30 } = req.body;
-    const logDir = LOG_DIRS[type] || LOG_DIRS.combined;
+    const { type = 'system', days = 30 } = req.body;
+    const logDir = LOG_DIRS[type] || LOG_DIRS.system;
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
@@ -211,16 +205,17 @@ router.post('/cleanup', auth, async (req, res) => {
         const filePath = path.join(logDir, file);
         await fs.unlink(filePath);
         deletedCount++;
-        logger.admin.info('清理旧日志', { type, file, days });
       }
     }
+
+    system.info('清理旧日志', { type, days, deletedCount });
 
     res.json({
       message: `已清理 ${deletedCount} 个日志文件`,
       deletedCount,
     });
   } catch (error) {
-    logger.error('清理日志失败', { error: error.message });
+    system.error('清理日志失败', { error: error.message });
     res.status(500).json({ error: '清理日志失败' });
   }
 });

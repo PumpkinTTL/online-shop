@@ -20,7 +20,7 @@ const limiters = require('./middleware/rateLimiter');
 
 // 日志系统
 const { requestLogger, errorLogger } = require('./logger/middleware');
-const logger = require('./logger');
+const { system } = require('./logger');
 
 const app = express();
 const PORT = process.env.PORT || 5100;
@@ -102,7 +102,7 @@ app.use((err, req, res, next) => {
   const message = err.message || '服务器内部错误';
 
   // 记录错误
-  logger.error('全局错误处理', {
+  system.error('全局错误处理', {
     error: message,
     stack: err.stack,
     url: req.originalUrl,

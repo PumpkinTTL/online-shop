@@ -809,11 +809,11 @@ const app = createApp({
     // ===== 日志管理 =====
     var logStats = ref({});
     var logLoading = ref(false);
-    var currentLogType = ref('combined');
+    var currentLogType = ref('system');
     var logFiles = ref([]);
     var logQueryResult = ref({ total: 0, filtered: 0, logs: [] });
     var logQueryForm = ref({
-      type: 'combined',
+      type: 'system',
       filename: '',
       level: '',
       keyword: '',
@@ -833,28 +833,24 @@ const app = createApp({
     var getLogTypeLabel = function(type) {
       var map = {
         access: '访问日志',
-        error: '错误日志',
         business: '业务日志',
-        combined: '综合日志',
-        exceptions: '异常日志',
-        rejections: '拒绝日志'
+        action: '操作日志',
+        system: '系统日志'
       };
       return map[type] || type;
     };
     var getLogTypeColor = function(type) {
       var map = {
         access: '#409EFF',
-        error: '#F56C6C',
         business: '#E6A23C',
-        combined: '#67C23A',
-        exceptions: '#F59E0B',
-        rejections: '#8B5CF6'
+        action: '#67C23A',
+        system: '#F56C6C'
       };
       return map[type] || '#909399';
     };
     var getLogLevelType = function(level) {
       var value = String(level || 'info').toLowerCase();
-      var map = { error: 'danger', warn: 'warning', warning: 'warning', info: 'info', http: 'primary', debug: 'success' };
+      var map = { error: 'danger', warn: 'warning', warning: 'warning', success: 'success', info: 'info', http: 'primary', debug: 'info' };
       return map[value] || 'info';
     };
     var formatFileSize = function(size) {

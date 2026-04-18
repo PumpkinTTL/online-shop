@@ -1,50 +1,54 @@
-const logger = require('./index');
+const { access, system } = require('./index');
 
-// 请求日志中间件
+// 静态资源跳过（不记录访问日志）
+const SKIP_EXTENSIONS = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.map', '.woff', '.woff2', '.ttf', '.eot'];
+
+function shouldSkip(url) {
+  return SKIP_EXTENSIONS.some(ext => url.endsWith(ext));
+}
+
+// 请求日志中间件 → access
 function requestLogger(req, res, next) {
+  // 跳过静态资源和非 API 请求
+  if (shouldSkip(req.originalUrl || req.url)) {
+    return next();
+  }
+
   const startTime = Date.now();
 
-  // 记录请求信息
   const requestInfo = {
-    method: req.method,
-    url: req.originalUrl || req.url,
     ip: req.ip || req.connection.remoteAddress,
+    userId: req.userId || undefined,
+    adminId: req.admin ? req.admin.id : undefined,
+    method: req.method,
+    path: req.originalUrl || req.url,
     userAgent: req.get('user-agent'),
-    query: req.query,
-    // body会在响应时记录
   };
 
-  // 添加用户信息（如果有）
-  if (req.userId) {
-    requestInfo.userId = req.userId;
-  }
-  if (req.admin) {
-    requestInfo.adminId = req.admin.id;
-  }
-
-  // 监听响应完成事件
   res.on('finish', () => {
     const responseTime = Date.now() - startTime;
+    const status = res.statusCode;
 
-    const responseInfo = {
+    const logData = {
       ...requestInfo,
-      statusCode: res.statusCode,
-      responseTime: responseTime,
-      contentLength: res.get('content-length') || 0,
+      status,
+      time: `${responseTime}ms`,
     };
 
-    // 只记录成功和重定向的请求（避免大量错误日志）
-    if (res.statusCode < 400) {
-      logger.http(`${req.method} ${req.url}`, responseInfo);
+    // 按 HTTP 状态码映射日志级别
+    if (status >= 500) {
+      access.error(`${req.method} ${req.url}`, logData);
+    } else if (status >= 400) {
+      access.warn(`${req.method} ${req.url}`, logData);
     } else {
-      logger.warn(`${req.method} ${req.url} - ${res.statusCode}`, responseInfo);
+      access.success(`${req.method} ${req.url}`, logData);
     }
   });
 
   next();
 }
 
-// 错误日志中间件
+// 错误日志中间件 → system
 function errorLogger(err, req, res, next) {
   const errorInfo = {
     message: err.message,
@@ -55,20 +59,11 @@ function errorLogger(err, req, res, next) {
     statusCode: err.statusCode || 500,
   };
 
-  // 添加用户信息
-  if (req.userId) {
-    errorInfo.userId = req.userId;
-  }
-  if (req.admin) {
-    errorInfo.adminId = req.admin.id;
-  }
+  if (req.userId) errorInfo.userId = req.userId;
+  if (req.admin) errorInfo.adminId = req.admin.id;
+  if (req.body) errorInfo.body = req.body;
 
-  // 添加请求体（敏感信息已在logger中脱敏）
-  if (req.body) {
-    errorInfo.body = req.body;
-  }
-
-  logger.error('请求错误', errorInfo);
+  system.error('请求错误', errorInfo);
 
   next(err);
 }
