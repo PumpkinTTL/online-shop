@@ -8,6 +8,9 @@ const configCache = {
   payment: { windowMs: 60000, maxRequests: 3, enabled: true },
   api: { windowMs: 60000, maxRequests: 20, enabled: true },
   admin: { windowMs: 900000, maxRequests: 10, enabled: true },
+  pickup: { windowMs: 60000, maxRequests: 20, enabled: true },      // 接码接口：20次/分钟
+  pickupVerify: { windowMs: 60000, maxRequests: 5, enabled: true }, // 卡密验证：5次/分钟
+  pickupRedeem: { windowMs: 60000, maxRequests: 3, enabled: true }, // 卡密兑换：3次/分钟
 };
 
 // 创建限速器工厂函数
@@ -41,6 +44,9 @@ const limiters = {
   payment: createLimiter('payment'),
   api: createLimiter('api'),
   admin: createLimiter('admin'),
+  pickup: createLimiter('pickup'),
+  pickupVerify: createLimiter('pickupVerify'),
+  pickupRedeem: createLimiter('pickupRedeem'),
 };
 
 // 创建动态限速中间件（始终使用最新实例）
@@ -82,5 +88,8 @@ module.exports = {
   payment: createDynamicMiddleware('payment'),
   api: createDynamicMiddleware('api'),
   admin: createDynamicMiddleware('admin'),
+  pickup: createDynamicMiddleware('pickup'),
+  pickupVerify: createDynamicMiddleware('pickupVerify'),
+  pickupRedeem: createDynamicMiddleware('pickupRedeem'),
 };
 module.exports.refreshConfigs = refreshConfigs;

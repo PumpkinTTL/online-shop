@@ -3,11 +3,12 @@ const pickupService = require('../services/pickupService');
 const dataSource = require('../config/database');
 const Product = require('../entities/Product');
 const { optionalAuth } = require('../middleware/auth');
+const { pickupVerify, pickupRedeem, pickup } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
-// 验证卡密
-router.post('/verify-card', async (req, res) => {
+// 验证卡密（严格限速：5次/分钟，防止暴力破解）
+router.post('/verify-card', pickupVerify, async (req, res) => {
   try {
     const { code } = req.body;
     if (!code || !code.trim()) {
@@ -25,8 +26,8 @@ router.post('/verify-card', async (req, res) => {
   }
 });
 
-// 兑换卡密 — 验证卡密后返回CDK，并写入订单
-router.post('/redeem', optionalAuth, async (req, res) => {
+// 兑换卡密 — 验证卡密后返回CDK，并写入订单（严格限速：3次/分钟，防止批量盗刷）
+router.post('/redeem', pickupRedeem, optionalAuth, async (req, res) => {
   try {
     const { code, productId, contact } = req.body;
     if (!code || !code.trim()) {
@@ -71,7 +72,7 @@ router.post('/redeem', optionalAuth, async (req, res) => {
 });
 
 // 获取手机号（MAAPI）
-router.post('/get-phone', async (req, res) => {
+router.post('/get-phone', pickup, async (req, res) => {
   try {
     const { cardCode, keyword, phone, cardType } = req.body;
 
@@ -102,7 +103,7 @@ router.post('/get-phone', async (req, res) => {
 });
 
 // 获取验证码（MAAPI，单次查询，前端轮询调用）
-router.post('/get-verify-code', async (req, res) => {
+router.post('/get-verify-code', pickup, async (req, res) => {
   try {
     const { phone, keyword } = req.body;
     if (!phone) {
@@ -131,7 +132,7 @@ router.get('/check-phone-record', async (req, res) => {
 });
 
 // 确认提货 — 创建订单
-router.post('/confirm', optionalAuth, async (req, res) => {
+router.post('/confirm', pickup, optionalAuth, async (req, res) => {
   try {
     const { cardKeyId, productId, contact, phone, verifyCode } = req.body;
 
@@ -184,7 +185,7 @@ router.post('/confirm', optionalAuth, async (req, res) => {
 });
 
 // 释放号码（MAAPI）
-router.post('/release-phone', async (req, res) => {
+router.post('/release-phone', pickup, async (req, res) => {
   try {
     const { phone } = req.body;
     if (!phone) {
@@ -198,7 +199,7 @@ router.post('/release-phone', async (req, res) => {
 });
 
 // 拉黑号码（MAAPI）
-router.post('/block-phone', async (req, res) => {
+router.post('/block-phone', pickup, async (req, res) => {
   try {
     const { phone } = req.body;
     if (!phone) {
@@ -250,7 +251,7 @@ router.get('/orders', async (req, res) => {
 // ==================== isCode 商品专用接口 ====================
 
 // isCode 商品：获取验证码（关联卡密和商品）
-router.post('/iscode/get-verify-code', async (req, res) => {
+router.post('/iscode/get-verify-code', pickup, async (req, res) => {
   try {
     const { phone, cardKeyId, productId } = req.body;
     if (!phone) {
@@ -269,7 +270,7 @@ router.post('/iscode/get-verify-code', async (req, res) => {
 });
 
 // isCode 商品：检查接码状态（按卡密+手机号查询）
-router.get('/iscode/check-status', async (req, res) => {
+router.get('/iscode/check-status', pickup, async (req, res) => {
   try {
     const { phone, cardKeyId } = req.query;
     if (!phone) {
