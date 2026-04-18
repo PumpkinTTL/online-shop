@@ -206,60 +206,65 @@
                   <plus></plus>
                 </el-icon> 添加类别
               </el-button>
-              <el-button type="danger" v-if="selectedCategoryIds.length > 0" @click="handleBatchDeleteCategories">
-                <el-icon>
-                  <delete></delete>
-                </el-icon> {{ '批量删除 (' + selectedCategoryIds.length + ')' }}
-              </el-button>
-              <div style="flex:1"></div>
               <el-button @click="loadCategories"><el-icon>
                   <refresh></refresh>
                 </el-icon> 刷新</el-button>
             </div>
 
-            <el-table :data="categories" v-loading="categoriesLoading" stripe style="width:100%"
-              @selection-change="handleCategorySelectionChange" row-key="id">
-              <el-table-column type="selection" width="45" :reserve-selection="true"></el-table-column>
-              <el-table-column prop="id" label="ID" width="60" sortable></el-table-column>
-              <el-table-column prop="name" label="类别名称" min-width="120" show-overflow-tooltip></el-table-column>
-              <el-table-column label="类别代号" width="120">
-                <template #default="{ row }"><code>{{ row.code }}</code></template>
-              </el-table-column>
-              <el-table-column label="说明" min-width="100" show-overflow-tooltip>
-                <template #default="{ row }">{{ row.description || '-' }}</template>
-              </el-table-column>
-              <el-table-column label="接码" width="240">
-                <template #default="{ row }">
-                  <span v-if="row.smsEnabled === 1">
-                    <el-tag type="success" size="small">已启用</el-tag>
-                    {{ [
-                    row.smsPrice ? '¥' + row.smsPrice : '',
-                    row.smsPaymentName ? row.smsPaymentName : '',
-                    row.smKeyWord ? '关键词: ' + row.smKeyWord : ''
-                    ].filter(Boolean).join(' / ') }}
-                  </span>
-                  <span v-else style="color:#999">未启用</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="sort" label="排序" width="70" sortable></el-table-column>
-              <el-table-column label="状态" width="80">
-                <template #default="{ row }">
-                  <el-tag :type="row.show ? 'success' : 'info'" size="small">
-                    {{ row.show ? '显示' : '隐藏' }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="140" fixed="right">
-                <template #default="{ row }">
-                  <el-button size="small" @click="openCategoryModal(row)">编辑</el-button>
-                  <el-popconfirm title="确定删除该类别吗？" @confirm="handleDeleteCategory(row.id)">
-                    <template #reference>
-                      <el-button size="small" type="danger">删除</el-button>
-                    </template>
-                  </el-popconfirm>
-                </template>
-              </el-table-column>
-            </el-table>
+            <div class="category-table-wrap" v-loading="categoriesLoading">
+              <table class="category-table">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">ID</th>
+                    <th style="width:140px;">类别名称</th>
+                    <th style="width:120px;">类别代号</th>
+                    <th>说明</th>
+                    <th style="width:280px;">接码</th>
+                    <th style="width:80px;">排序</th>
+                    <th style="width:90px;">状态</th>
+                    <th style="width:140px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="!categoriesLoading && categories.length === 0">
+                    <td colspan="8" class="category-table-empty">暂无类别数据</td>
+                  </tr>
+                  <tr v-for="row in categories" :key="row.id">
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.name }}</td>
+                    <td><code>{{ row.code }}</code></td>
+                    <td :title="row.description || '-'">{{ row.description || '-' }}</td>
+                    <td>
+                      <span v-if="row.smsEnabled === 1">
+                        <el-tag type="success" size="small">已启用</el-tag>
+                        {{ [
+                        row.smsPrice ? '¥' + row.smsPrice : '',
+                        row.smsPaymentName ? row.smsPaymentName : '',
+                        row.smKeyWord ? '关键词: ' + row.smKeyWord : ''
+                        ].filter(Boolean).join(' / ') }}
+                      </span>
+                      <span v-else style="color:#999">未启用</span>
+                    </td>
+                    <td>{{ row.sort }}</td>
+                    <td>
+                      <el-tag :type="row.show ? 'success' : 'info'" size="small">
+                        {{ row.show ? '显示' : '隐藏' }}
+                      </el-tag>
+                    </td>
+                    <td>
+                      <div class="category-table-actions">
+                        <el-button size="small" @click="openCategoryModal(row)">编辑</el-button>
+                        <el-popconfirm title="确定删除该类别吗？" @confirm="handleDeleteCategory(row.id)">
+                          <template #reference>
+                            <el-button size="small" type="danger">删除</el-button>
+                          </template>
+                        </el-popconfirm>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             <!-- 类别编辑弹窗 -->
             <el-dialog v-model="categoryModalVisible" :title="categoryForm.id ? '编辑类别' : '添加类别'" width="500px">
@@ -430,7 +435,7 @@
               <div style="flex:1"></div>
               <el-select v-model="cardKeyFilter.productId" placeholder="全部商品" clearable style="width:150px"
                 @change="loadCardKeys">
-                <el-option v-for="p in allProducts" :key="p.id" :label="p.name" :value="p.id"></el-option>
+                <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id"></el-option>
               </el-select>
               <el-select v-model="cardKeyFilter.status" placeholder="全部状态" clearable style="width:140px"
                 @change="loadCardKeys">
@@ -1072,7 +1077,7 @@
       <el-form label-width="100px" label-position="right">
         <el-form-item label="选择商品" required>
           <el-select v-model="cardKeyForm.productId" placeholder="请选择商品" style="width:100%">
-            <el-option v-for="p in allProducts" :key="p.id" :label="getProductLabel(p)" :value="p.id"></el-option>
+            <el-option v-for="p in products" :key="p.id" :label="getProductLabel(p)" :value="p.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="录入方式">
