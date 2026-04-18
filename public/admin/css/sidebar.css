@@ -38,7 +38,18 @@
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidebar-wrap.theme-light {
+/* ===== 移动端抽屉内容容器 ===== */
+.mobile-sidebar-content {
+  background: var(--sidebar-dark-bg);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* ===== 浅色主题（桌面端+移动端） ===== */
+.sidebar-wrap.theme-light,
+.mobile-sidebar-content.theme-light {
   background: var(--sidebar-light-bg);
   border-right-color: var(--sidebar-light-border);
 }
@@ -50,20 +61,7 @@
   }
 }
 
-/* ===== 移动端抽屉内容 ===== */
-.mobile-sidebar-content {
-  background: var(--sidebar-dark-bg);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-}
-
-.mobile-sidebar-content.theme-light {
-  background: var(--sidebar-light-bg);
-}
-
-/* ===== Logo区域 ===== */
+/* ===== Logo区域（桌面端+移动端） ===== */
 .sidebar-logo {
   height: 60px;
   display: flex;
@@ -76,7 +74,8 @@
   overflow: hidden;
 }
 
-.sidebar-wrap.theme-light .sidebar-logo {
+.sidebar-wrap.theme-light .sidebar-logo,
+.mobile-sidebar-content.theme-light .sidebar-logo {
   border-bottom-color: var(--sidebar-light-border);
 }
 
@@ -95,7 +94,8 @@
   background-clip: text;
 }
 
-.sidebar-wrap.theme-light .sidebar-logo .logo-title {
+.sidebar-wrap.theme-light .sidebar-logo .logo-title,
+.mobile-sidebar-content.theme-light .sidebar-logo .logo-title {
   background: var(--sidebar-light-logo-bg);
 }
 
@@ -120,11 +120,12 @@
   background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
 }
-.sidebar-wrap.theme-light .sidebar-menu::-webkit-scrollbar-thumb {
+.sidebar-wrap.theme-light .sidebar-menu::-webkit-scrollbar-thumb,
+.mobile-sidebar-content.theme-light .sidebar-menu::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.15);
 }
 
-/* ===== 菜单项基础样式（使用Element Plus默认值） ===== */
+/* ===== 菜单项基础样式 ===== */
 .sidebar-menu .el-menu-item {
   margin: 2px 0;
   border-radius: 8px;
@@ -134,29 +135,32 @@
   color: var(--sidebar-dark-text);
 }
 
-.sidebar-wrap.theme-light .sidebar-menu .el-menu-item {
+.sidebar-wrap.theme-light .sidebar-menu .el-menu-item,
+.mobile-sidebar-content.theme-light .sidebar-menu .el-menu-item {
   color: var(--sidebar-light-text);
 }
 
-/* 菜单项悬停（简化，不用transform） */
+/* 菜单项悬停 */
 .sidebar-menu .el-menu-item:hover {
   background-color: var(--sidebar-dark-item-hover);
   color: var(--sidebar-dark-text-hover);
 }
 
-.sidebar-wrap.theme-light .sidebar-menu .el-menu-item:hover {
+.sidebar-wrap.theme-light .sidebar-menu .el-menu-item:hover,
+.mobile-sidebar-content.theme-light .sidebar-menu .el-menu-item:hover {
   background-color: var(--sidebar-light-item-hover);
   color: var(--sidebar-light-text-hover);
 }
 
-/* 菜单项激活状态（简化，移除复杂效果） */
+/* 菜单项激活状态 */
 .sidebar-menu .el-menu-item.is-active {
   background-color: var(--sidebar-dark-active-bg);
   color: var(--sidebar-dark-active-text);
   font-weight: 600;
 }
 
-.sidebar-wrap.theme-light .sidebar-menu .el-menu-item.is-active {
+.sidebar-wrap.theme-light .sidebar-menu .el-menu-item.is-active,
+.mobile-sidebar-content.theme-light .sidebar-menu .el-menu-item.is-active {
   background-color: var(--sidebar-light-active-bg);
   color: var(--sidebar-light-active-text);
 }
@@ -172,7 +176,8 @@
   margin: 2px 0;
 }
 
-.sidebar-wrap.theme-light .sidebar-menu .el-sub-menu__title {
+.sidebar-wrap.theme-light .sidebar-menu .el-sub-menu__title,
+.mobile-sidebar-content.theme-light .sidebar-menu .el-sub-menu__title {
   color: var(--sidebar-light-text);
 }
 
@@ -181,7 +186,8 @@
   color: var(--sidebar-dark-text-hover);
 }
 
-.sidebar-wrap.theme-light .sidebar-menu .el-sub-menu__title:hover {
+.sidebar-wrap.theme-light .sidebar-menu .el-sub-menu__title:hover,
+.mobile-sidebar-content.theme-light .sidebar-menu .el-sub-menu__title:hover {
   background-color: var(--sidebar-light-item-hover);
   color: var(--sidebar-light-text-hover);
 }
@@ -200,7 +206,8 @@
   margin: 4px 0 8px 0;
 }
 
-.sidebar-wrap.theme-light .sidebar-menu .el-sub-menu .el-menu {
+.sidebar-wrap.theme-light .sidebar-menu .el-sub-menu .el-menu,
+.mobile-sidebar-content.theme-light .sidebar-menu .el-sub-menu .el-menu {
   background: var(--sidebar-light-submenu-bg);
 }
 
@@ -213,24 +220,45 @@
   line-height: 38px;
 }
 
+/* 子菜单项激活状态 */
+.sidebar-menu .el-sub-menu .el-menu-item.is-active {
+  background-color: var(--sidebar-dark-active-bg);
+  color: var(--sidebar-dark-active-text);
+}
+
+.sidebar-wrap.theme-light .sidebar-menu .el-sub-menu .el-menu-item.is-active,
+.mobile-sidebar-content.theme-light .sidebar-menu .el-sub-menu .el-menu-item.is-active {
+  background-color: var(--sidebar-light-active-bg);
+  color: var(--sidebar-light-active-text);
+}
+
 /* ===== 底部版本信息 ===== */
-.sidebar-wrap .version-info {
+.sidebar-wrap .version-info,
+.mobile-sidebar-content .version-info {
   padding: 12px 20px;
   border-top: 1px solid var(--sidebar-dark-border);
   flex-shrink: 0;
 }
 
-.sidebar-wrap.theme-light .version-info {
+.sidebar-wrap.theme-light .version-info,
+.mobile-sidebar-content.theme-light .version-info {
   border-top-color: var(--sidebar-light-border);
 }
 
-.sidebar-wrap .version-info div {
+.sidebar-wrap .version-info div,
+.mobile-sidebar-content .version-info div {
   font-size: 11px;
   color: var(--sidebar-dark-text);
 }
 
-.sidebar-wrap.theme-light .version-info div {
+.sidebar-wrap.theme-light .version-info div,
+.mobile-sidebar-content.theme-light .version-info div {
   color: var(--sidebar-light-text);
+}
+
+/* 移动端版本信息需要在底部 */
+.mobile-sidebar-content .version-info {
+  margin-top: auto;
 }
 
 /* ===== 主题切换按钮 ===== */
@@ -248,7 +276,8 @@
   transition: background-color 0.2s;
 }
 
-.sidebar-wrap.theme-light .theme-toggle-btn {
+.sidebar-wrap.theme-light .theme-toggle-btn,
+.mobile-sidebar-content.theme-light .theme-toggle-btn {
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -256,7 +285,8 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
-.sidebar-wrap.theme-light .theme-toggle-btn:hover {
+.sidebar-wrap.theme-light .theme-toggle-btn:hover,
+.mobile-sidebar-content.theme-light .theme-toggle-btn:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
@@ -265,53 +295,10 @@
   display: none;
 }
 
-/* ===== 移动端抽屉样式覆盖 ===== */
-/* 覆盖Element Plus抽屉默认样式 */
+/* ===== 移动端抽屉样式（不覆盖动画） ===== */
+/* 只覆盖必要的样式，保持Element Plus原生动画 */
 .mobile-sidebar-drawer .el-drawer__body {
   padding: 0;
-}
-
-.mobile-sidebar-drawer .el-drawer.ltr {
-  /* 保持默认的从左滑入动画 */
-}
-
-/* 移动端内容区的主题切换按钮 */
-.mobile-sidebar-content .theme-toggle-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: inherit;
-  padding: 8px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.mobile-sidebar-content.theme-light .theme-toggle-btn {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-/* 移动端版本信息 */
-.mobile-sidebar-content .version-info {
-  padding: 12px 20px;
-  border-top: 1px solid var(--sidebar-dark-border);
-  flex-shrink: 0;
-  margin-top: auto;
-}
-
-.mobile-sidebar-content.theme-light .version-info {
-  border-top-color: var(--sidebar-light-border);
-}
-
-.mobile-sidebar-content .version-info div {
-  font-size: 11px;
-  color: var(--sidebar-dark-text);
-}
-
-.mobile-sidebar-content.theme-light .version-info div {
-  color: var(--sidebar-light-text);
 }
 
 /* ===== 移动端抽屉显示 ===== */
@@ -321,6 +308,7 @@
   }
 }
 
+/* ===== 小屏幕适配 ===== */
 @media (max-width: 480px) {
   .sidebar-logo .logo-title {
     font-size: 16px;
