@@ -502,9 +502,15 @@ body {
 
 /* 防止表格单元格内容溢出 */
 .el-table .cell {
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* selection 列和操作列不裁切，确保复选框正常渲染 */
+.el-table .el-table-column--selection .cell,
+.el-table .el-table-fixed-column--right .cell {
+  overflow: visible !important;
+  white-space: normal !important;
 }
 
 .el-table .el-table__row:hover > td {
@@ -643,6 +649,8 @@ body {
   border-radius: 6px !important;
   font-size: 13px;
 }
+
+
 
 /* ===== Tooltip ===== */
 .el-tooltip__trigger {

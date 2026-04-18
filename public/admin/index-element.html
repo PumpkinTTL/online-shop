@@ -11,12 +11,12 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
     rel="stylesheet">
-  <!-- Vue 3 -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <!-- Element Plus -->
-  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
-  <script src="https://unpkg.com/element-plus"></script>
-  <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+  <!-- Vue 3 (固定稳定版本) -->
+  <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.js"></script>
+  <!-- Element Plus (与 Vue 3.4 兼容) -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.7.2/dist/index.css">
+  <script src="https://unpkg.com/element-plus@2.7.2"></script>
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1"></script>
   <!-- Axios -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <!-- Custom Styles -->
@@ -238,9 +238,9 @@
                       <span v-if="row.smsEnabled === 1">
                         <el-tag type="success" size="small">已启用</el-tag>
                         {{ [
-                          row.smsPrice ? '¥' + row.smsPrice : '',
-                          row.smsPaymentName ? row.smsPaymentName : '',
-                          row.smKeyWord ? '关键词: ' + row.smKeyWord : ''
+                        row.smsPrice ? '¥' + row.smsPrice : '',
+                        row.smsPaymentName ? row.smsPaymentName : '',
+                        row.smKeyWord ? '关键词: ' + row.smKeyWord : ''
                         ].filter(Boolean).join(' / ') }}
                       </span>
                       <span v-else style="color:#999">未启用</span>
@@ -279,10 +279,12 @@
                   <el-input v-model="categoryForm.description" type="textarea" :rows="2" />
                 </el-form-item>
                 <el-form-item label="接码服务">
-                  <el-switch v-model="categoryForm.smsEnabled" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="关闭" />
+                  <el-switch v-model="categoryForm.smsEnabled" :active-value="1" :inactive-value="0" active-text="启用"
+                    inactive-text="关闭" />
                 </el-form-item>
                 <el-form-item label="接码价格" v-show="categoryForm.smsEnabled === 1">
-                  <el-input-number v-model="categoryForm.smsPrice" :precision="2" :step="0.01" :min="0" style="width:100%" />
+                  <el-input-number v-model="categoryForm.smsPrice" :precision="2" :step="0.01" :min="0"
+                    style="width:100%" />
                 </el-form-item>
                 <el-form-item label="接码支付名" v-show="categoryForm.smsEnabled === 1">
                   <el-input v-model="categoryForm.smsPaymentName" placeholder="如：增值服务" />
@@ -294,7 +296,8 @@
                   <el-input-number v-model="categoryForm.sort" :min="0" style="width:100%" />
                 </el-form-item>
                 <el-form-item label="状态">
-                  <el-switch v-model="categoryForm.show" :active-value="1" :inactive-value="0" active-text="显示" inactive-text="隐藏" />
+                  <el-switch v-model="categoryForm.show" :active-value="1" :inactive-value="0" active-text="显示"
+                    inactive-text="隐藏" />
                 </el-form-item>
               </el-form>
               <template #footer>
@@ -417,13 +420,13 @@
               <div style="flex:1"></div>
               <el-select v-model="cardKeyFilter.productId" placeholder="全部商品" clearable style="width:150px"
                 @change="loadCardKeys">
-                <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id" />
+                <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id"></el-option>
               </el-select>
-              <el-select v-model="cardKeyFilter.status" placeholder="全部状态" clearable style="width:120px"
+              <el-select v-model="cardKeyFilter.status" placeholder="全部状态" clearable style="width:140px"
                 @change="loadCardKeys">
-                <el-option label="未使用" value="unused" />
-                <el-option label="已使用" value="used" />
-                <el-option label="已过期" value="expired" />
+                <el-option label="已过期" value="expired"></el-option>
+                <el-option label="未使用" value="unused"></el-option>
+                <el-option label="已使用" value="used"></el-option>
               </el-select>
               <el-button @click="loadCardKeys"><el-icon>
                   <Refresh />
@@ -431,8 +434,8 @@
             </div>
 
             <el-table :data="cardKeys" v-loading="cardKeysLoading" stripe style="width:100%"
-              @selection-change="handleCardKeySelectionChange">
-              <el-table-column type="selection" width="45" />
+              @selection-change="handleCardKeySelectionChange" row-key="id">
+              <el-table-column type="selection" width="45" :reserve-selection="true" />
               <el-table-column prop="id" label="ID" width="60" sortable />
               <el-table-column label="卡密" min-width="140">
                 <template #default="{ row }"><code>{{ row.code }}</code></template>
@@ -479,9 +482,10 @@
             </el-table>
 
             <div class="pagination-wrap">
-              <el-pagination v-if="cardKeyTotal > cardKeyFilter.pageSize" layout="total, prev, pager, next"
-                :total="cardKeyTotal" :page-size="cardKeyFilter.pageSize" v-model:current-page="cardKeyFilter.page"
-                @current-change="loadCardKeys" />
+              <el-pagination layout="total, sizes, prev, pager, next" :total="cardKeyTotal"
+                :page-sizes="[10, 20, 30, 50]" :page-size="cardKeyFilter.pageSize"
+                v-model:current-page="cardKeyFilter.page" v-model:page-size="cardKeyFilter.pageSize"
+                @current-change="loadCardKeys" @size-change="handleCardKeyPageSizeChange" />
             </div>
           </div>
 
@@ -491,9 +495,9 @@
               <div style="flex:1"></div>
               <el-select v-model="orderFilter.status" placeholder="全部状态" clearable style="width:120px"
                 @change="loadOrders">
-                <el-option label="待处理" value="pending" />
-                <el-option label="已完成" value="completed" />
-                <el-option label="失败" value="failed" />
+                <el-option label="待处理" value="pending"></el-option>
+                <el-option label="已完成" value="completed"></el-option>
+                <el-option label="失败" value="failed"></el-option>
               </el-select>
               <el-button @click="loadOrders"><el-icon>
                   <Refresh />
@@ -537,9 +541,10 @@
             </el-table>
 
             <div class="pagination-wrap">
-              <el-pagination v-if="orderTotal > orderFilter.pageSize" layout="total, prev, pager, next"
-                :total="orderTotal" :page-size="orderFilter.pageSize" v-model:current-page="orderFilter.page"
-                @current-change="loadOrders" />
+              <el-pagination layout="total, sizes, prev, pager, next" :total="orderTotal" :page-sizes="[10, 20, 30, 50]"
+                :page-size="orderFilter.pageSize" v-model:current-page="orderFilter.page"
+                v-model:page-size="orderFilter.pageSize" @current-change="loadOrders"
+                @size-change="handleOrderPageSizeChange" />
             </div>
           </div>
 
@@ -645,15 +650,15 @@
               <div style="flex:1"></div>
               <el-select v-model="smsRecordFilter.source" placeholder="全部来源" clearable style="width:130px"
                 @change="loadSmsRecords">
-                <el-option label="免费接码" value="free" />
-                <el-option label="isCode商品" value="iscode" />
+                <el-option label="免费接码" value="free"></el-option>
+                <el-option label="isCode商品" value="iscode"></el-option>
               </el-select>
               <el-select v-model="smsRecordFilter.status" placeholder="全部状态" clearable style="width:120px"
                 @change="loadSmsRecords">
-                <el-option label="使用中" value="active" />
-                <el-option label="已完成" value="completed" />
-                <el-option label="已释放" value="released" />
-                <el-option label="已拉黑" value="blocked" />
+                <el-option label="使用中" value="active"></el-option>
+                <el-option label="已完成" value="completed"></el-option>
+                <el-option label="已释放" value="released"></el-option>
+                <el-option label="已拉黑" value="blocked"></el-option>
               </el-select>
               <el-input v-model="smsRecordFilter.phone" placeholder="手机号搜索" style="width:160px" clearable
                 @keyup.enter="loadSmsRecords" :prefix-icon="Search">
@@ -706,9 +711,10 @@
             </el-table>
 
             <div class="pagination-wrap">
-              <el-pagination v-if="smsRecordTotal > smsRecordFilter.pageSize" layout="total, prev, pager, next"
-                :total="smsRecordTotal" :page-size="smsRecordFilter.pageSize"
-                v-model:current-page="smsRecordFilter.page" @current-change="loadSmsRecords" />
+              <el-pagination layout="total, sizes, prev, pager, next" :total="smsRecordTotal"
+                :page-sizes="[10, 20, 30, 50]" :page-size="smsRecordFilter.pageSize"
+                v-model:current-page="smsRecordFilter.page" v-model:page-size="smsRecordFilter.pageSize"
+                @current-change="loadSmsRecords" @size-change="handleSmsRecordPageSizeChange" />
             </div>
           </div>
 
@@ -726,7 +732,8 @@
 
             <div v-loading="rateLimitLoading" style="margin-top:16px;">
               <el-row :gutter="16">
-                <el-col :xs="24" :sm="12" :md="12" :lg="8" v-for="config in rateLimitConfigs" :key="config.id" style="margin-bottom:16px;">
+                <el-col :xs="24" :sm="12" :md="12" :lg="8" v-for="config in rateLimitConfigs" :key="config.id"
+                  style="margin-bottom:16px;">
                   <el-card shadow="hover" style="height:100%;">
                     <template #header>
                       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -742,27 +749,33 @@
                     </template>
 
                     <div style="display:flex;flex-direction:column;gap:12px;">
-                      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
+                      <div
+                        style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
                         <span style="color:#606266;font-size:13px;">标识符</span>
                         <el-tag size="small" type="info">{{ config.key }}</el-tag>
                       </div>
 
-                      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
+                      <div
+                        style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
                         <span style="color:#606266;font-size:13px;">时间窗口</span>
-                        <span style="color:#303133;font-weight:500;font-size:14px;">{{ formatWindowMs(config.windowMs) }}</span>
+                        <span style="color:#303133;font-weight:500;font-size:14px;">{{ formatWindowMs(config.windowMs)
+                          }}</span>
                       </div>
 
-                      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
+                      <div
+                        style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F0F0;">
                         <span style="color:#606266;font-size:13px;">最大请求数</span>
                         <span style="color:#303133;font-weight:500;font-size:14px;">{{ config.maxRequests }} 次</span>
                       </div>
 
                       <div style="padding:8px 0;">
                         <div style="color:#606266;font-size:13px;margin-bottom:6px;">提示信息</div>
-                        <div style="color:#909399;font-size:12px;line-height:1.5;word-break:break-all;">{{ config.message || '\无' }}</div>
+                        <div style="color:#909399;font-size:12px;line-height:1.5;word-break:break-all;">{{
+                          config.message || '\无' }}</div>
                       </div>
 
-                      <el-button type="primary" size="small" @click="editRateLimit(config)" style="width:100%;margin-top:8px;">
+                      <el-button type="primary" size="small" @click="editRateLimit(config)"
+                        style="width:100%;margin-top:8px;">
                         编辑配置
                       </el-button>
                     </div>
@@ -786,7 +799,9 @@
             <!-- 日志类型选择卡片 -->
             <el-row :gutter="16" style="margin-top:16px;">
               <el-col :xs="12" :sm="8" :md="4" v-for="(stat, type) in logStats" :key="type">
-                <el-card shadow="hover" style="margin-bottom:16px;cursor:pointer;transition:all 0.2s;" :style="{border: currentLogType === type ? '2px solid ' + getLogTypeColor(type) : '1px solid #EBEEF5'}" @click="selectLogType(type)">
+                <el-card shadow="hover" style="margin-bottom:16px;cursor:pointer;transition:all 0.2s;"
+                  :style="{border: currentLogType === type ? '2px solid ' + getLogTypeColor(type) : '1px solid #EBEEF5'}"
+                  @click="selectLogType(type)">
                   <div style="display:flex;align-items:center;gap:12px;">
                     <el-icon :size="28" :color="getLogTypeColor(type)">
                       <Document v-if="type === 'access'" />
@@ -798,7 +813,8 @@
                       <Document v-else />
                     </el-icon>
                     <div style="flex:1;">
-                      <div style="color:#606266;font-size:11px;margin-bottom:2px;font-weight:500;">{{ getLogTypeLabel(type) }}</div>
+                      <div style="color:#606266;font-size:11px;margin-bottom:2px;font-weight:500;">{{
+                        getLogTypeLabel(type) }}</div>
                       <div style="color:#303133;font-size:18px;font-weight:600;">
                         {{ stat.fileCount || 0 }} 文件
                       </div>
@@ -817,27 +833,34 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
                   <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
                     <span style="font-weight:600;white-space:nowrap;">{{ getLogTypeLabel(currentLogType) }}：</span>
-                    <el-select v-model="logQueryForm.filename" placeholder="选择日志文件" style="width:220px;" @change="queryLogs(false)" :loading="logLoading" filterable>
-                      <el-option v-for="file in logFiles" :key="file.filename" :label="file.filename" :value="file.filename">
+                    <el-select v-model="logQueryForm.filename" placeholder="选择日志文件" style="width:220px;"
+                      @change="queryLogs(false)" :loading="logLoading" filterable>
+                      <el-option v-for="file in logFiles" :key="file.filename" :label="file.filename"
+                        :value="file.filename">
                         <span style="float:left">{{ file.filename }}</span>
                         <span style="float:right;color:#909399;font-size:12px;">{{ file.date || '' }}</span>
                       </el-option>
                     </el-select>
                   </div>
                   <div style="display:flex;gap:8px;align-items:center;">
-                    <el-select v-model="logQueryForm.level" placeholder="日志级别" clearable style="width:110px" @change="queryLogs(false)">
-                      <el-option label="错误" value="error" />
-                      <el-option label="警告" value="warn" />
-                      <el-option label="信息" value="info" />
-                      <el-option label="HTTP" value="http" />
-                      <el-option label="调试" value="debug" />
+                    <el-select v-model="logQueryForm.level" placeholder="日志级别" clearable style="width:110px"
+                      @change="queryLogs(false)">
+                      <el-option label="错误" value="error"></el-option>
+                      <el-option label="警告" value="warn"></el-option>
+                      <el-option label="信息" value="info"></el-option>
+                      <el-option label="HTTP" value="http"></el-option>
+                      <el-option label="调试" value="debug"></el-option>
                     </el-select>
-                    <el-input v-model="logQueryForm.keyword" placeholder="搜索关键词" clearable style="width:160px" @keyup.enter="queryLogs(false)">
+                    <el-input v-model="logQueryForm.keyword" placeholder="搜索关键词" clearable style="width:160px"
+                      @keyup.enter="queryLogs(false)">
                       <template #suffix>
-                        <el-icon @click="queryLogs(false)" style="cursor:pointer"><Search /></el-icon>
+                        <el-icon @click="queryLogs(false)" style="cursor:pointer">
+                          <Search />
+                        </el-icon>
                       </template>
                     </el-input>
-                    <el-input-number v-model="logQueryForm.limit" :min="10" :max="500" :step="10" style="width:100px" @change="queryLogs(false)" />
+                    <el-input-number v-model="logQueryForm.limit" :min="10" :max="500" :step="10" style="width:100px"
+                      @change="queryLogs(false)" />
                     <el-button @click="queryLogs(false)" :loading="logLoading">查询</el-button>
                   </div>
                 </div>
@@ -847,7 +870,8 @@
               <div v-if="logLoading" v-loading="true" style="min-height:200px;"></div>
 
               <!-- 空状态 -->
-              <div v-else-if="!logQueryResult.logs || logQueryResult.logs.length === 0" style="padding:40px;text-align:center;">
+              <div v-else-if="!logQueryResult.logs || logQueryResult.logs.length === 0"
+                style="padding:40px;text-align:center;">
                 <el-empty description="暂无日志数据" />
               </div>
 
@@ -860,17 +884,25 @@
                         <div v-if="row.url"><strong>完整URL:</strong> {{ row.url }}</div>
                         <div v-if="row.ip"><strong>IP地址:</strong> {{ row.ip }}</div>
                         <div v-if="row.userAgent"><strong>请求头:</strong> {{ row.userAgent }}</div>
-                        <div v-if="row.query && Object.keys(row.query).length"><strong>查询参数:</strong> <code>{{ JSON.stringify(row.query) }}</code></div>
+                        <div v-if="row.query && Object.keys(row.query).length"><strong>查询参数:</strong>
+                          <code>{{ JSON.stringify(row.query) }}</code>
+                        </div>
                         <div v-if="row.contentLength"><strong>响应大小:</strong> {{ row.contentLength }} bytes</div>
                         <div v-if="row.userId"><strong>用户ID:</strong> {{ row.userId }}</div>
                         <div v-if="row.adminId"><strong>管理员ID:</strong> {{ row.adminId }}</div>
                         <div v-if="row.productId"><strong>商品ID:</strong> {{ row.productId }}</div>
                         <div v-if="row.orderId"><strong>订单ID:</strong> {{ row.orderId }}</div>
-                        <div v-if="row.stack"><strong>堆栈:</strong> <pre style="margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;">{{ row.stack }}</pre></div>
+                        <div v-if="row.stack"><strong>堆栈:</strong>
+                          <pre
+                            style="margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;">{{ row.stack }}</pre>
+                        </div>
                         <div v-if="row.code"><strong>错误码:</strong> {{ row.code }}</div>
                         <div v-if="row.action"><strong>操作:</strong> {{ row.action }}</div>
                         <div v-if="row.target"><strong>目标:</strong> {{ row.target }}</div>
-                        <div v-if="row.details"><strong>详情:</strong> <pre style="margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;">{{ typeof row.details === 'object' ? JSON.stringify(row.details, null, 2) : row.details }}</pre></div>
+                        <div v-if="row.details"><strong>详情:</strong>
+                          <pre
+                            style="margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;">{{ typeof row.details === 'object' ? JSON.stringify(row.details, null, 2) : row.details }}</pre>
+                        </div>
                       </div>
                     </div>
                   </template>
@@ -889,14 +921,18 @@
                 </el-table-column>
                 <el-table-column label="方法" width="70" align="center">
                   <template #default="{ row }">
-                    <el-tag :type="row.method === 'GET' ? 'success' : row.method === 'POST' ? 'primary' : row.method === 'DELETE' ? 'danger' : 'info'" size="small">
+                    <el-tag
+                      :type="row.method === 'GET' ? 'success' : row.method === 'POST' ? 'primary' : row.method === 'DELETE' ? 'danger' : 'info'"
+                      size="small">
                       {{ row.method || '-' }}
                     </el-tag>
                   </template>
                 </el-table-column>
                 <el-table-column label="状态码" width="90" align="center">
                   <template #default="{ row }">
-                    <el-tag v-if="row.statusCode" :type="row.statusCode < 300 ? 'success' : row.statusCode < 400 ? 'warning' : 'danger'" size="small">
+                    <el-tag v-if="row.statusCode"
+                      :type="row.statusCode < 300 ? 'success' : row.statusCode < 400 ? 'warning' : 'danger'"
+                      size="small">
                       {{ row.statusCode }}
                     </el-tag>
                     <span v-else style="color:#909399;">-</span>
@@ -904,7 +940,8 @@
                 </el-table-column>
                 <el-table-column label="响应时间" width="90" align="center">
                   <template #default="{ row }">
-                    <span :style="{color: row.responseTime > 1000 ? '#EF4444' : row.responseTime > 500 ? '#F59E0B' : '#22C55E'}">
+                    <span
+                      :style="{color: row.responseTime > 1000 ? '#EF4444' : row.responseTime > 500 ? '#F59E0B' : '#22C55E'}">
                       {{ row.responseTime ? row.responseTime + 'ms' : '-' }}
                     </span>
                   </template>
@@ -915,13 +952,15 @@
                     <span v-else-if="row.error" style="color:#F56C6C;">{{ row.error }}</span>
                     <span v-else-if="row.event">{{ row.event }}</span>
                     <span v-else-if="row.url" style="color:#606266;">{{ row.url }}</span>
-                    <code v-else style="color:#909399;font-size:11px;">{{ JSON.stringify(row).substring(0, 100) }}...</code>
+                    <code v-else
+                      style="color:#909399;font-size:11px;">{{ JSON.stringify(row).substring(0, 100) }}...</code>
                   </template>
                 </el-table-column>
               </el-table>
 
               <!-- 统计信息 -->
-              <div v-if="logQueryResult.logs && logQueryResult.logs.length > 0" style="margin-top:16px;text-align:center;color:#909399;font-size:12px;">
+              <div v-if="logQueryResult.logs && logQueryResult.logs.length > 0"
+                style="margin-top:16px;text-align:center;color:#909399;font-size:12px;">
                 共 {{ logQueryResult.total }} 条记录，显示 {{ logQueryResult.filtered }} 条
               </div>
             </el-card>
@@ -948,7 +987,7 @@
         </el-form-item>
         <el-form-item label="商品类别">
           <el-select v-model="editingProduct.categoryId" style="width:100%" placeholder="选择类别">
-            <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+            <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="描述">
@@ -986,7 +1025,7 @@
       <el-form label-width="100px" label-position="right">
         <el-form-item label="选择商品" required>
           <el-select v-model="cardKeyForm.productId" placeholder="请选择商品" style="width:100%">
-            <el-option v-for="p in products" :key="p.id" :label="getProductLabel(p)" :value="p.id" />
+            <el-option v-for="p in products" :key="p.id" :label="getProductLabel(p)" :value="p.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="录入方式">
@@ -1040,9 +1079,9 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="editingCDK.status" style="width:100%">
-            <el-option label="未使用" value="unused" />
-            <el-option label="已使用" value="used" />
-            <el-option label="已过期" value="expired" />
+            <el-option label="未使用" value="unused"></el-option>
+            <el-option label="已使用" value="used"></el-option>
+            <el-option label="已过期" value="expired"></el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -1066,8 +1105,8 @@
         </el-form-item>
         <el-form-item label="角色">
           <el-select v-model="adminForm.role" style="width:100%">
-            <el-option label="管理员" value="admin" />
-            <el-option label="超级管理员" value="super" />
+            <el-option label="管理员" value="admin"></el-option>
+            <el-option label="超级管理员" value="super"></el-option>
           </el-select>
         </el-form-item>
       </el-form>

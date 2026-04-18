@@ -337,6 +337,11 @@ const app = createApp({
       selectedCardKeyIds.value = selection.map(function(item) { return item.id; });
     };
 
+    var handleCardKeyPageSizeChange = function() {
+      cardKeyFilter.value.page = 1;
+      loadCardKeys();
+    };
+
     var handleGenerateCardKeys = async function() {
       var f = cardKeyForm.value;
       if (!f.productId) return ElMsg.warning('请选择商品');
@@ -474,6 +479,11 @@ const app = createApp({
       return map[s] || s;
     };
 
+    var handleOrderPageSizeChange = function() {
+      orderFilter.value.page = 1;
+      loadOrders();
+    };
+
     // ===== 用户管理 =====
     var users = ref([]);
     var usersLoading = ref(false);
@@ -597,6 +607,11 @@ const app = createApp({
     var smsSourceType = function(s) {
       var map = { free: 'info', iscode: 'success' };
       return map[s] || 'info';
+    };
+
+    var handleSmsRecordPageSizeChange = function() {
+      smsRecordFilter.value.page = 1;
+      loadSmsRecords();
     };
 
     // ===== 日志管理 =====
@@ -1017,6 +1032,7 @@ const app = createApp({
       handleDeleteCardKey: handleDeleteCardKey,
       handleCardKeySelectionChange: handleCardKeySelectionChange,
       handleBatchDeleteCardKeys: handleBatchDeleteCardKeys,
+      handleCardKeyPageSizeChange: handleCardKeyPageSizeChange,
       cardStatusType: cardStatusType,
       cardStatusLabel: cardStatusLabel,
       // 订单
@@ -1028,6 +1044,7 @@ const app = createApp({
       handleDeleteOrder: handleDeleteOrder,
       orderStatusType: orderStatusType,
       orderStatusLabel: orderStatusLabel,
+      handleOrderPageSizeChange: handleOrderPageSizeChange,
       // 用户
       users: users,
       usersLoading: usersLoading,
@@ -1057,6 +1074,7 @@ const app = createApp({
       smsStatusLabel: smsStatusLabel,
       smsSourceLabel: smsSourceLabel,
       smsSourceType: smsSourceType,
+      handleSmsRecordPageSizeChange: handleSmsRecordPageSizeChange,
       // 日志管理
       logStats: logStats,
       logLoading: logLoading,
