@@ -559,6 +559,22 @@ const app = createApp({
       }
     };
 
+    var copyText = async function(text, label) {
+      try {
+        await navigator.clipboard.writeText(text);
+        ElMsg.success((label || '内容') + ' 已复制');
+      } catch (e) {
+        // 降级方案
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        ElMsg.success((label || '内容') + ' 已复制');
+      }
+    };
+
     var handleDeleteOrder = async function(id) {
       if (!await confirmAction('确定要删除该订单吗？')) return;
       try {
@@ -1247,6 +1263,7 @@ const app = createApp({
       selectedOrderIds: selectedOrderIds,
       loadOrders: loadOrders,
       handleDeleteOrder: handleDeleteOrder,
+      copyText: copyText,
       orderStatusType: orderStatusType,
       orderStatusLabel: orderStatusLabel,
       handleOrderPageSizeChange: handleOrderPageSizeChange,

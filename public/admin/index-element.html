@@ -671,29 +671,63 @@
             <el-table :data="orders" v-loading="ordersLoading" stripe style="width:100%"
               @selection-change="handleOrderSelectionChange" row-key="id">
               <el-table-column type="selection" width="45" :reserve-selection="true"></el-table-column>
-              <el-table-column prop="id" label="ID" width="60" sortable></el-table-column>
-              <el-table-column label="订单号" width="180">
-                <template #default="{ row }"><code>{{ row.orderNo }}</code></template>
+              <el-table-column label="订单号" min-width="160">
+                <template #default="{ row }">{{ row.orderNo }}</template>
               </el-table-column>
-              <el-table-column label="商品" min-width="120">
-                <template #default="{ row }">{{ getProductName(row.productId) }}</template>
-              </el-table-column>
-              <el-table-column prop="contact" label="联系方式" width="140"></el-table-column>
-              <el-table-column label="手机号" width="120">
-                <template #default="{ row }">{{ row.phone || '-' }}</template>
-              </el-table-column>
-              <el-table-column label="验证码" width="100">
-                <template #default="{ row }">{{ row.verifyCode || '-' }}</template>
-              </el-table-column>
-              <el-table-column label="状态" width="90">
+              <el-table-column label="商品" min-width="130">
                 <template #default="{ row }">
-                  <el-tag size="small" :type="orderStatusType(row.status)">{{ orderStatusLabel(row.status) }}</el-tag>
+                  <div style="line-height:1.7">
+                    <div>{{ row.productName || getProductName(row.productId) }}</div>
+                    <el-tag v-if="row.isSms" type="warning" size="small" effect="dark" round style="margin-top:2px">
+                      <el-icon style="vertical-align:text-bottom;margin-right:2px"><phone></phone></el-icon>SMS
+                    </el-tag>
+                  </div>
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" width="160" sortable>
+              <el-table-column label="凭证" min-width="200">
+                <template #default="{ row }">
+                  <div v-if="row.cardCode || row.cardCDK" style="line-height:1.9">
+                    <div><span style="color:#94A3B8;font-size:11px">卡密</span> <code style="font-size:11px;color:#475569;background:#F1F5F9;padding:2px 6px;border-radius:3px">{{ row.cardCode || '-' }}</code>
+                      <el-icon v-if="row.cardCode && row.cardCode !== '-'" style="color:#94A3B8;font-size:12px;vertical-align:text-bottom;cursor:pointer;margin-left:4px" @click="copyText(row.cardCode, '卡密')" title="复制卡密"><copy-document></copy-document></el-icon></div>
+                    <div v-if="row.cardCDK"><span style="color:#94A3B8;font-size:11px">CDK</span> <code style="font-size:11px;color:#2563EB;cursor:pointer;background:#EFF6FF;padding:2px 6px;border-radius:3px"
+                      @click="copyText(row.cardCDK, 'CDK')">{{ row.cardCDK.length > 14 ? row.cardCDK.substring(0,14)+'…' : row.cardCDK }}</code>
+                      <el-icon style="color:#60A5FA;font-size:12px;vertical-align:text-bottom;cursor:pointer;margin-left:4px" @click="copyText(row.cardCDK, 'CDK')" title="复制CDK"><copy-document></copy-document></el-icon></div>
+                  </div>
+                  <span v-else style="color:#C0C4CC">-</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="金额/方式" min-width="110" align="center">
+                <template #default="{ row }">
+                  <div v-if="row.amount != null" style="display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.5">
+                    <span style="color:#EF4444;font-weight:600;font-size:13px">¥{{ row.amount }}</span>
+                    <el-tag v-if="row.payMethod === 'alipay'" type="primary" size="small">
+                      <el-icon style="vertical-align:text-bottom;margin-right:2px"><wallet></wallet></el-icon>支付宝
+                    </el-tag>
+                    <el-tag v-else-if="row.payMethod === '兑换'" type="success" size="small">
+                      <el-icon style="vertical-align:text-bottom;margin-right:2px"><key></key></el-icon>兑换
+                    </el-tag>
+                    <span v-else style="color:#C0C4CC;font-size:11px">-</span>
+                  </div>
+                  <span v-else style="color:#C0C4CC">-</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="联系方式/用户" min-width="140">
+                <template #default="{ row }">
+                  <div>{{ row.contact || '-' }}</div>
+                  <div v-if="row.username" style="color:#909399;font-size:11px">@{{ row.username }}</div>
+                </template>
+              </el-table-column>
+              <el-table-column label="状态" min-width="70" align="center">
+                <template #default="{ row }">
+                  <el-tooltip :content="row.status === 'pending' ? '需支付二次接码费用' : '已完成/可接码'" placement="top">
+                    <el-tag size="small" :type="orderStatusType(row.status)">{{ orderStatusLabel(row.status) }}</el-tag>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+              <el-table-column label="创建时间" min-width="145" sortable>
                 <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
               </el-table-column>
-              <el-table-column label="操作" width="70" fixed="right">
+              <el-table-column label="操作" width="60" fixed="right">
                 <template #default="{ row }">
                   <el-tooltip content="删除" placement="top">
                     <el-button class="action-btn action-delete" size="small" circle @click="handleDeleteOrder(row.id)">

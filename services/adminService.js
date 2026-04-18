@@ -410,6 +410,7 @@ class AdminService {
     const where = {};
     if (status) where.status = status;
 
+    // 后台订单查询允许无条件全表（管理需要）
     const [items, total] = await repo.findAndCount({
       where,
       order: { id: 'DESC' },
@@ -417,7 +418,61 @@ class AdminService {
       take: pageSize,
     });
 
-    return { items, total, page, pageSize };
+    // 关联商品信息（名称+价格+是否接码产品）
+    const Product = require('../entities/Product');
+    const ProductCategory = require('../entities/ProductCategory');
+    const productRepo = dataSource.getRepository(Product);
+    const categoryRepo = dataSource.getRepository(ProductCategory);
+    const pIds = [...new Set(items.map(o => o.productId).filter(Boolean))];
+    let pMap = {};
+    if (pIds.length > 0) {
+      const products = await productRepo.find({
+        where: pIds.map(id => ({ id })),
+        relations: ['category'],
+      });
+      const cIds = [...new Set(products.map(p => p.categoryId).filter(Boolean))];
+      let cMap = {};
+      if (cIds.length > 0) {
+        (await categoryRepo.findByIds(cIds)).forEach(c => { cMap[c.id] = c; });
+      }
+      products.forEach(p => {
+        pMap[p.id] = {
+          name: p.name,
+          price: p.price,
+          isSms: (cMap[p.categoryId] || {}).smsEnabled === 1,
+        };
+      });
+    }
+
+    // 关联卡密信息（CDK兑换码 + code）
+    const CardKey = require('../entities/CardKey');
+    const ckRepo = dataSource.getRepository(CardKey);
+    const ckIds = [...new Set(items.map(o => o.cardKeyId).filter(Boolean))];
+    let ckMap = {};
+    if (ckIds.length > 0) {
+      (await ckRepo.findByIds(ckIds)).forEach(ck => { ckMap[ck.id] = { code: ck.code, CDK: ck.CDK }; });
+    }
+
+    // 关联用户名
+    const User = require('../entities/User');
+    const userRepo = dataSource.getRepository(User);
+    const uIds = [...new Set(items.map(o => o.userId).filter(Boolean))];
+    let uMap = {};
+    if (uIds.length > 0) {
+      (await userRepo.findByIds(uIds)).forEach(u => { uMap[u.id] = u.nickname || u.username; });
+    }
+
+    const enrichedItems = items.map(order => ({
+      ...order,
+      productName: (pMap[order.productId] || {}).name || '未知',
+      productPrice: (pMap[order.productId] || {}).price || null,
+      isSms: (pMap[order.productId] || {}).isSms || false,
+      cardCDK: (ckMap[order.cardKeyId] || {}).CDK || null,
+      cardCode: (ckMap[order.cardKeyId] || {}).code || null,
+      username: uMap[order.userId] || null,
+    }));
+
+    return { items: enrichedItems, total, page, pageSize };
   }
 
   async deleteOrder(id) {
