@@ -696,16 +696,22 @@
                   <span v-else style="color:#C0C4CC">-</span>
                 </template>
               </el-table-column>
-              <el-table-column label="金额/方式" min-width="110" align="center">
+              <el-table-column label="金额/方式" min-width="115" align="center">
                 <template #default="{ row }">
-                  <div v-if="row.amount != null" style="display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.5">
+                  <div v-if="row.amount != null" style="display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.6">
                     <span style="color:#EF4444;font-weight:600;font-size:13px">¥{{ row.amount }}</span>
-                    <el-tag v-if="row.payMethod === 'alipay'" type="primary" size="small">
-                      <el-icon style="vertical-align:text-bottom;margin-right:2px"><wallet></wallet></el-icon>支付宝
-                    </el-tag>
-                    <el-tag v-else-if="row.payMethod === '兑换'" type="success" size="small">
-                      <el-icon style="vertical-align:text-bottom;margin-right:2px"><key></key></el-icon>兑换
-                    </el-tag>
+                    <el-popover v-if="row.payMethod === 'alipay' && (row.tradeNo || row.completedAt)" placement="bottom" :width="220" trigger="click">
+                      <template #reference>
+                        <el-tag type="primary" size="small" style="cursor:pointer"><el-icon style="vertical-align:text-bottom;margin-right:2px"><wallet></wallet></el-icon>支付宝</el-tag>
+                      </template>
+                      <div style="font-size:12px;line-height:2">
+                        <div v-if="row.tradeNo"><span style="color:#94A3B8">流水号:</span> <br><code style="font-size:11px;color:#2563EB;word-break:break-all">{{ row.tradeNo }}</code></div>
+                        <div v-if="row.completedAt"><span style="color:#94A3B8">完成时间:</span> {{ formatDate(row.completedAt) }}</div>
+                        <div v-if="row.productPrice != null"><span style="color:#94A3B8">商品标价:</span> ¥{{ row.productPrice }}</div>
+                      </div>
+                    </el-popover>
+                    <el-tag v-else-if="row.payMethod === 'alipay'" type="primary" size="small"><el-icon style="vertical-align:text-bottom;margin-right:2px"><wallet></wallet></el-icon>支付宝</el-tag>
+                    <el-tag v-else-if="row.payMethod === '兑换'" type="success" size="small"><el-icon style="vertical-align:text-bottom;margin-right:2px"><key></key></el-icon>兑换</el-tag>
                     <span v-else style="color:#C0C4CC;font-size:11px">-</span>
                   </div>
                   <span v-else style="color:#C0C4CC">-</span>
@@ -719,7 +725,7 @@
               </el-table-column>
               <el-table-column label="状态" min-width="70" align="center">
                 <template #default="{ row }">
-                  <el-tooltip :content="row.status === 'pending' ? '需支付二次接码费用' : '已完成/可接码'" placement="top">
+                  <el-tooltip :content="row.isSms ? (row.status === 'pending' ? '需支付二次接码费用' : '已完成/可接码') : (row.status === 'pending' ? '待处理' : '已完成')" placement="top">
                     <el-tag size="small" :type="orderStatusType(row.status)">{{ orderStatusLabel(row.status) }}</el-tag>
                   </el-tooltip>
                 </template>

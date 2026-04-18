@@ -1,0 +1,96 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - generic [ref=e9]: 工具商店
+    - menubar [ref=e10]:
+      - menuitem "仪表盘" [ref=e11] [cursor=pointer]: 仪表盘
+      - menuitem "业务管理" [expanded] [ref=e13]:
+        - generic [ref=e14] [cursor=pointer]:
+          - img [ref=e16]
+          - generic [ref=e18]: 业务管理
+          - img [ref=e20]
+        - menu [ref=e22]:
+          - menuitem "商品类别" [ref=e23] [cursor=pointer]:
+            - img [ref=e25]
+            - text: 商品类别
+          - menuitem "商品管理" [ref=e27] [cursor=pointer]:
+            - img [ref=e29]
+            - text: 商品管理
+          - menuitem "卡密管理" [ref=e31] [cursor=pointer]:
+            - img [ref=e33]
+            - text: 卡密管理
+          - menuitem "订单管理" [ref=e35] [cursor=pointer]:
+            - img [ref=e37]
+            - text: 订单管理
+      - menuitem "系统管理" [expanded] [ref=e39]:
+        - generic [ref=e40] [cursor=pointer]:
+          - img [ref=e42]
+          - generic [ref=e44]: 系统管理
+          - img [ref=e46]
+        - menu [ref=e48]:
+          - menuitem "用户管理" [ref=e49] [cursor=pointer]:
+            - img [ref=e51]
+            - text: 用户管理
+          - menuitem "管理员" [ref=e53] [cursor=pointer]: 管理员
+          - menuitem "接码记录" [ref=e55] [cursor=pointer]:
+            - img [ref=e57]
+            - text: 接码记录
+          - menuitem "限速配置" [ref=e59] [cursor=pointer]:
+            - img [ref=e61]
+            - text: 限速配置
+          - menuitem "日志查看" [ref=e63] [cursor=pointer]:
+            - img [ref=e65]
+            - text: 日志查看
+    - generic [ref=e68]: v2.0 Element Plus
+  - generic [ref=e69]:
+    - generic [ref=e70]:
+      - generic [ref=e71]:
+        - img [ref=e73] [cursor=pointer]
+        - navigation "Breadcrumb" [ref=e75]:
+          - generic [ref=e76]:
+            - link "首页" [ref=e77]
+            - text: /
+          - link "仪表盘" [ref=e79]
+      - generic [ref=e80]:
+        - button [ref=e81] [cursor=pointer]:
+          - img [ref=e84]
+        - button "超 超级管理员" [ref=e87] [cursor=pointer]:
+          - generic [ref=e88]: 超
+          - generic [ref=e89]: 超级管理员
+    - main [ref=e91]:
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - heading "欢迎回来，超级管理员" [level=2] [ref=e94]
+          - paragraph [ref=e95]: 以下是您的店铺概览数据
+        - generic [ref=e96]:
+          - generic [ref=e100]:
+            - img [ref=e103]
+            - generic [ref=e105]:
+              - generic [ref=e106]: "2"
+              - generic [ref=e107]: 商品总数
+          - generic [ref=e111]:
+            - img [ref=e114]
+            - generic [ref=e116]:
+              - generic [ref=e117]: "5"
+              - generic [ref=e118]: 可用卡密
+          - generic [ref=e122]:
+            - img [ref=e125]
+            - generic [ref=e127]:
+              - generic [ref=e128]: "14"
+              - generic [ref=e129]: 已用卡密
+          - generic [ref=e133]:
+            - img [ref=e136]
+            - generic [ref=e138]:
+              - generic [ref=e139]: "1"
+              - generic [ref=e140]: 用户总数
+          - generic [ref=e144]:
+            - img [ref=e147]
+            - generic [ref=e149]:
+              - generic [ref=e150]: "2"
+              - generic [ref=e151]: 订单总数
+          - generic [ref=e155]:
+            - img [ref=e158]
+            - generic [ref=e160]:
+              - generic [ref=e161]: "2"
+              - generic [ref=e162]: 近7天订单
