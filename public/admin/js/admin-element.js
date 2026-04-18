@@ -12,6 +12,39 @@ const app = createApp({
     const isCollapsed = ref(false);
     const openMenus = ref(['manage', 'system']);
 
+    // ===== 主题切换 =====
+    const isLightTheme = ref(false);
+    const isMobileSidebarOpen = ref(false);
+
+    // 从localStorage读取主题设置
+    var savedTheme = localStorage.getItem('admin-theme');
+    if (savedTheme) {
+      isLightTheme.value = savedTheme === 'light';
+    }
+
+    // 切换主题
+    var toggleTheme = function() {
+      isLightTheme.value = !isLightTheme.value;
+      localStorage.setItem('admin-theme', isLightTheme.value ? 'light' : 'dark');
+    };
+
+    // 关闭移动端侧边栏
+    var closeMobileSidebar = function() {
+      isMobileSidebarOpen.value = false;
+    };
+
+    // 检测移动端
+    var checkMobile = function() {
+      if (window.innerWidth <= 768) {
+        isMobileSidebarOpen.value = false;
+      }
+    };
+
+    // 监听窗口大小变化
+    onMounted(function() {
+      window.addEventListener('resize', checkMobile);
+    });
+
     // ===== Element Plus 消息提示 =====
     const ElMsg = {
       success: function(msg) { ElementPlus.ElMessage.success(msg); },
@@ -1130,6 +1163,11 @@ const app = createApp({
       handleMenuSelect: handleMenuSelect,
       refreshCurrentPage: refreshCurrentPage,
       logout: logout,
+      // 主题切换
+      isLightTheme: isLightTheme,
+      toggleTheme: toggleTheme,
+      isMobileSidebarOpen: isMobileSidebarOpen,
+      closeMobileSidebar: closeMobileSidebar,
       formatDate: typeof formatDate !== 'undefined' ? formatDate : function(dateStr) {
         if (!dateStr) return '-';
         var d = new Date(dateStr);

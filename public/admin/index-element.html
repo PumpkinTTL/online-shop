@@ -22,16 +22,28 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <!-- Custom Styles -->
   <link rel="stylesheet" href="/admin/css/admin-element.css">
+  <link rel="stylesheet" href="/admin/css/sidebar.css">
   <link rel="stylesheet" href="/admin/css/pagination.css">
 </head>
 
 <body>
   <div id="app">
     <el-container style="height:100vh">
+      <!-- 移动端侧边栏遮罩 -->
+      <div class="sidebar-overlay" :class="{ show: isMobileSidebarOpen }" @click="closeMobileSidebar"></div>
+
       <!-- 侧边栏 -->
-      <el-aside :width="isCollapsed ? '72px' : '240px'" class="sidebar-wrap">
+      <el-aside :width="isCollapsed ? '72px' : '240px'" class="sidebar-wrap" :class="{ 'theme-light': isLightTheme, 'mobile-open': isMobileSidebarOpen }">
+        <!-- 主题切换按钮 -->
+        <button class="theme-toggle-btn" @click="toggleTheme" v-if="!isCollapsed">
+          <el-icon :size="16">
+            <sunny v-if="isLightTheme"></sunny>
+            <moon v-else></moon>
+          </el-icon>
+        </button>
+
         <div class="sidebar-logo" :class="{ collapsed: isCollapsed }">
-          <el-icon :size="26" style="color:#3B82F6;">
+          <el-icon :size="26">
             <promotion></promotion>
           </el-icon>
           <span v-if="!isCollapsed" class="logo-title">工具商店</span>
@@ -119,8 +131,8 @@
         </el-menu>
 
         <!-- 侧边栏底部版本信息 -->
-        <div v-if="!isCollapsed" style="padding:12px 20px;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
-          <div style="font-size:11px;color:#475569;">v2.0 Element Plus</div>
+        <div v-if="!isCollapsed" class="version-info">
+          <div>v2.0 Element Plus</div>
         </div>
       </el-aside>
 
@@ -129,6 +141,11 @@
         <!-- 顶部栏 -->
         <el-header class="app-header">
           <div class="header-left">
+            <!-- 移动端菜单按钮 -->
+            <el-icon class="mobile-menu-btn" @click="isMobileSidebarOpen = true" :size="20">
+              <menu></menu>
+            </el-icon>
+            <!-- 桌面端折叠按钮 -->
             <el-icon class="collapse-btn" @click="isCollapsed = !isCollapsed" :size="20">
               <fold v-if="!isCollapsed"></fold>
               <expand v-else></expand>

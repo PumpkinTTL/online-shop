@@ -6,10 +6,6 @@
    ============================================================ */
 
 :root {
-  --sidebar-bg: #0F172A;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-text: #94A3B8;
-  --sidebar-active: #3B82F6;
   --header-bg: #FFFFFF;
   --header-border: #F1F5F9;
   --main-bg: #F8FAFC;
@@ -123,114 +119,6 @@ body {
   border-color: var(--accent) !important;
 }
 
-/* ===== 侧边栏 ===== */
-.sidebar-wrap {
-  background: var(--sidebar-bg) !important;
-  border-right: 1px solid var(--sidebar-border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
-}
-
-.sidebar-logo {
-  height: 60px;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 12px;
-  border-bottom: 1px solid var(--sidebar-border);
-  flex-shrink: 0;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.sidebar-logo.collapsed {
-  justify-content: center;
-  padding: 0;
-}
-
-.sidebar-logo .logo-title {
-  font-family: 'Poppins', sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #F1F5F9;
-  letter-spacing: 0.5px;
-}
-
-/* 侧边栏菜单 */
-.sidebar-menu {
-  flex: 1;
-  border-right: none !important;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 12px 8px;
-  background: transparent !important;
-}
-
-/* 滚动条美化 */
-.sidebar-menu::-webkit-scrollbar {
-  width: 4px;
-}
-.sidebar-menu::-webkit-scrollbar-track {
-  background: transparent;
-}
-.sidebar-menu::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-.sidebar-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* 菜单项 */
-.sidebar-menu .el-menu-item {
-  margin: 2px 0;
-  border-radius: 8px !important;
-  height: 42px !important;
-  line-height: 42px !important;
-  font-size: 13px;
-  transition: all 0.2s ease-out !important;
-}
-
-.sidebar-menu .el-menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  color: #CBD5E1 !important;
-}
-
-.sidebar-menu .el-menu-item.is-active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08)) !important;
-  color: #60A5FA !important;
-  font-weight: 600;
-  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.15);
-}
-
-.sidebar-menu .el-sub-menu__title {
-  border-radius: 8px !important;
-  height: 42px !important;
-  line-height: 42px !important;
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748B !important;
-  margin: 2px 0;
-}
-
-.sidebar-menu .el-sub-menu__title:hover {
-  background-color: rgba(255, 255, 255, 0.04) !important;
-  color: #94A3B8 !important;
-}
-
-.sidebar-menu .el-sub-menu .el-menu-item {
-  padding-left: 52px !important;
-  min-width: auto !important;
-}
-
-/* 子菜单箭头颜色 */
-.sidebar-menu .el-sub-menu__icon-arrow {
-  color: #475569 !important;
-}
-
 /* ===== 顶部栏 ===== */
 .app-header {
   background: var(--header-bg);
@@ -249,6 +137,23 @@ body {
   gap: 16px;
 }
 
+/* 移动端菜单按钮 */
+.mobile-menu-btn {
+  display: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  padding: 6px;
+  border-radius: 6px;
+  margin-right: 8px;
+}
+
+.mobile-menu-btn:hover {
+  color: var(--accent);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+/* 桌面端折叠按钮 */
 .collapse-btn {
   cursor: pointer;
   color: var(--text-secondary);
@@ -260,6 +165,17 @@ body {
 .collapse-btn:hover {
   color: var(--accent);
   background: rgba(59, 130, 246, 0.06);
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .collapse-btn {
+    display: none;
+  }
 }
 
 /* 面包屑 */
@@ -729,10 +645,6 @@ body {
 
   .user-name {
     display: none;
-  }
-
-  .sidebar-logo .logo-title {
-    font-size: 16px;
   }
 }
 
