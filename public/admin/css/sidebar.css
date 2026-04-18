@@ -1,6 +1,5 @@
 /* ============================================================
-   侧边导航栏样式 - 轻量高性能版本
-   支持深色/浅色主题切换，响应式适配
+   侧边导航栏样式 - 极简高性能版本
    ============================================================ */
 
 /* ===== CSS变量定义 ===== */
@@ -12,7 +11,7 @@
   --sidebar-dark-text-hover: #E2E8F0;
   --sidebar-dark-active-bg: rgba(59, 130, 246, 0.15);
   --sidebar-dark-active-text: #60A5FA;
-  --sidebar-dark-logo-bg: linear-gradient(135deg, #3B82F6, #6366F1);
+  --sidebar-dark-logo-text: #60A5FA;
   --sidebar-dark-item-hover: rgba(255, 255, 255, 0.06);
   --sidebar-dark-submenu-bg: rgba(0, 0, 0, 0.2);
 
@@ -23,7 +22,7 @@
   --sidebar-light-text-hover: #334155;
   --sidebar-light-active-bg: rgba(59, 130, 246, 0.1);
   --sidebar-light-active-text: #3B82F6;
-  --sidebar-light-logo-bg: linear-gradient(135deg, #3B82F6, #6366F1);
+  --sidebar-light-logo-text: #3B82F6;
   --sidebar-light-item-hover: rgba(59, 130, 246, 0.06);
   --sidebar-light-submenu-bg: #F8FAFC;
 }
@@ -35,7 +34,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ===== 移动端抽屉内容容器 ===== */
@@ -44,7 +42,6 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0;
 }
 
 /* ===== 浅色主题（桌面端+移动端） ===== */
@@ -61,7 +58,7 @@
   }
 }
 
-/* ===== Logo区域（桌面端+移动端） ===== */
+/* ===== Logo区域 ===== */
 .sidebar-logo {
   height: 60px;
   display: flex;
@@ -70,8 +67,6 @@
   gap: 12px;
   border-bottom: 1px solid var(--sidebar-dark-border);
   flex-shrink: 0;
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 .sidebar-wrap.theme-light .sidebar-logo,
@@ -84,19 +79,30 @@
   padding: 0;
 }
 
+/* Logo图标背景 */
+.sidebar-logo .el-icon {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #3B82F6, #6366F1);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Logo标题 - 移除渐变文字，使用纯色 */
 .sidebar-logo .logo-title {
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 18px;
   font-weight: 700;
-  background: var(--sidebar-dark-logo-bg);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--sidebar-dark-logo-text);
 }
 
 .sidebar-wrap.theme-light .sidebar-logo .logo-title,
 .mobile-sidebar-content.theme-light .sidebar-logo .logo-title {
-  background: var(--sidebar-light-logo-bg);
+  color: var(--sidebar-light-logo-text);
 }
 
 /* ===== 菜单容器 ===== */
@@ -256,7 +262,6 @@
   color: var(--sidebar-light-text);
 }
 
-/* 移动端版本信息需要在底部 */
 .mobile-sidebar-content .version-info {
   margin-top: auto;
 }
@@ -269,16 +274,16 @@
   z-index: 10;
   background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: inherit;
+  color: #94A3B8;
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .sidebar-wrap.theme-light .theme-toggle-btn,
 .mobile-sidebar-content.theme-light .theme-toggle-btn {
   background: rgba(0, 0, 0, 0.05);
+  color: #64748B;
 }
 
 .theme-toggle-btn:hover {
@@ -295,8 +300,7 @@
   display: none;
 }
 
-/* ===== 移动端抽屉样式（不覆盖动画） ===== */
-/* 只覆盖必要的样式，保持Element Plus原生动画 */
+/* ===== 移动端抽屉样式（只覆盖必要样式） ===== */
 .mobile-sidebar-drawer .el-drawer__body {
   padding: 0;
 }
@@ -318,6 +322,5 @@
   .sidebar-menu .el-sub-menu__title {
     height: 40px;
     line-height: 40px;
-    font-size: 13px;
   }
 }

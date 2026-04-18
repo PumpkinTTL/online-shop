@@ -141,30 +141,34 @@ body {
 .mobile-menu-btn {
   display: none;
   cursor: pointer;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  padding: 6px;
-  border-radius: 6px;
+  color: #64748B;
+  padding: 8px;
+  border-radius: 8px;
   margin-right: 8px;
+  font-size: 20px;
+  background: transparent;
+  border: none;
 }
 
 .mobile-menu-btn:hover {
-  color: var(--accent);
-  background: rgba(59, 130, 246, 0.06);
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.08);
 }
 
 /* 桌面端折叠按钮 */
 .collapse-btn {
   cursor: pointer;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  padding: 6px;
-  border-radius: 6px;
+  color: #64748B;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 20px;
+  background: transparent;
+  border: none;
 }
 
 .collapse-btn:hover {
-  color: var(--accent);
-  background: rgba(59, 130, 246, 0.06);
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.08);
 }
 
 @media (max-width: 768px) {
