@@ -500,10 +500,28 @@ body {
   padding: 12px 0 !important;
 }
 
-/* 防止表格单元格内容溢出 */
-.el-table .cell {
+/* 防止表格单元格内容溢出 - 但不影响表头 */
+.el-table .el-table__body-wrapper .cell {
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 表头不裁切 */
+.el-table .el-table__header-wrapper .cell {
+  white-space: normal;
+  text-overflow: clip;
+}
+
+/* 注意事项单元格样式 */
+.tips-cell {
+  display: inline-block;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #EF4444;
+  font-size: 12px;
+  cursor: help;
 }
 
 /* selection 列和操作列不裁切，确保复选框正常渲染 */

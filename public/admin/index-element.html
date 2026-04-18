@@ -369,10 +369,11 @@
               <el-table-column label="关键词" width="100">
                 <template #default="{ row }">{{ row.smKeyWord || '-' }}</template>
               </el-table-column>
-              <el-table-column label="注意事项" width="120" show-overflow-tooltip>
+              <el-table-column label="注意事项" width="120">
                 <template #default="{ row }">
-                  <el-tag v-if="row.tips" type="danger" size="small"><i class="fa-solid fa-triangle-exclamation"></i>
-                    有</el-tag>
+                  <el-tooltip v-if="row.tips" :content="row.tips" placement="top" :show-after="500">
+                    <span class="tips-cell">{{ row.tips }}</span>
+                  </el-tooltip>
                   <span v-else style="color: #999">-</span>
                 </template>
               </el-table-column>
