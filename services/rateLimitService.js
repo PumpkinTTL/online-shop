@@ -44,6 +44,30 @@ class RateLimitService {
         message: '管理后台请求过于频繁',
         enabled: true,
       },
+      {
+        key: 'pickup',
+        name: '接码接口',
+        windowMs: 60 * 1000,
+        maxRequests: 20,
+        message: '接码请求过于频繁，请稍后再试',
+        enabled: true,
+      },
+      {
+        key: 'pickupVerify',
+        name: '卡密验证',
+        windowMs: 60 * 1000,
+        maxRequests: 5,
+        message: '卡密验证过于频繁，请稍后再试',
+        enabled: true,
+      },
+      {
+        key: 'pickupRedeem',
+        name: '卡密兑换',
+        windowMs: 60 * 1000,
+        maxRequests: 3,
+        message: '卡密兑换过于频繁，请稍后再试',
+        enabled: true,
+      },
     ];
   }
 
