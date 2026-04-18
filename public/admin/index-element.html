@@ -217,7 +217,7 @@
                   <tr>
                     <th style="width:70px;">ID</th>
                     <th style="min-width:140px;">类别名称</th>
-                    <th style="width:110px;">代号</th>
+                    <th>代号</th>
                     <th style="min-width:180px;">说明</th>
                     <th style="width:100px;">接码</th>
                     <th style="width:70px;">排序</th>
@@ -241,7 +241,10 @@
                     <td>
                       <el-popover v-if="row.smsEnabled === 1" placement="top" :width="240" trigger="click">
                         <template #reference>
-                          <el-tag type="success" size="small" style="cursor:pointer">已启用</el-tag>
+                          <el-tag type="success" size="small" style="cursor:pointer">
+                            <el-icon style="vertical-align:middle;margin-right:2px;"><info-filled /></el-icon>
+                            已启用
+                          </el-tag>
                         </template>
                         <div class="sms-detail-popover">
                           <div class="sms-detail-row">
