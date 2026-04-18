@@ -1293,7 +1293,9 @@ const app = createApp({
 });
 
 // 注册 Element Plus
-app.use(ElementPlus);
+app.use(ElementPlus, {
+  locale: ElementPlusLocaleZhCn,
+});
 
 // 覆盖 401 跳转到 Element 版登录页
 // 重新创建 axios 实例，替换默认拦截器
