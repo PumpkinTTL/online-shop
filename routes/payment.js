@@ -1,12 +1,32 @@
 const express = require('express');
+const { body, query, validationResult } = require('express-validator');
 const paymentService = require('../services/paymentService');
 const { optionalAuth } = require('../middleware/auth');
 const { payment: paymentLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
+// 验证中间件：统一处理验证错误
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
+
 // 创建支付订单（预下单，返回二维码）
-router.post('/create', paymentLimiter, optionalAuth, async (req, res) => {
+router.post('/create', paymentLimiter, [
+  body('productId')
+    .isInt({ min: 1 })
+    .withMessage('商品ID必须是正整数'),
+  body('contact')
+    .trim()
+    .notEmpty()
+    .withMessage('联系方式不能为空')
+    .isLength({ max: 200 })
+    .withMessage('联系方式长度不能超过200字符'),
+], handleValidationErrors, optionalAuth, async (req, res) => {
   try {
     const { productId, contact, amount: frontendAmount } = req.body;
 
@@ -15,9 +35,6 @@ router.post('/create', paymentLimiter, optionalAuth, async (req, res) => {
       console.warn(`[Security] 检测到前端传递金额参数: productId=${productId}, frontendAmount=${frontendAmount}, ip=${req.ip}`);
     }
 
-    if (!productId) {
-      return res.status(400).json({ error: '请选择商品' });
-    }
     const result = await paymentService.createPayment(parseInt(productId), contact, req.userId || null);
     res.json(result);
   } catch (error) {
@@ -26,7 +43,20 @@ router.post('/create', paymentLimiter, optionalAuth, async (req, res) => {
 });
 
 // 创建接码服务支付订单（paySMS）
-router.post('/create-sms', paymentLimiter, optionalAuth, async (req, res) => {
+router.post('/create-sms', paymentLimiter, [
+  body('cardKeyId')
+    .isInt({ min: 1 })
+    .withMessage('卡密ID必须是正整数'),
+  body('productId')
+    .isInt({ min: 1 })
+    .withMessage('商品ID必须是正整数'),
+  body('contact')
+    .trim()
+    .notEmpty()
+    .withMessage('联系方式不能为空')
+    .isLength({ max: 200 })
+    .withMessage('联系方式长度不能超过200字符'),
+], handleValidationErrors, optionalAuth, async (req, res) => {
   try {
     const { cardKeyId, productId, contact, amount: frontendAmount } = req.body;
 
@@ -35,12 +65,6 @@ router.post('/create-sms', paymentLimiter, optionalAuth, async (req, res) => {
       console.warn(`[Security] 检测到前端传递金额参数: cardKeyId=${cardKeyId}, productId=${productId}, frontendAmount=${frontendAmount}, ip=${req.ip}`);
     }
 
-    if (!cardKeyId) {
-      return res.status(400).json({ error: '缺少卡密信息' });
-    }
-    if (!productId) {
-      return res.status(400).json({ error: '缺少商品信息' });
-    }
     const result = await paymentService.createSmsPayment(
       cardKeyId,
       productId,
@@ -54,12 +78,14 @@ router.post('/create-sms', paymentLimiter, optionalAuth, async (req, res) => {
 });
 
 // 查询支付状态（前端轮询）
-router.get('/status', async (req, res) => {
+router.get('/status', [
+  query('orderNo')
+    .trim()
+    .notEmpty()
+    .withMessage('订单号不能为空'),
+], handleValidationErrors, async (req, res) => {
   try {
     const { orderNo } = req.query;
-    if (!orderNo) {
-      return res.status(400).json({ error: '缺少订单号' });
-    }
     const result = await paymentService.queryPaymentStatus(orderNo.trim());
     res.json(result);
   } catch (error) {
@@ -68,12 +94,20 @@ router.get('/status', async (req, res) => {
 });
 
 // 更新联系方式（需要订单号匹配，如果订单有userId则需要登录认证）
-router.post('/update-contact', async (req, res) => {
+router.post('/update-contact', [
+  body('orderNo')
+    .trim()
+    .notEmpty()
+    .withMessage('订单号不能为空'),
+  body('contact')
+    .trim()
+    .notEmpty()
+    .withMessage('联系方式不能为空')
+    .isLength({ max: 200 })
+    .withMessage('联系方式长度不能超过200字符'),
+], handleValidationErrors, async (req, res) => {
   try {
     const { orderNo, contact } = req.body;
-    if (!orderNo || !contact) {
-      return res.status(400).json({ error: '参数不完整' });
-    }
 
     const paymentRepo = paymentService.getPaymentOrderRepo();
     const order = await paymentRepo.findOne({ where: { orderNo } });

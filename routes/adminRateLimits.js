@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const { body, param, validationResult } = require('express-validator');
 const rateLimitService = require('../services/rateLimitService');
 const dataSource = require('../config/database');
 const Admin = require('../entities/Admin');
@@ -46,6 +47,15 @@ const auth = async (req, res, next) => {
 
 const router = express.Router();
 
+// 验证中间件：统一处理验证错误
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
+
 // 获取所有速率限制配置（需要管理员权限）
 router.get('/', auth, async (req, res) => {
   try {
@@ -70,7 +80,30 @@ router.get('/:key', auth, async (req, res) => {
 });
 
 // 更新速率限制配置（需要管理员权限）
-router.put('/:key', auth, async (req, res) => {
+router.put('/:key', [
+  param('key')
+    .isIn(['global', 'login', 'payment', 'api', 'admin'])
+    .withMessage('无效的配置键'),
+  body('windowMs')
+    .optional()
+    .isInt({ min: 1000 })
+    .withMessage('时间窗口必须是大于等于1000的整数毫秒值'),
+  body('maxRequests')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('最大请求数必须是大于等于1的整数'),
+  body('enabled')
+    .optional()
+    .isBoolean()
+    .withMessage('enabled必须是布尔值'),
+  body('message')
+    .optional()
+    .isString()
+    .withMessage('message必须是字符串')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('message长度必须在1-200字符之间'),
+], handleValidationErrors, auth, async (req, res) => {
   try {
     const { key } = req.params;
     const { windowMs, maxRequests, message, enabled } = req.body;

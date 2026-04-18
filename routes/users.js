@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
 const userService = require('../services/UserService');
 const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 const { login: loginLimiter } = require('../middleware/rateLimiter');
@@ -7,9 +8,6 @@ const { login: loginLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 const JWT_EXPIRES_IN = '7d';
-
-// 用户名验证正则：只能包含英文、数字、下划线，长度3-20
-const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
 // 生成 JWT Token（登录/注册时使用）
 const generateToken = (userId) => {
@@ -24,36 +22,40 @@ const COOKIE_OPTIONS = {
   maxAge: 7 * 24 * 60 * 60 * 1000  // 7天（毫秒）
 };
 
+// 验证中间件：统一处理验证错误
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
+
 // 注册
-router.post('/register', async (req, res) => {
+router.post('/register', [
+  body('username')
+    .trim()
+    .isLength({ min: 3, max: 20 })
+    .withMessage('用户名长度必须为3-20位')
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage('用户名只能包含英文、数字、下划线'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('密码长度至少6位'),
+], handleValidationErrors, async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    // 验证用户名
-    if (!username || !USERNAME_REGEX.test(username)) {
-      return res.status(400).json({ 
-        error: '用户名只能包含英文、数字、下划线，长度3-20位' 
-      });
-    }
-    
-    // 验证密码
-    if (!password || password.length < 6) {
-      return res.status(400).json({ 
-        error: '密码长度至少6位' 
-      });
-    }
-    
     const user = await userService.register(username, password);
-    
+
     // 生成 token
     const token = generateToken(user.id);
-    
+
     // 设置 Cookie
     res.cookie('token', token, COOKIE_OPTIONS);
-    
+
     // 脱敏返回
-    res.status(201).json({ 
-      message: '注册成功', 
+    res.status(201).json({
+      message: '注册成功',
       user: {
         id: user.id,
         username: user.username,
@@ -68,27 +70,30 @@ router.post('/register', async (req, res) => {
 });
 
 // 登录
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', loginLimiter, [
+  body('username')
+    .trim()
+    .notEmpty()
+    .withMessage('用户名不能为空')
+    .isLength({ min: 3, max: 20 })
+    .withMessage('用户名长度必须为3-20位'),
+  body('password')
+    .notEmpty()
+    .withMessage('密码不能为空'),
+], handleValidationErrors, async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    if (!username || !password) {
-      return res.status(400).json({ 
-        error: '用户名和密码不能为空' 
-      });
-    }
-    
     const user = await userService.login(username, password);
-    
+
     // 生成 JWT token
     const token = generateToken(user.id);
-    
+
     // 设置 Cookie
     res.cookie('token', token, COOKIE_OPTIONS);
-    
+
     // 脱敏返回
-    res.json({ 
-      message: '登录成功', 
+    res.json({
+      message: '登录成功',
       user: {
         id: user.id,
         username: user.username,
