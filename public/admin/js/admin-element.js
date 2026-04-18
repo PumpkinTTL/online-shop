@@ -1104,8 +1104,10 @@ const app = createApp({
       toggleRateLimit: toggleRateLimit,
       resetRateLimits: resetRateLimits,
       formatWindowMs: formatWindowMs,
-      // 搜索图标（供 el-input :prefix-icon 使用）
+      // 图标组件引用（供 :icon / :prefix-icon 属性使用）
       Search: ElementPlusIconsVue.Search,
+      Refresh: ElementPlusIconsVue.Refresh,
+      RefreshLeft: ElementPlusIconsVue.RefreshLeft,
     };
   },
 });
