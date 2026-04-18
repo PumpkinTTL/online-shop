@@ -99,11 +99,107 @@ body {
 
 .el-dialog__body {
   padding: 24px !important;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .el-dialog__footer {
   border-top: 1px solid #F1F5F9;
   padding: 16px 24px !important;
+}
+
+/* ===== 弹窗移动端适配 ===== */
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 95% !important;
+    max-width: none !important;
+    margin: 0 auto !important;
+  }
+
+  .el-dialog__header {
+    padding: 16px !important;
+  }
+
+  .el-dialog__title {
+    font-size: 15px;
+  }
+
+  .el-dialog__body {
+    padding: 16px !important;
+    max-height: 55vh;
+  }
+
+  .el-dialog__footer {
+    padding: 12px 16px !important;
+  }
+
+  /* 弹窗内的表单项 */
+  .el-dialog .el-form-item {
+    margin-bottom: 16px !important;
+  }
+
+  .el-dialog .el-form-item__label {
+    font-size: 13px !important;
+    padding-bottom: 6px !important;
+  }
+
+  /* 弹窗内的按钮 */
+  .el-dialog__footer .el-button {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+  }
+
+  .el-dialog__footer .el-button + .el-button {
+    margin-left: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .el-dialog {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .el-dialog__header {
+    padding: 12px 16px !important;
+  }
+
+  .el-dialog__title {
+    font-size: 14px;
+  }
+
+  .el-dialog__body {
+    padding: 12px 16px !important;
+    max-height: calc(100vh - 120px);
+  }
+
+  .el-dialog__footer {
+    padding: 10px 16px !important;
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    z-index: 1;
+  }
+
+  /* 弹窗内的输入框 */
+  .el-dialog .el-input__wrapper,
+  .el-dialog .el-textarea__inner {
+    font-size: 14px !important;
+  }
+
+  /* 弹窗底部按钮竖排排列 */
+  .el-dialog__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .el-dialog__footer .el-button + .el-button {
+    margin-left: 0 !important;
+  }
 }
 
 /* Pagination 圆角 */
@@ -530,6 +626,83 @@ body {
   font-size: 13px;
 }
 
+/* ===== 表单输入框移动端适配 ===== */
+@media (max-width: 480px) {
+  .el-dialog .el-input__wrapper,
+  .el-dialog .el-select .el-input__wrapper,
+  .el-dialog .el-textarea__inner {
+    font-size: 14px !important;
+  }
+
+  .el-dialog .el-input,
+  .el-dialog .el-select,
+  .el-dialog .el-cascader,
+  .el-dialog .el-date-editor {
+    width: 100% !important;
+  }
+
+  .el-dialog .el-textarea {
+    width: 100% !important;
+  }
+
+  /* 开关组件适配 */
+  .el-dialog .el-switch {
+    height: 22px !important;
+  }
+
+  .el-dialog .el-switch__core {
+    height: 22px !important;
+    min-width: 44px !important;
+  }
+
+  /* 单选框组适配 */
+  .el-dialog .el-radio-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .el-dialog .el-radio {
+    margin-right: 0 !important;
+  }
+
+  /* 复选框组适配 */
+  .el-dialog .el-checkbox-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .el-dialog .el-checkbox {
+    margin-right: 0 !important;
+  }
+
+  /* 时间选择器适配 */
+  .el-dialog .el-date-editor {
+    width: 100% !important;
+  }
+
+  /* 数字输入框适配 */
+  .el-dialog .el-input-number {
+    width: 100% !important;
+  }
+
+  .el-dialog .el-input-number .el-input__wrapper {
+    width: 100% !important;
+  }
+
+  /* 表单项内容换行 */
+  .el-dialog .el-form-item__content {
+    flex-wrap: wrap !important;
+  }
+
+  /* 确保长文本换行 */
+  .el-dialog .el-form-item__label {
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+}
+
 /* ===== 操作按钮（圆形图标按钮） ===== */
 .action-btn {
   width: 32px !important;
@@ -651,6 +824,16 @@ body {
   .user-name {
     display: none;
   }
+
+  /* ===== 遮罩层移动端样式 ===== */
+  .el-overlay {
+    padding: 10px !important;
+  }
+
+  /* 弹窗容器 */
+  .el-dialog__wrapper {
+    padding: 10px !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -674,6 +857,15 @@ body {
 
   .page-toolbar {
     gap: 6px;
+  }
+
+  /* ===== 遮罩层小屏幕样式 ===== */
+  .el-overlay {
+    padding: 0 !important;
+  }
+
+  .el-dialog__wrapper {
+    padding: 0 !important;
   }
 }
 
