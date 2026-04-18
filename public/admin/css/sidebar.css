@@ -34,6 +34,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Element Plus折叠过渡需要这个 */
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ===== 移动端抽屉内容容器 ===== */
@@ -67,7 +69,8 @@
   gap: 12px;
   border-bottom: 1px solid var(--sidebar-dark-border);
   flex-shrink: 0;
-  transition: padding 0.3s;
+  /* Element Plus折叠过渡需要这个 */
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), gap 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-wrap.theme-light .sidebar-logo,
@@ -77,11 +80,12 @@
 
 /* 折叠状态 - logo居中 */
 .sidebar-logo.collapsed {
-  justify-content: center;
-  padding: 0;
+  justify-content: center !important;
+  padding: 0 !important;
+  gap: 0 !important;
 }
 
-/* Logo图标 */
+/* Logo图标 - 折叠状态下居中 */
 .sidebar-logo .el-icon {
   flex-shrink: 0;
   background: linear-gradient(135deg, #3B82F6, #6366F1);
@@ -92,6 +96,11 @@
   justify-content: center;
   color: #fff;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* 折叠状态下的图标 - 确保居中 */
+.sidebar-logo.collapsed .el-icon {
+  margin: 0;
 }
 
 /* Logo标题 */
