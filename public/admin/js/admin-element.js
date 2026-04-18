@@ -61,7 +61,7 @@ const app = createApp({
 
     // ===== 商品名查找 =====
     var getProductName = function(productId) {
-      var list = products.value;
+      var list = allProducts.value;
       for (var i = 0; i < list.length; i++) {
         if (list[i].id === productId) return list[i].name;
       }
@@ -100,7 +100,7 @@ const app = createApp({
       if (page === 'dashboard') loadStats();
       else if (page === 'categories') loadCategories();
       else if (page === 'products') { loadCategories(); loadProducts(); }
-      else if (page === 'cardkeys') { loadProducts(); loadCardKeys(); }
+      else if (page === 'cardkeys') { loadAllProducts(); loadCardKeys(); }
       else if (page === 'orders') loadOrders();
       else if (page === 'users') loadUsers();
       else if (page === 'admins') loadAdmins();
@@ -135,6 +135,7 @@ const app = createApp({
     // ===== 商品类别管理 =====
     var categories = ref([]);
     var categoriesLoading = ref(false);
+    var selectedCategoryIds = ref([]);
     var categoryModalVisible = ref(false);
     var categoryForm = ref({});
 
@@ -204,20 +205,80 @@ const app = createApp({
       }
     };
 
+    var handleCategorySelectionChange = function(selection) {
+      selectedCategoryIds.value = selection.map(function(item) { return item.id; });
+    };
+
+    var handleBatchDeleteCategories = async function() {
+      if (selectedCategoryIds.value.length === 0) return;
+      var msg = '确定要删除选中的 ' + selectedCategoryIds.value.length + ' 个类别吗？此操作不可恢复！';
+      if (!await confirmAction(msg)) return;
+      try {
+        var res = await AdminAPI.batchDeleteCategories(selectedCategoryIds.value);
+        ElMsg.success(res.message || '删除成功');
+        selectedCategoryIds.value = [];
+        loadCategories();
+      } catch (e) {
+        ElMsg.error(e.message || '批量删除失败');
+      }
+    };
+
     // ===== 商品管理 =====
     var products = ref([]);
+    var allProducts = ref([]); // 全量商品，用于下拉框和名称映射
     var productsLoading = ref(false);
+    var productTotal = ref(0);
+    var productFilter = ref({ page: 1, pageSize: 20 });
     var productModalVisible = ref(false);
     var editingProduct = ref({});
+    var selectedProductIds = ref([]);
+
+    var loadAllProducts = async function() {
+      try {
+        allProducts.value = await AdminAPI.getProducts();
+      } catch (e) { }
+    };
 
     var loadProducts = async function() {
       productsLoading.value = true;
       try {
-        products.value = await AdminAPI.getProducts();
+        var result = await AdminAPI.getProducts(productFilter.value);
+        // 兼容：分页返回{items,total}，不分页返回数组
+        if (Array.isArray(result)) {
+          products.value = result;
+          productTotal.value = result.length;
+        } else {
+          products.value = result.items || [];
+          productTotal.value = result.total || 0;
+        }
       } catch (e) {
         ElMsg.error('加载商品失败');
       } finally {
         productsLoading.value = false;
+      }
+    };
+
+    var handleProductPageSizeChange = function() {
+      productFilter.value.page = 1;
+      loadProducts();
+    };
+
+    var handleProductSelectionChange = function(selection) {
+      selectedProductIds.value = selection.map(function(item) { return item.id; });
+    };
+
+    var handleBatchDeleteProducts = async function() {
+      if (selectedProductIds.value.length === 0) return;
+      var msg = '确定要删除选中的 ' + selectedProductIds.value.length + ' 个商品吗？此操作不可恢复！';
+      if (!await confirmAction(msg)) return;
+      try {
+        var res = await AdminAPI.batchDeleteProducts(selectedProductIds.value);
+        ElMsg.success(res.message || '删除成功');
+        selectedProductIds.value = [];
+        loadProducts();
+        loadStats();
+      } catch (e) {
+        ElMsg.error(e.message || '批量删除失败');
       }
     };
 
@@ -444,6 +505,7 @@ const app = createApp({
     var ordersLoading = ref(false);
     var orderTotal = ref(0);
     var orderFilter = ref({ status: '', page: 1, pageSize: 20 });
+    var selectedOrderIds = ref([]);
 
     var loadOrders = async function() {
       ordersLoading.value = true;
@@ -484,19 +546,57 @@ const app = createApp({
       loadOrders();
     };
 
+    var handleOrderSelectionChange = function(selection) {
+      selectedOrderIds.value = selection.map(function(item) { return item.id; });
+    };
+
+    var handleBatchDeleteOrders = async function() {
+      if (selectedOrderIds.value.length === 0) return;
+      var msg = '确定要删除选中的 ' + selectedOrderIds.value.length + ' 条订单吗？此操作不可恢复！';
+      if (!await confirmAction(msg)) return;
+      try {
+        var res = await AdminAPI.batchDeleteOrders(selectedOrderIds.value);
+        ElMsg.success(res.message || '删除成功');
+        selectedOrderIds.value = [];
+        loadOrders();
+        loadStats();
+      } catch (e) {
+        ElMsg.error(e.message || '批量删除失败');
+      }
+    };
+
     // ===== 用户管理 =====
     var users = ref([]);
     var usersLoading = ref(false);
+    var userTotal = ref(0);
+    var userFilter = ref({ page: 1, pageSize: 20 });
+    var selectedUserIds = ref([]);
 
     var loadUsers = async function() {
       usersLoading.value = true;
       try {
-        users.value = await AdminAPI.getUsers();
+        var result = await AdminAPI.getUsers(userFilter.value);
+        if (Array.isArray(result)) {
+          users.value = result;
+          userTotal.value = result.length;
+        } else {
+          users.value = result.items || [];
+          userTotal.value = result.total || 0;
+        }
       } catch (e) {
         ElMsg.error('加载用户失败');
       } finally {
         usersLoading.value = false;
       }
+    };
+
+    var handleUserPageSizeChange = function() {
+      userFilter.value.page = 1;
+      loadUsers();
+    };
+
+    var handleUserSelectionChange = function(selection) {
+      selectedUserIds.value = selection.map(function(item) { return item.id; });
     };
 
     var handleToggleUser = async function(id) {
@@ -521,21 +621,55 @@ const app = createApp({
       }
     };
 
+    var handleBatchDeleteUsers = async function() {
+      if (selectedUserIds.value.length === 0) return;
+      var msg = '确定要删除选中的 ' + selectedUserIds.value.length + ' 个用户吗？此操作不可恢复！';
+      if (!await confirmAction(msg)) return;
+      try {
+        var res = await AdminAPI.batchDeleteUsers(selectedUserIds.value);
+        ElMsg.success(res.message || '删除成功');
+        selectedUserIds.value = [];
+        loadUsers();
+        loadStats();
+      } catch (e) {
+        ElMsg.error(e.message || '批量删除失败');
+      }
+    };
+
     // ===== 管理员管理 =====
     var admins = ref([]);
     var adminsLoading = ref(false);
+    var adminTotal = ref(0);
+    var adminFilter = ref({ page: 1, pageSize: 20 });
+    var selectedAdminIds = ref([]);
     var adminModalVisible = ref(false);
     var adminForm = ref({ username: '', password: '', nickname: '', role: 'admin' });
 
     var loadAdmins = async function() {
       adminsLoading.value = true;
       try {
-        admins.value = await AdminAPI.getAdmins();
+        var result = await AdminAPI.getAdmins(adminFilter.value);
+        if (Array.isArray(result)) {
+          admins.value = result;
+          adminTotal.value = result.length;
+        } else {
+          admins.value = result.items || [];
+          adminTotal.value = result.total || 0;
+        }
       } catch (e) {
         ElMsg.error('加载管理员列表失败');
       } finally {
         adminsLoading.value = false;
       }
+    };
+
+    var handleAdminPageSizeChange = function() {
+      adminFilter.value.page = 1;
+      loadAdmins();
+    };
+
+    var handleAdminSelectionChange = function(selection) {
+      selectedAdminIds.value = selection.map(function(item) { return item.id; });
     };
 
     var openAdminModal = function() {
@@ -578,6 +712,7 @@ const app = createApp({
     var smsRecordTotal = ref(0);
     var smsRecordLoading = ref(false);
     var smsRecordFilter = ref({ status: '', phone: '', keyword: '', source: '', page: 1, pageSize: 20 });
+    var selectedSmsRecordIds = ref([]);
 
     var loadSmsRecords = async function() {
       smsRecordLoading.value = true;
@@ -612,6 +747,24 @@ const app = createApp({
     var handleSmsRecordPageSizeChange = function() {
       smsRecordFilter.value.page = 1;
       loadSmsRecords();
+    };
+
+    var handleSmsRecordSelectionChange = function(selection) {
+      selectedSmsRecordIds.value = selection.map(function(item) { return item.id; });
+    };
+
+    var handleBatchDeleteSmsRecords = async function() {
+      if (selectedSmsRecordIds.value.length === 0) return;
+      var msg = '确定要删除选中的 ' + selectedSmsRecordIds.value.length + ' 条记录吗？此操作不可恢复！';
+      if (!await confirmAction(msg)) return;
+      try {
+        var res = await AdminAPI.batchDeleteSmsRecords(selectedSmsRecordIds.value);
+        ElMsg.success(res.message || '删除成功');
+        selectedSmsRecordIds.value = [];
+        loadSmsRecords();
+      } catch (e) {
+        ElMsg.error(e.message || '批量删除失败');
+      }
     };
 
     // ===== 日志管理 =====
@@ -791,8 +944,8 @@ const app = createApp({
     watch(currentPage, async function(page) {
       if (page === 'dashboard') await loadStats();
       else if (page === 'categories') await loadCategories();
-      else if (page === 'products') { await loadCategories(); await loadProducts(); }
-      else if (page === 'cardkeys') { await loadProducts(); await loadCardKeys(); await loadCardPrefixes(); }
+      else if (page === 'products') { await loadCategories(); await loadProducts(); await loadAllProducts(); }
+      else if (page === 'cardkeys') { await loadAllProducts(); await loadCardKeys(); await loadCardPrefixes(); }
       else if (page === 'orders') await loadOrders();
       else if (page === 'users') await loadUsers();
       else if (page === 'admins') await loadAdmins();
@@ -948,8 +1101,8 @@ const app = createApp({
       var page = currentPage.value;
       if (page === 'dashboard') await loadStats();
       else if (page === 'categories') await loadCategories();
-      else if (page === 'products') { await loadCategories(); await loadProducts(); }
-      else if (page === 'cardkeys') { await loadProducts(); await loadCardKeys(); await loadCardPrefixes(); }
+      else if (page === 'products') { await loadCategories(); await loadProducts(); await loadAllProducts(); }
+      else if (page === 'cardkeys') { await loadAllProducts(); await loadCardKeys(); await loadCardPrefixes(); }
       else if (page === 'orders') await loadOrders();
       else if (page === 'users') await loadUsers();
       else if (page === 'admins') await loadAdmins();
@@ -995,21 +1148,31 @@ const app = createApp({
       // 商品类别
       categories: categories,
       categoriesLoading: categoriesLoading,
+      selectedCategoryIds: selectedCategoryIds,
       categoryModalVisible: categoryModalVisible,
       categoryForm: categoryForm,
       loadCategories: loadCategories,
       openCategoryModal: openCategoryModal,
       handleSaveCategory: handleSaveCategory,
       handleDeleteCategory: handleDeleteCategory,
+      handleCategorySelectionChange: handleCategorySelectionChange,
+      handleBatchDeleteCategories: handleBatchDeleteCategories,
       // 商品
       products: products,
+      allProducts: allProducts,
       productsLoading: productsLoading,
+      productTotal: productTotal,
+      productFilter: productFilter,
       productModalVisible: productModalVisible,
       editingProduct: editingProduct,
+      selectedProductIds: selectedProductIds,
       loadProducts: loadProducts,
       openProductModal: openProductModal,
       handleSaveProduct: handleSaveProduct,
       handleDeleteProduct: handleDeleteProduct,
+      handleProductPageSizeChange: handleProductPageSizeChange,
+      handleProductSelectionChange: handleProductSelectionChange,
+      handleBatchDeleteProducts: handleBatchDeleteProducts,
       productTypeLabel: productTypeLabel,
       // 卡密
       cardKeys: cardKeys,
@@ -1040,26 +1203,40 @@ const app = createApp({
       ordersLoading: ordersLoading,
       orderTotal: orderTotal,
       orderFilter: orderFilter,
+      selectedOrderIds: selectedOrderIds,
       loadOrders: loadOrders,
       handleDeleteOrder: handleDeleteOrder,
       orderStatusType: orderStatusType,
       orderStatusLabel: orderStatusLabel,
       handleOrderPageSizeChange: handleOrderPageSizeChange,
+      handleOrderSelectionChange: handleOrderSelectionChange,
+      handleBatchDeleteOrders: handleBatchDeleteOrders,
       // 用户
       users: users,
       usersLoading: usersLoading,
+      userTotal: userTotal,
+      userFilter: userFilter,
+      selectedUserIds: selectedUserIds,
       loadUsers: loadUsers,
       handleToggleUser: handleToggleUser,
       handleDeleteUser: handleDeleteUser,
+      handleUserPageSizeChange: handleUserPageSizeChange,
+      handleUserSelectionChange: handleUserSelectionChange,
+      handleBatchDeleteUsers: handleBatchDeleteUsers,
       // 管理员
       admins: admins,
       adminsLoading: adminsLoading,
+      adminTotal: adminTotal,
+      adminFilter: adminFilter,
+      selectedAdminIds: selectedAdminIds,
       adminModalVisible: adminModalVisible,
       adminForm: adminForm,
       loadAdmins: loadAdmins,
       openAdminModal: openAdminModal,
       handleCreateAdmin: handleCreateAdmin,
       handleDeleteAdmin: handleDeleteAdmin,
+      handleAdminPageSizeChange: handleAdminPageSizeChange,
+      handleAdminSelectionChange: handleAdminSelectionChange,
       // 修改密码
       showPasswordModal: showPasswordModal,
       passwordForm: passwordForm,
@@ -1069,12 +1246,15 @@ const app = createApp({
       smsRecordTotal: smsRecordTotal,
       smsRecordLoading: smsRecordLoading,
       smsRecordFilter: smsRecordFilter,
+      selectedSmsRecordIds: selectedSmsRecordIds,
       loadSmsRecords: loadSmsRecords,
       smsStatusType: smsStatusType,
       smsStatusLabel: smsStatusLabel,
       smsSourceLabel: smsSourceLabel,
       smsSourceType: smsSourceType,
       handleSmsRecordPageSizeChange: handleSmsRecordPageSizeChange,
+      handleSmsRecordSelectionChange: handleSmsRecordSelectionChange,
+      handleBatchDeleteSmsRecords: handleBatchDeleteSmsRecords,
       // 日志管理
       logStats: logStats,
       logLoading: logLoading,

@@ -497,6 +497,13 @@ class PickupService {
       smsContent: record.smsContent || null,
     };
   }
+
+  // 批量删除接码记录
+  async batchDeleteSmsRecords(ids) {
+    const repo = this.getSmsRecordRepo();
+    const result = await repo.delete(ids);
+    return result.affected || 0;
+  }
 }
 
 module.exports = new PickupService();

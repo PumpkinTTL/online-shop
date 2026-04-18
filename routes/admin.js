@@ -146,8 +146,12 @@ router.get('/stats', auth, async (req, res) => {
 
 router.get('/products', auth, async (req, res) => {
   try {
-    const products = await adminService.getProducts();
-    res.json(products);
+    const { page, pageSize } = req.query;
+    const result = await adminService.getProducts({
+      page: page ? parseInt(page) : 1,
+      pageSize: pageSize ? parseInt(pageSize) : 0,
+    });
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -185,6 +189,20 @@ router.delete('/products/:id', auth, async (req, res) => {
   try {
     await adminService.deleteProduct(parseInt(req.params.id));
     res.json({ message: '删除成功' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 批量删除商品
+router.post('/products/batch-delete', auth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请选择要删除的商品' });
+    }
+    const result = await adminService.batchDeleteProducts(ids);
+    res.json({ message: `成功删除 ${result} 个商品`, count: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -238,12 +256,30 @@ router.delete('/categories/:id', auth, async (req, res) => {
   }
 });
 
+// 批量删除类别
+router.post('/categories/batch-delete', auth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请选择要删除的类别' });
+    }
+    const result = await adminService.batchDeleteCategories(ids);
+    res.json({ message: `成功删除 ${result} 个类别`, count: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ==================== 用户管理 ====================
 
 router.get('/users', auth, async (req, res) => {
   try {
-    const users = await adminService.getUsers();
-    res.json(users);
+    const { page, pageSize } = req.query;
+    const result = await adminService.getUsers({
+      page: page ? parseInt(page) : 1,
+      pageSize: pageSize ? parseInt(pageSize) : 0,
+    });
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -272,6 +308,20 @@ router.delete('/users/:id', auth, async (req, res) => {
   try {
     await adminService.deleteUser(parseInt(req.params.id));
     res.json({ message: '删除成功' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 批量删除用户
+router.post('/users/batch-delete', auth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请选择要删除的用户' });
+    }
+    const result = await adminService.batchDeleteUsers(ids);
+    res.json({ message: `成功删除 ${result} 个用户`, count: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -391,6 +441,20 @@ router.delete('/orders/:id', auth, async (req, res) => {
   }
 });
 
+// 批量删除订单
+router.post('/orders/batch-delete', auth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请选择要删除的订单' });
+    }
+    const result = await adminService.batchDeleteOrders(ids);
+    res.json({ message: `成功删除 ${result} 条订单`, count: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ==================== 接码记录 ====================
 
 router.get('/sms-records', auth, async (req, res) => {
@@ -410,12 +474,30 @@ router.get('/sms-records', auth, async (req, res) => {
   }
 });
 
+// 批量删除接码记录
+router.post('/sms-records/batch-delete', auth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请选择要删除的记录' });
+    }
+    const result = await pickupService.batchDeleteSmsRecords(ids);
+    res.json({ message: `成功删除 ${result} 条记录`, count: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ==================== 管理员管理 ====================
 
 router.get('/admins', auth, async (req, res) => {
   try {
-    const admins = await adminService.findAllAdmins();
-    res.json(admins);
+    const { page, pageSize } = req.query;
+    const result = await adminService.findAllAdmins({
+      page: page ? parseInt(page) : 1,
+      pageSize: pageSize ? parseInt(pageSize) : 0,
+    });
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

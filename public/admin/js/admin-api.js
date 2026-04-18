@@ -85,8 +85,8 @@ const AdminAPI = {
   },
 
   // 商品
-  getProducts() {
-    return this.getHttp().get('/products?all=1');
+  getProducts(params) {
+    return this.getHttp().get('/products', { params });
   },
   getProduct(id) {
     return this.getHttp().get(`/products/${id}`);
@@ -100,10 +100,13 @@ const AdminAPI = {
   deleteProduct(id) {
     return this.getHttp().delete(`/products/${id}`);
   },
+  batchDeleteProducts(ids) {
+    return this.getHttp().post('/products/batch-delete', { ids });
+  },
 
   // 用户
-  getUsers() {
-    return this.getHttp().get('/users');
+  getUsers(params) {
+    return this.getHttp().get('/users', { params });
   },
   getUser(id) {
     return this.getHttp().get(`/users/${id}`);
@@ -113,6 +116,9 @@ const AdminAPI = {
   },
   deleteUser(id) {
     return this.getHttp().delete(`/users/${id}`);
+  },
+  batchDeleteUsers(ids) {
+    return this.getHttp().post('/users/batch-delete', { ids });
   },
 
   // 卡密
@@ -145,6 +151,9 @@ const AdminAPI = {
   deleteOrder(id) {
     return this.getHttp().delete(`/orders/${id}`);
   },
+  batchDeleteOrders(ids) {
+    return this.getHttp().post('/orders/batch-delete', { ids });
+  },
 
   // 商品类别
   getCategories() {
@@ -162,10 +171,13 @@ const AdminAPI = {
   deleteCategory(id) {
     return this.getHttp().delete(`/categories/${id}`);
   },
+  batchDeleteCategories(ids) {
+    return this.getHttp().post('/categories/batch-delete', { ids });
+  },
 
   // 管理员
-  getAdmins() {
-    return this.getHttp().get('/admins');
+  getAdmins(params) {
+    return this.getHttp().get('/admins', { params });
   },
   createAdmin(data) {
     return this.getHttp().post('/admins', data);
@@ -177,6 +189,9 @@ const AdminAPI = {
   // 接码记录
   getSmsRecords(params) {
     return this.getHttp().get('/sms-records', { params });
+  },
+  batchDeleteSmsRecords(ids) {
+    return this.getHttp().post('/sms-records/batch-delete', { ids });
   },
 
   // 日志管理

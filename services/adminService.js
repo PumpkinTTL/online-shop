@@ -98,9 +98,18 @@ class AdminService {
   }
 
   // 获取所有管理员
-  async findAllAdmins() {
-    const admins = await this.getAdminRepo().find();
-    return admins.map(({ password, ...a }) => a);
+  async findAllAdmins({ page = 1, pageSize = 0 } = {}) {
+    const repo = this.getAdminRepo();
+    // pageSize=0 表示不分页，返回全部
+    if (!pageSize) {
+      const admins = await repo.find();
+      return admins.map(({ password, ...a }) => a);
+    }
+    const [items, total] = await repo.findAndCount({
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    return { items: items.map(({ password, ...a }) => a), total, page, pageSize };
   }
 
   // 删除管理员
@@ -166,18 +175,33 @@ class AdminService {
     return product;
   }
 
-  async getProducts() {
-    const products = await dataSource.getRepository(Product).find({
+  async getProducts({ page = 1, pageSize = 0 } = {}) {
+    const repo = dataSource.getRepository(Product);
+    // pageSize=0 表示不分页，返回全部（兼容旧调用）
+    if (!pageSize) {
+      const products = await repo.find({
+        relations: ['category'],
+        order: { id: 'DESC' },
+      });
+      const cardKeyRepo = dataSource.getRepository(CardKey);
+      for (const p of products) {
+        p.stock = await cardKeyRepo.count({ where: { productId: p.id, status: 'unused' } });
+        this.normalizeProduct(p);
+      }
+      return products;
+    }
+    const [items, total] = await repo.findAndCount({
       relations: ['category'],
       order: { id: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
-    // 附加库存（卡密动态计算）
     const cardKeyRepo = dataSource.getRepository(CardKey);
-    for (const p of products) {
+    for (const p of items) {
       p.stock = await cardKeyRepo.count({ where: { productId: p.id, status: 'unused' } });
       this.normalizeProduct(p);
     }
-    return products;
+    return { items, total, page, pageSize };
   }
 
   async getProduct(id) {
@@ -217,9 +241,19 @@ class AdminService {
 
   // ==================== 用户管理 ====================
 
-  async getUsers() {
-    const users = await dataSource.getRepository(User).find({ order: { id: 'DESC' } });
-    return users.map(({ password, ...u }) => u);
+  async getUsers({ page = 1, pageSize = 0 } = {}) {
+    const repo = dataSource.getRepository(User);
+    // pageSize=0 表示不分页，返回全部
+    if (!pageSize) {
+      const users = await repo.find({ order: { id: 'DESC' } });
+      return users.map(({ password, ...u }) => u);
+    }
+    const [items, total] = await repo.findAndCount({
+      order: { id: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    return { items: items.map(({ password, ...u }) => u), total, page, pageSize };
   }
 
   async getUser(id) {
@@ -351,6 +385,24 @@ class AdminService {
     return result.affected || 0;
   }
 
+  async batchDeleteProducts(ids) {
+    const repo = dataSource.getRepository(Product);
+    const result = await repo.delete(ids);
+    return result.affected || 0;
+  }
+
+  async batchDeleteOrders(ids) {
+    const repo = dataSource.getRepository(Order);
+    const result = await repo.delete(ids);
+    return result.affected || 0;
+  }
+
+  async batchDeleteUsers(ids) {
+    const repo = dataSource.getRepository(User);
+    const result = await repo.delete(ids);
+    return result.affected || 0;
+  }
+
   // ==================== 订单管理 ====================
 
   async getOrders({ status, page, pageSize }) {
@@ -418,6 +470,22 @@ class AdminService {
 
     await repo.remove(category);
     return true;
+  }
+
+  async batchDeleteCategories(ids) {
+    const repo = dataSource.getRepository(ProductCategory);
+    const productRepo = dataSource.getRepository(Product);
+    let deleted = 0;
+    for (const id of ids) {
+      const count = await productRepo.count({ where: { categoryId: id } });
+      if (count > 0) continue; // 跳过有商品的类别
+      const category = await repo.findOne({ where: { id } });
+      if (category) {
+        await repo.remove(category);
+        deleted++;
+      }
+    }
+    return deleted;
   }
 }
 
