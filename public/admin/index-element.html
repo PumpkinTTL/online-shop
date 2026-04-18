@@ -249,13 +249,12 @@
         <el-header class="app-header">
           <div class="header-left">
             <!-- 移动端菜单按钮 -->
-            <el-icon class="mobile-menu-btn" @click="isMobileSidebarOpen = true" :size="20">
-              <menu></menu>
+            <el-icon class="mobile-menu-btn" @click="isMobileSidebarOpen = true" :size="22">
+              <component :is="'Menu'"></component>
             </el-icon>
             <!-- 桌面端折叠按钮 -->
-            <el-icon class="collapse-btn" @click="isCollapsed = !isCollapsed" :size="20">
-              <fold v-if="!isCollapsed"></fold>
-              <expand v-else></expand>
+            <el-icon class="collapse-btn" @click="isCollapsed = !isCollapsed" :size="22">
+              <component :is="isCollapsed ? 'Expand' : 'Fold'"></component>
             </el-icon>
             <el-breadcrumb separator="/">
               <el-breadcrumb-item>首页</el-breadcrumb-item>

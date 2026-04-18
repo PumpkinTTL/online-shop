@@ -1,5 +1,5 @@
 /* ============================================================
-   侧边导航栏样式 - 极简高性能版本
+   侧边导航栏样式 - 极简版本，保留Element Plus原生功能
    ============================================================ */
 
 /* ===== CSS变量定义 ===== */
@@ -67,6 +67,7 @@
   gap: 12px;
   border-bottom: 1px solid var(--sidebar-dark-border);
   flex-shrink: 0;
+  transition: padding 0.3s;
 }
 
 .sidebar-wrap.theme-light .sidebar-logo,
@@ -74,12 +75,13 @@
   border-bottom-color: var(--sidebar-light-border);
 }
 
+/* 折叠状态 - logo居中 */
 .sidebar-logo.collapsed {
   justify-content: center;
   padding: 0;
 }
 
-/* Logo图标背景 */
+/* Logo图标 */
 .sidebar-logo .el-icon {
   flex-shrink: 0;
   background: linear-gradient(135deg, #3B82F6, #6366F1);
@@ -92,7 +94,7 @@
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
-/* Logo标题 - 移除渐变文字，使用纯色 */
+/* Logo标题 */
 .sidebar-logo .logo-title {
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 18px;
@@ -300,7 +302,7 @@
   display: none;
 }
 
-/* ===== 移动端抽屉样式（只覆盖必要样式） ===== */
+/* ===== 移动端抽屉样式 ===== */
 .mobile-sidebar-drawer .el-drawer__body {
   padding: 0;
 }
@@ -322,5 +324,6 @@
   .sidebar-menu .el-sub-menu__title {
     height: 40px;
     line-height: 40px;
+    font-size: 13px;
   }
 }

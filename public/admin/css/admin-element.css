@@ -141,13 +141,13 @@ body {
 .mobile-menu-btn {
   display: none;
   cursor: pointer;
-  color: #64748B;
+  color: #475569;
   padding: 8px;
   border-radius: 8px;
   margin-right: 8px;
-  font-size: 20px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  transition: all 0.2s;
 }
 
 .mobile-menu-btn:hover {
@@ -158,12 +158,12 @@ body {
 /* 桌面端折叠按钮 */
 .collapse-btn {
   cursor: pointer;
-  color: #64748B;
+  color: #475569;
   padding: 8px;
   border-radius: 8px;
-  font-size: 20px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  transition: all 0.2s;
 }
 
 .collapse-btn:hover {
@@ -175,6 +175,9 @@ body {
   .mobile-menu-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
   }
 
   .collapse-btn {
