@@ -223,7 +223,7 @@ const columns = [
     }
   },
   {
-    title: '状态', key: 'status', width: 90,
+    title: '状态', key: 'status', minWidth: 70,
     render: (row) => h(NTag, { type: cardStatusMap[row.status] || 'info', size: 'small' }, () => cardStatusLabel[row.status] || row.status),
   },
   {

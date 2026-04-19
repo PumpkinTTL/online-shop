@@ -186,7 +186,7 @@ const columns = [
     }
   },
   {
-    title: '状态', key: 'status', width: 80, align: 'center',
+    title: '状态', key: 'status', minWidth: 70, align: 'center',
     render: (row) => h(NTooltip, {}, {
       trigger: () => h(NTag, { type: statusMap[row.status] || 'default', size: 'small' }, () => statusLabel[row.status] || row.status),
       default: () => row.isSms

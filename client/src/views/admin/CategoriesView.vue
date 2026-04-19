@@ -121,22 +121,22 @@ const columns = [
   { type: 'selection' },
   { title: 'ID', key: 'id', width: 60 },
   {
-    title: '类别名称', key: 'name',
+    title: '类别名称', key: 'name', minWidth: 100,
     render: (row) => h('span', { style: 'font-weight:600' }, row.name),
   },
   {
-    title: '代号', key: 'code', width: 100,
+    title: '代号', key: 'code', minWidth: 70,
     render: (row) => h(NTag, { type: 'info', size: 'small' }, () => row.code),
   },
   {
-    title: '说明', key: 'description', minWidth: 140,
+    title: '说明', key: 'description', minWidth: 120,
     render: (row) => h('span', {
       style: 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;display:inline-block',
       title: row.description || '-',
     }, row.description || '-'),
   },
   {
-    title: '接码', key: 'smsEnabled', width: 100,
+    title: '接码', key: 'smsEnabled', minWidth: 80,
     render: (row) => {
       if (row.smsEnabled === 1 || row.smsEnabled === true) {
         return h(NPopover, { trigger: 'click', placement: 'top' }, {
@@ -151,9 +151,9 @@ const columns = [
       return h(NTag, { type: 'default', size: 'small' }, () => '未启用')
     },
   },
-  { title: '排序', key: 'sort', width: 70 },
+  { title: '排序', key: 'sort', minWidth: 60 },
   {
-    title: '状态', key: 'show', width: 80,
+    title: '状态', key: 'show', minWidth: 70,
     render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '上架' : '下架'),
   },
   {

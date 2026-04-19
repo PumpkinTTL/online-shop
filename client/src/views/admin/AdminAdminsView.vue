@@ -115,7 +115,7 @@ const columns = [
     render: (row) => h(NTag, { type: row.role === 'super' ? 'primary' : 'info', size: 'small' }, () => row.role === 'super' ? '超级管理员' : '管理员'),
   },
   {
-    title: '状态', key: 'isActive', width: 80,
+    title: '状态', key: 'isActive', minWidth: 70,
     render: (row) => h(NTag, { type: row.isActive ? 'success' : 'error', size: 'small' }, () => row.isActive ? '正常' : '禁用'),
   },
   {

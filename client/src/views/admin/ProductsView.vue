@@ -22,7 +22,7 @@
         :bordered="false"
         :loading="loading"
         :row-key="row => row.id"
-        :scroll-x="1400"
+        :scroll-x="1460"
         v-model:checked-row-keys="selectedKeys"
         @update:checked-row-keys="keys => selectedKeys = keys"
       />
@@ -168,58 +168,57 @@ const columns = [
     ellipsis: { tooltip: true },
   },
   {
-    title: '分类', key: 'categoryName', width: 100,
+    title: '分类', key: 'categoryName', minWidth: 80,
     render: (row) => {
       const cat = adminStore.categories.find(c => c.id === row.categoryId)
       if (!cat) return '-'
-      // 根据 code 着色
       const typeMap = { AI: 'info', SMS: 'success' }
       const tagType = cat.smsEnabled ? 'success' : (typeMap[cat.code] || 'warning')
       return h(NTag, { type: tagType, size: 'small' }, () => cat.name)
     }
   },
   {
-    title: '价格', key: 'price', width: 90, sorter: (a, b) => a.price - b.price,
+    title: '价格', key: 'price', minWidth: 80, sorter: (a, b) => a.price - b.price,
     render: (row) => h('span', { style: 'color:#EF4444;font-weight:600' }, `¥${row.price}`),
   },
   {
-    title: '库存', key: 'stock', width: 70, sorter: (a, b) => (a.stock || 0) - (b.stock || 0),
+    title: '库存', key: 'stock', minWidth: 60, sorter: (a, b) => (a.stock || 0) - (b.stock || 0),
     render: (row) => h(NTag, {
       type: row.stock > 0 ? 'success' : 'error', size: 'small'
     }, () => row.stock || 0),
   },
   {
-    title: '销量', key: 'sales', width: 70, sorter: (a, b) => (a.sales || 0) - (b.sales || 0),
+    title: '销量', key: 'sales', minWidth: 60, sorter: (a, b) => (a.sales || 0) - (b.sales || 0),
     render: (row) => h('span', { style: 'font-weight:600;color:#6366F1' }, row.sales || 0),
   },
   {
-    title: '质保', key: 'warranty', width: 90,
+    title: '质保', key: 'warranty', minWidth: 70,
     render: (row) => row.warranty || '-',
   },
   {
-    title: '接码', key: 'isCode', width: 70,
+    title: '接码', key: 'isCode', minWidth: 70,
     render: (row) => h(NTag, {
       type: row.isCode ? 'success' : 'default', size: 'small'
     }, () => row.isCode ? '需要' : '否'),
   },
   {
-    title: '关键词', key: 'smKeyWord', width: 90,
+    title: '关键词', key: 'smKeyWord', minWidth: 70,
     render: (row) => row.smKeyWord || '-',
   },
   {
-    title: '注意事项', key: 'tips', width: 110,
+    title: '注意事项', key: 'tips', minWidth: 90,
     render: (row) => row.tips
       ? h(NTooltip, {}, { trigger: () => h('span', { style: 'cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;display:inline-block' }, row.tips), default: () => row.tips })
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
-    title: '积分', key: 'credit', width: 70, align: 'center',
+    title: '积分', key: 'credit', minWidth: 60, align: 'center',
     render: (row) => row.credit
       ? h(NTag, { type: 'warning', size: 'small' }, () => row.credit)
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
-    title: '上架', key: 'show', width: 70,
+    title: '上架', key: 'show', minWidth: 70,
     render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '上架' : '下架'),
   },
   {

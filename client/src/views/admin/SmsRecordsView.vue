@@ -83,7 +83,7 @@ const columns = [
   { type: 'selection' },
   { title: 'ID', key: 'id', width: 60, sorter: (a, b) => a.id - b.id },
   {
-    title: '手机号', key: 'phone', width: 150,
+    title: '手机号', key: 'phone', minWidth: 120,
     render: (row) => {
       const revealed = !revealedKeys.value.has(`phone-${row.id}`)
       return h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
@@ -105,7 +105,7 @@ const columns = [
     render: (row) => row.keyword || '-',
   },
   {
-    title: '卡类型', key: 'cardType', width: 90,
+    title: '卡类型', key: 'cardType', minWidth: 70,
     render: (row) => row.cardType || '全部',
   },
   {
@@ -124,7 +124,7 @@ const columns = [
     },
   },
   {
-    title: '状态', key: 'status', width: 90,
+    title: '状态', key: 'status', minWidth: 70,
     render: (row) => h(NTag, { type: statusMap[row.status] || 'default', size: 'small' }, () => statusLabelMap[row.status] || row.status),
   },
   {
