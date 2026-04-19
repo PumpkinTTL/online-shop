@@ -44,12 +44,17 @@ const AdminAPI = {
         return config;
       });
 
-      // 响应拦截器：401 跳转登录，统一错误处理
+      // 响应拦截器：401 跳转登录，429验证码，统一错误处理
       this._http.interceptors.response.use(
         (response) => response.data,
         (error) => {
           if (error.response) {
             const { status, data } = error.response;
+            if (status === 429 && data?.captchaRequired) {
+              const err = new Error(data?.error || '需要验证码');
+              err.captchaRequired = true;
+              throw err;
+            }
             if (status === 401) {
               this.clearToken();
               window.location.href = '/admin/login';

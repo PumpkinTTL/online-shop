@@ -14,6 +14,7 @@ const adminRouter = require('./routes/admin');
 const paymentRouter = require('./routes/payment');
 const adminRateLimitsRouter = require('./routes/adminRateLimits');
 const logsRouter = require('./routes/logs');
+const captchaRouter = require('./routes/captcha');
 const adminService = require('./services/adminService');
 const rateLimitService = require('./services/rateLimitService');
 const limiters = require('./middleware/rateLimiter');
@@ -46,10 +47,13 @@ app.use(cors({
 // 中间件
 app.use(express.json({ limit: '1mb' })); // 限制请求体大小
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-app.use(cookieParser()); // 解析 Cookie
+app.use(cookieParser(process.env.JWT_SECRET)); // 解析 Cookie（启用签名）
 
 // 请求日志中间件（必须在路由之前）
 app.use(requestLogger);
+
+// 验证码路由（必须在全球限流之前，否则限流时无法获取验证码）
+app.use('/api/captcha', captchaRouter);
 
 // 全局速率限制
 app.use('/api', limiters.global);

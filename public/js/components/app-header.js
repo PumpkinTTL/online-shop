@@ -86,9 +86,20 @@ const AppHeader = {
             <label><i class="fa-solid fa-lock"></i> 确认密码</label>
             <input type="password" v-model="authForm.confirmPassword" placeholder="再次输入密码" class="form-input">
           </div>
-          <button class="btn btn-primary btn-block" @click="handleAuth" :disabled="authLoading">
-            <i class="fa-solid fa-spinner fa-spin" v-if="authLoading"></i>
-            {{ authLoading ? '处理中...' : (isLogin ? '登录' : '注册') }}
+          <!-- 验证码区域（限流触发后显示） -->
+          <div class="form-group" v-if="captchaVisible">
+            <label><i class="fa-solid fa-shield-halved"></i> 验证码</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="captcha-question">{{ captchaQuestion }}</span>
+              <input type="text" v-model="captchaAnswer" placeholder="请输入答案" class="form-input" style="flex:1;" @keyup.enter="submitCaptcha">
+              <button class="btn btn-ghost btn-sm" @click="refreshCaptcha" :disabled="captchaLoading" title="换一个">
+                <i class="fa-solid fa-rotate" :class="{ 'fa-spin': captchaLoading }"></i>
+              </button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-block" @click="captchaVisible ? submitCaptcha() : handleAuth()" :disabled="authLoading || captchaLoading">
+            <i class="fa-solid fa-spinner fa-spin" v-if="authLoading || captchaLoading"></i>
+            {{ (authLoading || captchaLoading) ? '处理中...' : (captchaVisible ? '提交验证码' : (isLogin ? '登录' : '注册')) }}
           </button>
         </div>
       </div>
@@ -107,7 +118,12 @@ const AppHeader = {
         username: '',
         password: '',
         confirmPassword: ''
-      }
+      },
+      captchaVisible: false,
+      captchaId: '',
+      captchaQuestion: '',
+      captchaAnswer: '',
+      captchaLoading: false
     };
   },
   methods: {
@@ -121,10 +137,18 @@ const AppHeader = {
     showAuthModal() {
       this.authModalVisible = true;
       this.authForm = { username: '', password: '', confirmPassword: '' };
+      this.captchaVisible = false;
+      this.captchaId = '';
+      this.captchaQuestion = '';
+      this.captchaAnswer = '';
     },
     closeAuthModal() {
       this.authModalVisible = false;
       this.authForm = { username: '', password: '', confirmPassword: '' };
+      this.captchaVisible = false;
+      this.captchaId = '';
+      this.captchaQuestion = '';
+      this.captchaAnswer = '';
     },
     async handleAuth() {
       const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
@@ -167,9 +191,51 @@ const AppHeader = {
         Toast.success(this.isLogin ? '登录成功' : '注册成功');
         this.closeAuthModal();
       } catch (error) {
-        Toast.error(error.response?.data?.error || error.message || '操作失败');
+        const errData = error.response?.data;
+        if (error.response?.status === 429 && errData?.captchaRequired) {
+          // 触发验证码
+          await this.refreshCaptcha();
+          this.captchaVisible = true;
+          Toast.warning('请求过于频繁，请完成验证码后重试');
+        } else {
+          Toast.error(errData?.error || error.message || '操作失败');
+        }
       } finally {
         this.authLoading = false;
+      }
+    },
+    async refreshCaptcha() {
+      this.captchaLoading = true;
+      try {
+        const data = await CaptchaUtil.fetch();
+        this.captchaId = data.captchaId;
+        this.captchaQuestion = data.question;
+        this.captchaAnswer = '';
+      } catch (e) {
+        Toast.error('获取验证码失败');
+      } finally {
+        this.captchaLoading = false;
+      }
+    },
+    async submitCaptcha() {
+      if (!this.captchaAnswer.trim()) {
+        Toast.warning('请输入验证码答案');
+        return;
+      }
+      this.captchaLoading = true;
+      try {
+        await CaptchaUtil.verify(this.captchaId, this.captchaAnswer.trim());
+        Toast.success('验证码通过');
+        this.captchaVisible = false;
+        this.captchaAnswer = '';
+        // 重新提交原始请求
+        await this.handleAuth();
+      } catch (e) {
+        Toast.error(e.response?.data?.error || '验证码错误');
+        // 刷新验证码
+        await this.refreshCaptcha();
+      } finally {
+        this.captchaLoading = false;
       }
     },
     async logout() {
@@ -203,6 +269,11 @@ const AppHeader = {
     if (this.showAuth) {
       this.checkLogin();
     }
+    // 监听全局验证码事件
+    window.addEventListener('captcha-required', () => {
+      this.refreshCaptcha();
+      this.captchaVisible = true;
+    });
   }
 };
 

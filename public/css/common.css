@@ -431,6 +431,22 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   color: var(--text-light);
 }
 
+/* 验证码样式 */
+.captcha-question {
+  display: inline-block;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  letter-spacing: 1px;
+  min-width: 80px;
+  text-align: center;
+}
+
 .btn-block {
   width: 100%;
   justify-content: center;
