@@ -27,36 +27,56 @@
     </div>
 
     <!-- 新增/编辑弹窗 -->
-    <n-modal v-model:show="showForm" preset="card" :title="editingCategory ? '编辑类别' : '新增类别'" style="max-width:600px;">
-      <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="100">
-        <n-form-item label="类别名称" path="name">
-          <n-input v-model:value="form.name" placeholder="如：AI绘画" />
-        </n-form-item>
-        <n-form-item label="类别代码" path="code">
-          <n-input v-model:value="form.code" placeholder="如：AI" />
-        </n-form-item>
+    <n-modal v-model:show="showForm" preset="card" :title="editingCategory ? '编辑类别' : '新增类别'" style="max-width:660px;">
+      <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="90">
+        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+          <n-gi span="2 m:1">
+            <n-form-item label="类别名称" path="name">
+              <n-input v-model:value="form.name" placeholder="如：AI绘画" />
+            </n-form-item>
+          </n-gi>
+          <n-gi span="2 m:1">
+            <n-form-item label="类别代码" path="code">
+              <n-input v-model:value="form.code" placeholder="如：AI" />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
         <n-form-item label="说明">
           <n-input v-model:value="form.description" type="textarea" :rows="2" placeholder="类别说明（可选）" />
         </n-form-item>
-        <n-form-item label="排序">
-          <n-input-number v-model:value="form.sort" :min="0" style="width:100%" />
-        </n-form-item>
-        <n-form-item label="显示">
-          <n-switch v-model:value="form.show" />
-        </n-form-item>
+        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+          <n-gi span="2 m:1">
+            <n-form-item label="排序">
+              <n-input-number v-model:value="form.sort" :min="0" style="width:100%" />
+            </n-form-item>
+          </n-gi>
+          <n-gi span="2 m:1">
+            <n-form-item label="显示">
+              <n-switch v-model:value="form.show" />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
         <n-divider>接码配置</n-divider>
         <n-form-item label="需要接码" path="smsEnabled">
           <n-switch v-model:value="form.smsEnabled" @update:value="handleSmsToggle" />
         </n-form-item>
-        <n-form-item v-if="form.smsEnabled" label="接码价格" path="smsPrice">
-          <n-input-number v-model:value="form.smsPrice" :min="0" :precision="2" style="width:100%" placeholder="0.00" />
-        </n-form-item>
-        <n-form-item v-if="form.smsEnabled" label="支付名称" path="smsPaymentName">
-          <n-input v-model:value="form.smsPaymentName" placeholder="接码服务支付显示名称" />
-        </n-form-item>
-        <n-form-item v-if="form.smsEnabled" label="关键词" path="smKeyWord">
-          <n-input v-model:value="form.smKeyWord" placeholder="MAAPI 关键词" />
-        </n-form-item>
+        <template v-if="form.smsEnabled">
+          <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+            <n-gi span="2 m:1">
+              <n-form-item label="接码价格" path="smsPrice">
+                <n-input-number v-model:value="form.smsPrice" :min="0" :precision="2" style="width:100%" placeholder="0.00" />
+              </n-form-item>
+            </n-gi>
+            <n-gi span="2 m:1">
+              <n-form-item label="支付名称" path="smsPaymentName">
+                <n-input v-model:value="form.smsPaymentName" placeholder="支付显示名称" />
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+          <n-form-item label="关键词" path="smKeyWord">
+            <n-input v-model:value="form.smKeyWord" placeholder="MAAPI 关键词" />
+          </n-form-item>
+        </template>
       </n-form>
       <template #footer>
         <n-space justify="end">
@@ -73,7 +93,7 @@ import { ref, h, onMounted } from 'vue'
 import {
   NButton, NIcon, NDataTable, NModal, NForm, NFormItem,
   NInput, NInputNumber, NSwitch, NDivider, NSpace, NTag, NPopover,
-  useMessage, useDialog
+  NGrid, NGi, useMessage, useDialog
 } from 'naive-ui'
 import { AddOutline, TrashOutline, CreateOutline } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'

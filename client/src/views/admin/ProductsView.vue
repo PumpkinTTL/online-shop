@@ -41,36 +41,65 @@
     </div>
 
     <!-- 新增/编辑弹窗 -->
-    <n-modal v-model:show="showForm" preset="card" :title="editingProduct ? '编辑商品' : '新增商品'" style="max-width:620px;">
-      <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="90">
+    <n-modal v-model:show="showForm" preset="card" :title="editingProduct ? '编辑商品' : '新增商品'" style="max-width:720px;">
+      <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="80">
         <n-form-item label="商品名称" path="name">
           <n-input v-model:value="form.name" placeholder="请输入商品名称" />
         </n-form-item>
+        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+          <n-gi span="2 m:1">
+            <n-form-item label="价格" path="price">
+              <n-input-number v-model:value="form.price" :min="0" :precision="2" :step="0.01" style="width:100%" placeholder="0.00" />
+            </n-form-item>
+          </n-gi>
+          <n-gi span="2 m:1">
+            <n-form-item label="类别" path="categoryId">
+              <n-select v-model:value="form.categoryId" :options="categoryOptions" placeholder="选择类别" />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
         <n-form-item label="商品代号" path="code">
           <n-input v-model:value="form.code" placeholder="支付订单显示（可选）" />
-        </n-form-item>
-        <n-form-item label="价格" path="price">
-          <n-input-number v-model:value="form.price" :min="0" :precision="2" :step="0.01" style="width:100%" placeholder="0.00" />
-        </n-form-item>
-        <n-form-item label="商品类别" path="categoryId">
-          <n-select v-model:value="form.categoryId" :options="categoryOptions" placeholder="选择类别" />
         </n-form-item>
         <n-form-item label="描述">
           <n-input v-model:value="form.description" type="textarea" :rows="2" placeholder="商品描述（可选）" />
         </n-form-item>
-        <n-form-item label="库存">
-          <n-input :value="String(form.stock || 0)" disabled />
-          <span style="margin-left:8px;color:var(--text-light);font-size:12px;">由卡密自动计算</span>
-        </n-form-item>
-        <n-form-item label="销量">
-          <n-input-number v-model:value="form.sales" :min="0" style="width:100%" />
-        </n-form-item>
-        <n-form-item label="质保时间">
-          <n-input v-model:value="form.warranty" placeholder="例如：30天、永久、1个月（可选）" />
-        </n-form-item>
-        <n-form-item label="积分额度">
-          <n-input-number v-model:value="form.credit" :min="0" style="width:100%" placeholder="0" />
-        </n-form-item>
+        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+          <n-gi span="2 m:1">
+            <n-form-item label="库存">
+              <n-input :value="String(form.stock || 0)" disabled />
+            </n-form-item>
+          </n-gi>
+          <n-gi span="2 m:1">
+            <n-form-item label="销量">
+              <n-input-number v-model:value="form.sales" :min="0" style="width:100%" />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
+        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+          <n-gi span="2 m:1">
+            <n-form-item label="质保时间">
+              <n-input v-model:value="form.warranty" placeholder="如30天、永久" />
+            </n-form-item>
+          </n-gi>
+          <n-gi span="2 m:1">
+            <n-form-item label="首页显示">
+              <n-switch v-model:value="form.show" />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
+        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+          <n-gi span="2 m:1">
+            <n-form-item label="积分额度">
+              <n-input-number v-model:value="form.credit" :min="0" style="width:100%" placeholder="0" />
+            </n-form-item>
+          </n-gi>
+          <n-gi span="2 m:1">
+            <n-form-item label="排序">
+              <n-input-number v-model:value="form.sort" :min="0" style="width:100%" />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
         <n-form-item label="注意事项">
           <n-input v-model:value="form.tips" type="textarea" :rows="2" placeholder="可选，购买页以红色警告展示" />
         </n-form-item>
@@ -79,12 +108,6 @@
         </n-form-item>
         <n-form-item label="关键词">
           <n-input v-model:value="form.keyword" placeholder="MAAPI 关键词（接码类商品必填）" />
-        </n-form-item>
-        <n-form-item label="排序">
-          <n-input-number v-model:value="form.sort" :min="0" style="width:100%" />
-        </n-form-item>
-        <n-form-item label="首页显示">
-          <n-switch v-model:value="form.show" />
         </n-form-item>
       </n-form>
       <template #footer>
@@ -102,7 +125,7 @@ import { ref, h, onMounted, computed } from 'vue'
 import {
   NButton, NIcon, NDataTable, NPagination,
   NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch,
-  NSpace, NTag, NTooltip, useMessage, useDialog
+  NSpace, NTag, NTooltip, NGrid, NGi, useMessage, useDialog
 } from 'naive-ui'
 import { AddOutline, TrashOutline, CreateOutline } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
