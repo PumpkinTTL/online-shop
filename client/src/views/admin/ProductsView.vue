@@ -133,7 +133,7 @@ const dialog = useDialog()
 
 const loading = ref(false)
 const currentPage = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(10)
 const selectedKeys = ref([])
 const filterCategory = ref(null)
 
@@ -219,7 +219,7 @@ const columns = [
   },
   {
     title: '上架', key: 'show', minWidth: 70,
-    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '上架' : '下架'),
+    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '是' : '否'),
   },
   {
     title: '创建时间', key: 'createdAt', width: 160, sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),

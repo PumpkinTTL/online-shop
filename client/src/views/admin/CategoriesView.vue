@@ -154,7 +154,7 @@ const columns = [
   { title: '排序', key: 'sort', minWidth: 60 },
   {
     title: '状态', key: 'show', minWidth: 70,
-    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '上架' : '下架'),
+    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '是' : '否'),
   },
   {
     title: '操作', key: 'actions', width: 160, fixed: 'right',

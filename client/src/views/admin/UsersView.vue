@@ -24,7 +24,7 @@
           v-model:page="currentPage"
           v-model:page-size="pageSize"
           :item-count="adminStore.usersTotal"
-          :page-sizes="[10, 20, 50]"
+          :page-sizes="[10, 20, 30, 50]"
           show-size-picker
           @update:page="loadData"
           @update:page-size="handlePageSizeChange"
@@ -49,7 +49,7 @@ const dialog = useDialog()
 
 const loading = ref(false)
 const currentPage = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(10)
 const selectedKeys = ref([])
 
 const columns = [

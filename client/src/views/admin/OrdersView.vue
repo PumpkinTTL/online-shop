@@ -52,7 +52,7 @@ const dialog = useDialog()
 const loading = ref(false)
 const revealedKeys = ref(new Set())
 const currentPage = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(10)
 const selectedKeys = ref([])
 const filterStatus = ref(null)
 
