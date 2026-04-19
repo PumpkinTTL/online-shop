@@ -33,7 +33,7 @@ const routes = [
         path: 'orders',
         name: 'Orders',
         component: () => import('@/views/OrdersView.vue'),
-        meta: { title: '我的订单', requiresAuth: true },
+        meta: { title: '我的订单' },
       },
     ],
   },

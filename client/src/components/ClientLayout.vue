@@ -1,33 +1,7 @@
 <template>
   <div class="client-layout">
-    <!-- 移动端精简 Header -->
-    <header class="mobile-header">
-      <div class="mobile-header-inner">
-        <router-link to="/" class="mobile-brand">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="url(#mBrandGrad)" />
-            <defs>
-              <linearGradient id="mBrandGrad" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#3B82F6" />
-                <stop offset="1" stop-color="#60A5FA" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <span class="mobile-brand-text">工具商店</span>
-        </router-link>
-        <div class="mobile-header-right">
-          <template v-if="userStore.isLoggedIn">
-            <div class="mobile-user-avatar">{{ userStore.user?.username?.[0]?.toUpperCase() || 'U' }}</div>
-          </template>
-          <template v-else>
-            <n-button type="primary" size="tiny" round @click="showAuthModal = true">登录</n-button>
-          </template>
-        </div>
-      </div>
-    </header>
-
-    <!-- 桌面端顶部导航 -->
-    <AppHeader class="desktop-header" />
+    <!-- 统一 Header（响应式适配） -->
+    <AppHeader />
 
     <main class="client-main">
       <router-view></router-view>
@@ -36,37 +10,45 @@
     <!-- 移动端底部 Tab Bar -->
     <nav class="mobile-tabbar">
       <router-link
-        v-for="tab in tabs"
-        :key="tab.key"
-        :to="tab.to"
+        to="/"
         class="tabbar-item"
-        :class="{ active: isActive(tab.key) }"
+        :class="{ active: isActive('home') }"
       >
-        <div class="tabbar-icon">
-          <n-icon :size="22"><component :is="tab.icon"></component></n-icon>
+        <div class="tabbar-icon-wrap">
+          <n-icon :size="22"><home-outline></home-outline></n-icon>
         </div>
-        <span class="tabbar-label">{{ tab.label }}</span>
+        <span class="tabbar-label">首页</span>
       </router-link>
+      <!-- 接码暂时隐藏 -->
+      <!-- <router-link to="/sms" class="tabbar-item" :class="{ active: isActive('sms') }">
+        <div class="tabbar-icon-wrap">
+          <n-icon :size="22"><phone-portrait-outline></phone-portrait-outline></n-icon>
+        </div>
+        <span class="tabbar-label">接码</span>
+      </router-link> -->
       <router-link
-        v-if="userStore.isLoggedIn"
         to="/orders"
         class="tabbar-item"
         :class="{ active: isActive('orders') }"
       >
-        <div class="tabbar-icon">
+        <div class="tabbar-icon-wrap">
           <n-icon :size="22"><receipt-outline></receipt-outline></n-icon>
         </div>
         <span class="tabbar-label">订单</span>
       </router-link>
-      <div v-else class="tabbar-item" @click="showAuthModal = true">
-        <div class="tabbar-icon">
+      <div
+        class="tabbar-item"
+        :class="{ active: isActive('mine') }"
+        @click="userStore.isLoggedIn ? null : (showAuthModal = true, isLogin = true)"
+      >
+        <div class="tabbar-icon-wrap">
           <n-icon :size="22"><person-outline></person-outline></n-icon>
         </div>
-        <span class="tabbar-label">我的</span>
+        <span class="tabbar-label">{{ userStore.isLoggedIn ? '我的' : '登录' }}</span>
       </div>
     </nav>
 
-    <!-- 登录注册弹窗 -->
+    <!-- 登录注册弹窗（Tab Bar 的登录入口触发） -->
     <n-modal v-model:show="showAuthModal" preset="card" :title="isLogin ? '登录' : '注册'" style="max-width: 400px;">
       <n-form ref="authFormRef" :model="authForm" :rules="authRules">
         <n-form-item label="用户名" path="username">
@@ -98,7 +80,10 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { NModal, NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
-import { HomeOutline, PhonePortraitOutline, ReceiptOutline, PersonOutline } from '@vicons/ionicons5'
+import {
+  HomeOutline, PhonePortraitOutline, ReceiptOutline,
+  PersonOutline
+} from '@vicons/ionicons5'
 import AppHeader from '@/components/AppHeader.vue'
 import CaptchaModal from '@/components/CaptchaModal.vue'
 import { useUserStore } from '@/stores/user'
@@ -156,15 +141,11 @@ async function handleAuth() {
   }
 }
 
-const tabs = [
-  { key: 'home', label: '首页', to: '/', icon: HomeOutline },
-  { key: 'sms', label: '接码', to: '/sms', icon: PhonePortraitOutline },
-]
-
 function isActive(key) {
   if (key === 'home') return route.path === '/'
   if (key === 'orders') return route.path === '/orders'
   if (key === 'sms') return route.path === '/sms'
+  if (key === 'mine') return false
   return false
 }
 </script>
@@ -181,66 +162,6 @@ function isActive(key) {
   flex: 1;
 }
 
-/* ===== 移动端 Header ===== */
-.mobile-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-.mobile-header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 48px;
-  padding: 0 16px;
-}
-
-.mobile-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-}
-
-.mobile-brand-text {
-  font-weight: 700;
-  font-size: 16px;
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #3B82F6, #60A5FA);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.mobile-header-right {
-  display: flex;
-  align-items: center;
-}
-
-.mobile-user-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3B82F6, #60A5FA);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* ===== 桌面端顶部导航 ===== */
-.desktop-header {
-  display: none;
-}
-
 /* ===== 移动端底部 Tab Bar ===== */
 .mobile-tabbar {
   position: fixed;
@@ -251,11 +172,11 @@ function isActive(key) {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  height: 52px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -269,7 +190,7 @@ function isActive(key) {
   height: 100%;
   text-decoration: none;
   color: #94A3B8;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease-out;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -278,35 +199,45 @@ function isActive(key) {
   color: #3B82F6;
 }
 
-.tabbar-icon {
+.tabbar-icon-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  width: 32px;
+  height: 26px;
+  border-radius: 13px;
+  transition: all 0.2s ease-out;
 }
 
-.tabbar-item.active .tabbar-icon {
-  transform: translateY(-1px);
+.tabbar-item.active .tabbar-icon-wrap {
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .tabbar-label {
   font-size: 10px;
   font-weight: 500;
   font-family: 'Open Sans', sans-serif;
+  transition: font-weight 0.15s ease-out;
 }
 
-/* ===== 桌面端：隐藏移动端导航，显示桌面导航 ===== */
+.tabbar-item.active .tabbar-label {
+  font-weight: 700;
+}
+
+/* ===== 桌面端：隐藏 Tab Bar ===== */
 @media (min-width: 768px) {
-  .mobile-header {
-    display: none;
-  }
-
-  .desktop-header {
-    display: block;
-  }
-
   .mobile-tabbar {
     display: none;
+  }
+}
+
+/* ===== 减少动画偏好 ===== */
+@media (prefers-reduced-motion: reduce) {
+  .tabbar-icon-wrap {
+    transition: none;
+  }
+  .tabbar-item.active .tabbar-icon-wrap {
+    background: rgba(59, 130, 246, 0.08);
   }
 }
 </style>
