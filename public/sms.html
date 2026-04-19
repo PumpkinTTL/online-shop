@@ -15,6 +15,7 @@
   <script src="/js/sms.js"></script>
   <script src="/js/captcha.js"></script>
   <script src="/js/components/app-header.js"></script>
+  <script src="/js/components/captcha-modal.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/common.css?v=20260415b">
@@ -25,6 +26,7 @@
   <div id="app">
     <!-- 导航栏（独立访问时显示） -->
     <app-header active-page="home" hide-in-iframe></app-header>
+    <captcha-modal></captcha-modal>
 
     <!-- 主内容 -->
     <div class="main-container">
@@ -136,6 +138,7 @@
     });
 
     registerAppHeader(app);
+    registerCaptchaModal(app);
     app.mount('#app');
   </script>
 </body>

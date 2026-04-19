@@ -82,6 +82,18 @@ app.get('/orders', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'orders.html'));
 });
 
+// Vue SPA 客户端（生产环境：指向 vite build 产物）
+const spaDistPath = path.join(__dirname, 'dist', 'spa');
+app.use('/app', express.static(spaDistPath));
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(spaDistPath, 'index.html'));
+});
+// SPA 内部路由回退（hash 模式不需要，预留 history 模式支持）
+// Express 5 path-to-regexp 不再支持 *，需用 {*name} 语法
+app.get('/app/{*path}', (req, res) => {
+  res.sendFile(path.join(spaDistPath, 'index.html'));
+});
+
 // 后台管理（Element Plus 版）
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'index-element.html'));

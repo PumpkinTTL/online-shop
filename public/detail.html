@@ -17,6 +17,7 @@
   <script src="/js/confirmDialog.js"></script>
   <script src="/js/captcha.js"></script>
   <script src="/js/components/app-header.js"></script>
+  <script src="/js/components/captcha-modal.js"></script>
   <script src="/js/components/product-action.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -28,6 +29,7 @@
   <div id="app">
     <!-- 导航栏 -->
     <app-header active-page="home" show-auth></app-header>
+    <captcha-modal></captcha-modal>
 
     <!-- 主内容 -->
     <main class="main">
@@ -253,6 +255,7 @@
     });
 
     registerAppHeader(app);
+    registerCaptchaModal(app);
     registerProductAction(app);
     app.mount('#app');
   </script>
