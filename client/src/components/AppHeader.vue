@@ -254,7 +254,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 .brand-text-group {
   display: none;
   flex-direction: column;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .brand-name {
@@ -271,7 +271,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   font-family: 'Poppins', sans-serif;
   color: #94A3B8;
   letter-spacing: 0.05em;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 /* ===== 分隔线（移动端隐藏） ===== */
@@ -288,7 +288,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 .header-nav {
   display: none;
   align-items: center;
-  gap: 0;
+  gap: 4px;
 }
 
 .nav-item {
@@ -366,7 +366,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   align-items: center;
   gap: 5px;
   padding: 6px 14px;
-  border-radius: 18px;
+  border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #3B82F6, #2563EB);
   color: white;
@@ -410,7 +410,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   align-items: center;
   gap: 6px;
   padding: 3px 10px 3px 3px;
-  border-radius: 18px;
+  border-radius: 8px;
   background: rgba(241, 245, 249, 0.8);
   border: 1px solid #E2E8F0;
   cursor: pointer;
@@ -609,6 +609,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   .header-nav {
     display: flex;
     margin-left: 0;
+    gap: 6px;
   }
 
   .nav-item {
@@ -662,6 +663,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
   .brand-tagline {
     font-size: 11px;
+    margin-top: 3px;
   }
 
   .header-divider {
