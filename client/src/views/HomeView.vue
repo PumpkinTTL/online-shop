@@ -167,7 +167,7 @@ function goToProduct(id) {
 }
 
 function coverStyle(product) {
-  const src = product.image ? `/assets/images/${product.image}` : (product.coverImage || '')
+  const src = product.image ? `/images/${product.image}` : (product.coverImage || '')
   if (src) {
     return { background: `url('${src}') center/cover no-repeat` }
   }
