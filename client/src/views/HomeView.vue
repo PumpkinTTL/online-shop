@@ -57,13 +57,15 @@
             <div
               v-for="product in filteredProducts"
               :key="product.id"
-              class="product-card"
+              :class="['product-card', { 'card-sold-out': product.stock === 0 }]"
               @click="goToProduct(product.id)"
             >
               <div class="card-cover" :style="coverStyle(product)">
                 <div v-if="!product.image && !product.coverImage" class="cover-placeholder">
                   <n-icon :size="28" color="#CBD5E1"><cube-outline></cube-outline></n-icon>
                 </div>
+                <!-- 售罄斜角丝带 -->
+                <div v-if="product.stock === 0" class="sold-out-ribbon">售罄</div>
               </div>
               <div class="card-body">
                 <h3 class="card-title">{{ product.name }}</h3>
@@ -82,11 +84,7 @@
                     <n-icon :size="11"><phone-portrait-outline></phone-portrait-outline></n-icon>
                     接码
                   </span>
-                  <span v-if="product.stock === 0" class="tag tag-out">
-                    <n-icon :size="11"><ban-outline></ban-outline></n-icon>
-                    售罄
-                  </span>
-                  <span v-else-if="product.stock > 0 && product.stock <= 5" class="tag tag-low">
+                  <span v-if="product.stock > 0 && product.stock <= 5" class="tag tag-low">
                     仅剩{{ product.stock }}
                   </span>
                 </div>
@@ -316,14 +314,16 @@ onMounted(async () => {
   overflow: hidden;
   border: 1px solid #F1F5F9;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   -webkit-tap-highlight-color: transparent;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .product-card:active {
   transform: scale(0.98);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 /* 卡片封面 */
@@ -347,6 +347,25 @@ onMounted(async () => {
   justify-content: center;
   width: 100%;
   height: 100%;
+}
+
+/* 售罄斜角丝带 */
+.sold-out-ribbon {
+  position: absolute;
+  top: 12px;
+  right: -28px;
+  width: 100px;
+  padding: 4px 0;
+  background: rgba(239, 68, 68, 0.88);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.1em;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* 卡片内容 */
@@ -414,11 +433,6 @@ onMounted(async () => {
   color: #047857;
 }
 
-.tag-out {
-  background: #F1F5F9;
-  color: #94A3B8;
-}
-
 .tag-low {
   background: linear-gradient(135deg, #FEF3C7, #FDE68A);
   color: #B45309;
@@ -458,6 +472,11 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 700;
   color: #EF4444;
+  transition: color 0.2s ease;
+}
+
+.product-card:hover .card-price {
+  color: #DC2626;
 }
 
 .price-symbol {
@@ -480,6 +499,18 @@ onMounted(async () => {
 .product-card:hover .card-action {
   background: #3B82F6;
   color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* 售罄卡片降饱和 */
+.card-sold-out {
+  filter: saturate(0.35);
+  opacity: 0.85;
+}
+
+.card-sold-out:hover {
+  filter: saturate(0.6);
+  opacity: 1;
 }
 
 /* ===== 空状态 ===== */
@@ -529,9 +560,9 @@ onMounted(async () => {
   }
 
   .product-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-    border-color: rgba(59, 130, 246, 0.08);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
+    border-color: rgba(59, 130, 246, 0.12);
   }
 
   .card-body {
