@@ -318,6 +318,8 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-card:active {
@@ -350,6 +352,10 @@ onMounted(async () => {
 /* 卡片内容 */
 .card-body {
   padding: 10px 12px 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .card-title {
@@ -444,6 +450,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: auto;
 }
 
 .card-price {
