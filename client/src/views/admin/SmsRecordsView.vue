@@ -85,13 +85,13 @@ const columns = [
   {
     title: '手机号', key: 'phone', width: 150,
     render: (row) => {
-      const revealed = revealedKeys.value.has(`phone-${row.id}`)
+      const revealed = !revealedKeys.value.has(`phone-${row.id}`)
       return h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
         h('code', {}, revealed ? row.phone : (row.phone ? row.phone.substring(0, 3) + '****' + row.phone.substring(7) : '-')),
         h(NIcon, {
           size: 14,
           style: 'cursor:pointer;opacity:0.5;flex-shrink:0',
-          onClick: () => { const s = new Set(revealedKeys.value); const k = `phone-${row.id}`; revealed ? s.delete(k) : s.add(k); revealedKeys.value = s },
+          onClick: () => { const s = new Set(revealedKeys.value); const k = `phone-${row.id}`; revealed ? s.add(k) : s.delete(k); revealedKeys.value = s },
         }, () => h(revealed ? EyeOutline : EyeOffOutline)),
       ])
     },
@@ -112,13 +112,13 @@ const columns = [
     title: '验证码', key: 'verifyCode', width: 120,
     render: (row) => {
       if (!row.verifyCode) return h('span', { style: 'color:#94A3B8' }, '-')
-      const revealed = revealedKeys.value.has(`vcode-${row.id}`)
+      const revealed = !revealedKeys.value.has(`vcode-${row.id}`)
       return h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
         h('code', { style: 'color:#22C55E' }, revealed ? row.verifyCode : '******'),
         h(NIcon, {
           size: 14,
           style: 'cursor:pointer;opacity:0.5;flex-shrink:0',
-          onClick: () => { const s = new Set(revealedKeys.value); const k = `vcode-${row.id}`; revealed ? s.delete(k) : s.add(k); revealedKeys.value = s },
+          onClick: () => { const s = new Set(revealedKeys.value); const k = `vcode-${row.id}`; revealed ? s.add(k) : s.delete(k); revealedKeys.value = s },
         }, () => h(revealed ? EyeOutline : EyeOffOutline)),
       ])
     },

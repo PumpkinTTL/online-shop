@@ -112,14 +112,14 @@ const columns = [
       if (!row.cardCode && !row.cardCDK) return h('span', { style: 'color:#94A3B8' }, '-')
       const children = []
       if (row.cardCode) {
-        const revealed = revealedKeys.value.has(`code-${row.id}`)
+        const revealed = !revealedKeys.value.has(`code-${row.id}`)
         children.push(h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
           h('span', { style: 'color:var(--text-light);font-size:11px' }, '卡密'),
-          h('code', { style: 'font-size:11px;padding:2px 6px;border-radius:3px' }, revealed ? row.cardCode : '••••••••'),
+          h('code', { style: 'font-size:11px;padding:2px 6px;border-radius:3px' }, revealed ? row.cardCode : '****'),
           h(NIcon, {
             size: 14,
             style: 'cursor:pointer;color:var(--text-light);opacity:0.5;transition:all 0.2s',
-            onClick: () => { const s = new Set(revealedKeys.value); const k = `code-${row.id}`; revealed ? s.delete(k) : s.add(k); revealedKeys.value = s },
+            onClick: () => { const s = new Set(revealedKeys.value); const k = `code-${row.id}`; revealed ? s.add(k) : s.delete(k); revealedKeys.value = s },
           }, () => h(revealed ? EyeOutline : EyeOffOutline)),
           h(NIcon, {
             size: 14,
@@ -129,16 +129,16 @@ const columns = [
         ]))
       }
       if (row.cardCDK) {
-        const revealed = revealedKeys.value.has(`cdk-${row.id}`)
+        const revealed = !revealedKeys.value.has(`cdk-${row.id}`)
         children.push(h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
           h('span', { style: 'color:var(--text-light);font-size:11px' }, 'CDK'),
           h('code', {
             style: 'font-size:11px;color:#3B82F6;padding:2px 6px;border-radius:3px',
-          }, revealed ? (row.cardCDK.length > 14 ? row.cardCDK.substring(0, 14) + '…' : row.cardCDK) : '••••-••••-••••'),
+          }, revealed ? (row.cardCDK.length > 14 ? row.cardCDK.substring(0, 14) + '…' : row.cardCDK) : '****'),
           h(NIcon, {
             size: 14,
             style: 'cursor:pointer;color:#60A5FA;opacity:0.5;transition:all 0.2s',
-            onClick: () => { const s = new Set(revealedKeys.value); const k = `cdk-${row.id}`; revealed ? s.delete(k) : s.add(k); revealedKeys.value = s },
+            onClick: () => { const s = new Set(revealedKeys.value); const k = `cdk-${row.id}`; revealed ? s.add(k) : s.delete(k); revealedKeys.value = s },
           }, () => h(revealed ? EyeOutline : EyeOffOutline)),
           h(NIcon, {
             size: 14,

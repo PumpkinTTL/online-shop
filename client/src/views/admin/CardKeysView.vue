@@ -179,16 +179,16 @@ const columns = [
   {
     title: '卡密', key: 'code', minWidth: 160,
     render: (row) => {
-      const revealed = revealedKeys.value.has(`code-${row.id}`)
+      const revealed = !revealedKeys.value.has(`code-${row.id}`)
       return h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
-        h('code', {}, revealed ? row.code : '••••••••'),
+        h('code', {}, revealed ? row.code : '****'),
         h(NIcon, {
           size: 14,
           style: 'cursor:pointer;opacity:0.5;flex-shrink:0',
           onClick: () => {
             const s = new Set(revealedKeys.value)
             const k = `code-${row.id}`
-            revealed ? s.delete(k) : s.add(k)
+            revealed ? s.add(k) : s.delete(k)
             revealedKeys.value = s
           },
         }, () => h(revealed ? EyeOutline : EyeOffOutline)),
@@ -199,16 +199,16 @@ const columns = [
     title: 'CDK', key: 'CDK', minWidth: 160,
     render: (row) => {
       if (!row.CDK) return h('span', { style: 'color:#94A3B8' }, '-')
-      const revealed = revealedKeys.value.has(`cdk-${row.id}`)
+      const revealed = !revealedKeys.value.has(`cdk-${row.id}`)
       return h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
-        h('code', { style: 'color:#22C55E' }, revealed ? (row.CDK.length > 16 ? row.CDK.substring(0, 16) + '…' : row.CDK) : '••••-••••-••••'),
+        h('code', { style: 'color:#22C55E' }, revealed ? (row.CDK.length > 16 ? row.CDK.substring(0, 16) + '…' : row.CDK) : '****'),
         h(NIcon, {
           size: 14,
           style: 'cursor:pointer;opacity:0.5;flex-shrink:0',
           onClick: () => {
             const s = new Set(revealedKeys.value)
             const k = `cdk-${row.id}`
-            revealed ? s.delete(k) : s.add(k)
+            revealed ? s.add(k) : s.delete(k)
             revealedKeys.value = s
           },
         }, () => h(revealed ? EyeOutline : EyeOffOutline)),
@@ -230,7 +230,7 @@ const columns = [
     title: '手机号', key: 'phone', width: 140,
     render: (row) => {
       if (!row.phone) return h('span', { style: 'color:#94A3B8' }, '-')
-      const revealed = revealedKeys.value.has(`phone-${row.id}`)
+      const revealed = !revealedKeys.value.has(`phone-${row.id}`)
       return h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
         h('span', {}, revealed ? row.phone : row.phone.substring(0, 3) + '****' + row.phone.substring(7)),
         h(NIcon, {
@@ -239,7 +239,7 @@ const columns = [
           onClick: () => {
             const s = new Set(revealedKeys.value)
             const k = `phone-${row.id}`
-            revealed ? s.delete(k) : s.add(k)
+            revealed ? s.add(k) : s.delete(k)
             revealedKeys.value = s
           },
         }, () => h(revealed ? EyeOutline : EyeOffOutline)),
