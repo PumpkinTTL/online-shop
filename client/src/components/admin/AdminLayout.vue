@@ -503,3 +503,21 @@ function handleRefresh() {
   }
 }
 </style>
+
+<!-- 全局样式：移动端弹窗适配 -->
+<style>
+@media (max-width: 767px) {
+  .n-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+  }
+  .n-modal .n-form-item--left-labelled {
+    flex-direction: column;
+  }
+  .n-modal .n-form-item--left-labelled .n-form-item-label {
+    text-align: left !important;
+    padding-bottom: 2px !important;
+  }
+}
+</style>

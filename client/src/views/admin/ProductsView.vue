@@ -83,7 +83,7 @@
             </n-form-item>
           </n-gi>
           <n-gi span="2 m:1">
-            <n-form-item label="首页显示">
+            <n-form-item label="上架">
               <n-switch v-model:value="form.show" />
             </n-form-item>
           </n-gi>
@@ -104,10 +104,7 @@
           <n-input v-model:value="form.tips" type="textarea" :rows="2" placeholder="可选，购买页以红色警告展示" />
         </n-form-item>
         <n-form-item label="封面图">
-          <n-input v-model:value="form.coverImage" placeholder="图片URL（可选）" />
-        </n-form-item>
-        <n-form-item label="关键词">
-          <n-input v-model:value="form.keyword" placeholder="MAAPI 关键词（接码类商品必填）" />
+          <n-input v-model:value="form.image" placeholder="图片URL（可选）" />
         </n-form-item>
       </n-form>
       <template #footer>
@@ -148,7 +145,7 @@ const formRef = ref(null)
 const defaultForm = {
   name: '', code: '', price: 0, categoryId: null, description: '',
   stock: 0, sales: 0, warranty: '', credit: null, tips: '',
-  coverImage: '', keyword: '', sort: 0, show: true,
+  image: '', sort: 0, show: true,
 }
 const form = ref({ ...defaultForm })
 
@@ -222,8 +219,8 @@ const columns = [
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
-    title: '显示', key: 'show', width: 70,
-    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '是' : '否'),
+    title: '上架', key: 'show', width: 70,
+    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '上架' : '下架'),
   },
   {
     title: '创建时间', key: 'createdAt', width: 160, sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
@@ -251,17 +248,16 @@ function openForm(row) {
     form.value = {
       name: row.name || '',
       code: row.code || '',
-      price: row.price || 0,
+      price: Number(row.price) || 0,
       categoryId: row.categoryId || null,
       description: row.description || '',
       stock: row.stock || 0,
-      sales: row.sales || 0,
+      sales: Number(row.sales) || 0,
       warranty: row.warranty || '',
-      credit: row.credit || null,
+      credit: row.credit != null ? Number(row.credit) : null,
       tips: row.tips || '',
-      coverImage: row.coverImage || '',
-      keyword: row.keyword || '',
-      sort: row.sort || 0,
+      image: row.image || '',
+      sort: Number(row.sort) || 0,
       show: row.show !== 0 && row.show !== false,
     }
   } else {

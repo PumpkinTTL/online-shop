@@ -51,7 +51,7 @@
             </n-form-item>
           </n-gi>
           <n-gi span="2 m:1">
-            <n-form-item label="显示">
+            <n-form-item label="上架">
               <n-switch v-model:value="form.show" />
             </n-form-item>
           </n-gi>
@@ -154,7 +154,7 @@ const columns = [
   { title: '排序', key: 'sort', width: 70 },
   {
     title: '状态', key: 'show', width: 80,
-    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '显示' : '隐藏'),
+    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '上架' : '下架'),
   },
   {
     title: '操作', key: 'actions', width: 160, fixed: 'right',
