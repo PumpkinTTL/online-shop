@@ -19,7 +19,7 @@ export default defineConfig({
         changeOrigin: true,
       },
       // 静态资源（图片等）
-      '/asset': {
+      '/assets': {
         target: 'http://localhost:5100',
         changeOrigin: true,
       },

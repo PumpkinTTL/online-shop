@@ -1,66 +1,93 @@
 <template>
-  <n-layout-header bordered class="app-header">
+  <header class="app-header">
     <div class="header-inner">
-      <div class="header-left">
-        <router-link to="/" class="brand">
-          <n-icon size="24" color="#3B82F6"><FlashOutline /></n-icon>
-          <span class="brand-text">工具商店</span>
+      <!-- Logo -->
+      <router-link to="/" class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="url(#brandGrad)" />
+            <defs>
+              <linearGradient id="brandGrad" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3B82F6" />
+                <stop offset="1" stop-color="#60A5FA" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="brand-text">工具商店</span>
+      </router-link>
+
+      <!-- 导航链接 -->
+      <nav class="header-nav">
+        <router-link to="/" class="nav-link" :class="{ active: route.path === '/' }">
+          <n-icon :size="18"><home-outline></home-outline></n-icon>
+          <span>首页</span>
         </router-link>
-        <n-menu mode="horizontal" :value="activeMenu" :options="menuOptions" @update:value="handleMenuClick" />
-      </div>
+        <router-link to="/sms" class="nav-link" :class="{ active: route.path === '/sms' }">
+          <n-icon :size="18"><phone-portrait-outline></phone-portrait-outline></n-icon>
+          <span>接码</span>
+        </router-link>
+        <router-link v-if="userStore.isLoggedIn" to="/orders" class="nav-link" :class="{ active: route.path === '/orders' }">
+          <n-icon :size="18"><receipt-outline></receipt-outline></n-icon>
+          <span>订单</span>
+        </router-link>
+      </nav>
+
+      <!-- 右侧操作区 -->
       <div class="header-right">
         <template v-if="userStore.isLoggedIn">
-          <n-avatar round size="small">{{ userStore.user?.username?.[0]?.toUpperCase() || 'U' }}</n-avatar>
-          <span class="user-name">{{ userStore.user?.username }}</span>
-          <n-button quaternary size="small" @click="handleLogout">
-            <template #icon><n-icon><LogOutOutline /></n-icon></template>
-          </n-button>
+          <div class="user-info">
+            <div class="user-avatar">{{ userStore.user?.username?.[0]?.toUpperCase() || 'U' }}</div>
+            <span class="user-name">{{ userStore.user?.username }}</span>
+          </div>
+          <button class="logout-btn" @click="handleLogout" title="退出登录">
+            <n-icon :size="18"><log-out-outline></log-out-outline></n-icon>
+          </button>
         </template>
         <template v-else>
-          <n-button type="primary" size="small" @click="showAuthModal = true">
-            <template #icon><n-icon><PersonOutline /></n-icon></template>
+          <n-button type="primary" size="small" round @click="showAuthModal = true">
+            <template #icon><n-icon><person-outline></person-outline></n-icon></template>
             登录
           </n-button>
         </template>
       </div>
     </div>
-  </n-layout-header>
 
-  <!-- 登录注册弹窗 -->
-  <n-modal v-model:show="showAuthModal" preset="card" :title="isLogin ? '登录' : '注册'" style="max-width: 400px;">
-    <n-form ref="authFormRef" :model="authForm" :rules="authRules">
-      <n-form-item label="用户名" path="username">
-        <n-input v-model:value="authForm.username" placeholder="3-20位英文、数字、下划线" />
-      </n-form-item>
-      <n-form-item label="密码" path="password">
-        <n-input v-model:value="authForm.password" type="password" placeholder="至少6位" show-password-on="click" />
-      </n-form-item>
-      <n-form-item v-if="!isLogin" label="确认密码" path="confirmPassword">
-        <n-input v-model:value="authForm.confirmPassword" type="password" placeholder="再次输入密码" />
-      </n-form-item>
-    </n-form>
-    <template #footer>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <n-button text @click="isLogin = !isLogin">
-          {{ isLogin ? '没有账号？去注册' : '已有账号？去登录' }}
-        </n-button>
-        <n-button type="primary" :loading="authLoading" @click="handleAuth">
-          {{ isLogin ? '登录' : '注册' }}
-        </n-button>
-      </div>
-    </template>
-  </n-modal>
+    <!-- 登录注册弹窗 -->
+    <n-modal v-model:show="showAuthModal" preset="card" :title="isLogin ? '登录' : '注册'" style="max-width: 400px;">
+      <n-form ref="authFormRef" :model="authForm" :rules="authRules">
+        <n-form-item label="用户名" path="username">
+          <n-input v-model:value="authForm.username" placeholder="3-20位英文、数字、下划线"></n-input>
+        </n-form-item>
+        <n-form-item label="密码" path="password">
+          <n-input v-model:value="authForm.password" type="password" placeholder="至少6位" show-password-on="click"></n-input>
+        </n-form-item>
+        <n-form-item v-if="!isLogin" label="确认密码" path="confirmPassword">
+          <n-input v-model:value="authForm.confirmPassword" type="password" placeholder="再次输入密码"></n-input>
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <n-button text @click="isLogin = !isLogin">
+            {{ isLogin ? '没有账号？去注册' : '已有账号？去登录' }}
+          </n-button>
+          <n-button type="primary" :loading="authLoading" @click="handleAuth">
+            {{ isLogin ? '登录' : '注册' }}
+          </n-button>
+        </div>
+      </template>
+    </n-modal>
+  </header>
 </template>
 
 <script setup>
-import { ref, computed, h } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { NLayoutHeader, NMenu, NButton, NIcon, NAvatar, NModal, NForm, NFormItem, NInput, useMessage } from 'naive-ui'
-import { FlashOutline, HomeOutline, PhonePortraitOutline, ReceiptOutline, PersonOutline, LogOutOutline } from '@vicons/ionicons5'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { NButton, NIcon, NModal, NForm, NFormItem, NInput, useMessage } from 'naive-ui'
+import { HomeOutline, PhonePortraitOutline, ReceiptOutline, PersonOutline, LogOutOutline } from '@vicons/ionicons5'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
-const router = useRouter()
 const message = useMessage()
 const userStore = useUserStore()
 
@@ -88,23 +115,6 @@ const authRules = computed(() => ({
     },
   ] : undefined,
 }))
-
-const activeMenu = computed(() => {
-  if (route.path === '/sms') return 'sms'
-  if (route.path === '/orders') return 'orders'
-  return 'home'
-})
-
-const menuOptions = [
-  { label: '首页', key: 'home', icon: () => h(NIcon, null, () => h(HomeOutline)) },
-  { label: '接码', key: 'sms', icon: () => h(NIcon, null, () => h(PhonePortraitOutline)) },
-  { label: '订单', key: 'orders', icon: () => h(NIcon, null, () => h(ReceiptOutline)) },
-]
-
-function handleMenuClick(key) {
-  const map = { home: '/', sms: '/sms', orders: '/orders' }
-  router.push(map[key])
-}
 
 async function handleAuth() {
   try {
@@ -141,8 +151,10 @@ async function handleLogout() {
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .header-inner {
@@ -152,41 +164,119 @@ async function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 64px;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
+/* Logo */
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   text-decoration: none;
   color: #1E293B;
-  font-weight: 700;
-  font-size: 18px;
-  font-family: Poppins, sans-serif;
+}
+
+.brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(96, 165, 250, 0.1));
 }
 
 .brand-text {
+  font-weight: 700;
+  font-size: 18px;
+  font-family: 'Poppins', sans-serif;
   background: linear-gradient(135deg, #3B82F6, #60A5FA);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
+/* 导航 */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.nav-link.active {
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.08);
+  font-weight: 600;
+}
+
+/* 右侧操作 */
 .header-right {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
 }
 
 .user-name {
   font-size: 14px;
-  color: #475569;
-  margin-left: 4px;
+  font-weight: 500;
+  color: #1E293B;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.06);
 }
 </style>

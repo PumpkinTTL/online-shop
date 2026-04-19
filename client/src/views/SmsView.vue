@@ -21,6 +21,12 @@ import { NH2, NCard, NEmpty } from 'naive-ui'
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 24px 72px 24px;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-bottom: 24px;
+  }
 }
 </style>
