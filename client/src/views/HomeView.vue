@@ -1,43 +1,51 @@
 <template>
   <div class="home-view">
-    <!-- 搜索区域 -->
-    <section class="search-section">
+    <!-- 搜索 + 分类 一体区 -->
+    <section class="filter-section">
       <div class="section-container">
-        <div class="search-box">
-          <n-icon :size="18" color="#94A3B8"><search-outline></search-outline></n-icon>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="搜索商品..."
-            class="search-input"
-          />
-          <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">
-            <n-icon :size="14"><close-outline></close-outline></n-icon>
-          </button>
-        </div>
-      </div>
-    </section>
+        <div class="filter-card">
+          <!-- 搜索框 -->
+          <div class="search-box" :class="{ 'search-focused': searchFocused }">
+            <div class="search-icon-wrap">
+              <n-icon :size="16" color="#94A3B8"><search-outline></search-outline></n-icon>
+            </div>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜索商品名称、描述..."
+              class="search-input"
+              @focus="searchFocused = true"
+              @blur="searchFocused = false"
+            />
+            <transition name="clear-fade">
+              <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">
+                <n-icon :size="12"><close-outline></close-outline></n-icon>
+              </button>
+            </transition>
+          </div>
 
-    <!-- 类别筛选 -->
-    <section class="category-section">
-      <div class="section-container">
-        <div class="category-scroll">
-          <button
-            class="category-chip"
-            :class="{ active: activeCategory === null }"
-            @click="activeCategory = null"
-          >
-            全部
-          </button>
-          <button
-            v-for="cat in productStore.categories"
-            :key="cat.id"
-            class="category-chip"
-            :class="{ active: activeCategory === cat.id }"
-            @click="activeCategory = cat.id"
-          >
-            {{ cat.name }}
-          </button>
+          <!-- 分类标签 -->
+          <div class="category-scroll-wrap">
+            <div class="category-scroll">
+              <button
+                class="category-chip"
+                :class="{ active: activeCategory === null }"
+                @click="activeCategory = null"
+              >
+                <n-icon :size="13"><apps-outline></apps-outline></n-icon>
+                全部
+              </button>
+              <button
+                v-for="cat in productStore.categories"
+                :key="cat.id"
+                class="category-chip"
+                :class="{ active: activeCategory === cat.id }"
+                @click="activeCategory = cat.id"
+              >
+                {{ cat.name }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -46,9 +54,12 @@
     <section class="products-section">
       <div class="section-container">
         <div class="section-header">
-          <h2 class="section-title">
-            {{ activeCategory ? getCategoryName(activeCategory) : '全部商品' }}
-          </h2>
+          <div class="section-title-group">
+            <span class="title-bar"></span>
+            <h2 class="section-title">
+              {{ activeCategory ? getCategoryName(activeCategory) : '全部商品' }}
+            </h2>
+          </div>
           <span class="product-count">{{ filteredProducts.length }} 件</span>
         </div>
 
@@ -132,7 +143,8 @@ import { NSpin, NIcon } from 'naive-ui'
 import {
   SearchOutline, CloseOutline, CubeOutline,
   WalletOutline, ShieldCheckmarkOutline, PhonePortraitOutline,
-  BanOutline, TrendingUpOutline, CheckmarkCircleOutline
+  BanOutline, TrendingUpOutline, CheckmarkCircleOutline,
+  AppsOutline
 } from '@vicons/ionicons5'
 import { useProductStore } from '@/stores/product'
 
@@ -140,7 +152,9 @@ const router = useRouter()
 const productStore = useProductStore()
 
 const searchQuery = ref('')
+const searchFocused = ref(false)
 const activeCategory = ref(null)
+const categoryScrollRef = ref(null)
 
 const filteredProducts = computed(() => {
   let list = productStore.products
@@ -181,8 +195,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* ===== 搜索区域 ===== */
-.search-section {
+/* ===== 搜索筛选区 ===== */
+.filter-section {
   padding: 12px 0 0;
 }
 
@@ -192,19 +206,43 @@ onMounted(async () => {
   padding: 0 16px;
 }
 
+.filter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===== 搜索框 ===== */
 .search-box {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 12px;
-  background: #F1F5F9;
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  padding: 0 14px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  transition: all 0.25s ease-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.search-box:focus-within {
-  background: white;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+.search-box.search-focused {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08), 0 2px 8px rgba(59, 130, 246, 0.06);
+}
+
+.search-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.search-focused .search-icon-wrap {
+  color: #3B82F6;
 }
 
 .search-input {
@@ -215,10 +253,12 @@ onMounted(async () => {
   font-family: 'Open Sans', sans-serif;
   color: #1E293B;
   background: transparent;
+  line-height: 1;
 }
 
 .search-input::placeholder {
   color: #94A3B8;
+  font-size: 13px;
 }
 
 .search-clear {
@@ -232,18 +272,37 @@ onMounted(async () => {
   background: #E2E8F0;
   color: #64748B;
   cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-/* ===== 类别筛选 ===== */
-.category-section {
-  padding: 10px 0 0;
+.search-clear:hover {
+  background: #CBD5E1;
+  color: #475569;
+}
+
+/* 清除按钮淡入淡出 */
+.clear-fade-enter-active,
+.clear-fade-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.clear-fade-enter-from,
+.clear-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+/* ===== 分类标签 ===== */
+.category-scroll-wrap {
+  position: relative;
+  margin: 0 -16px;
 }
 
 .category-scroll {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 4px 16px 4px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -254,39 +313,68 @@ onMounted(async () => {
 
 .category-chip {
   flex-shrink: 0;
-  padding: 5px 14px;
-  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px;
+  border-radius: 20px;
   border: 1.5px solid #E2E8F0;
   background: white;
   font-size: 12px;
   font-weight: 500;
+  font-family: 'Open Sans', sans-serif;
   color: #64748B;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease-out;
   white-space: nowrap;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .category-chip:hover {
   border-color: #93C5FD;
   color: #3B82F6;
+  background: #EFF6FF;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
 .category-chip.active {
-  background: #3B82F6;
-  border-color: #3B82F6;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  border-color: #2563EB;
   color: white;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+}
+
+.category-chip.active:hover {
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
 }
 
 /* ===== 商品列表 ===== */
 .products-section {
-  padding: 12px 0;
+  padding: 16px 0 0;
 }
 
 .section-header {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-bar {
+  display: inline-block;
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #3B82F6, #60A5FA);
 }
 
 .section-title {
@@ -294,11 +382,17 @@ onMounted(async () => {
   font-size: 15px;
   font-weight: 700;
   color: #0F172A;
+  line-height: 1;
 }
 
 .product-count {
   font-size: 11px;
   color: #94A3B8;
+  font-weight: 500;
+  font-family: 'Open Sans', sans-serif;
+  background: #F1F5F9;
+  padding: 3px 10px;
+  border-radius: 10px;
 }
 
 /* ===== 商品卡片 ===== */
@@ -310,11 +404,11 @@ onMounted(async () => {
 
 .product-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   border: 1px solid #F1F5F9;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.25s ease-out;
   -webkit-tap-highlight-color: transparent;
   display: flex;
   flex-direction: column;
@@ -334,7 +428,7 @@ onMounted(async () => {
   background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
   background-size: 100%;
   background-position: center;
-  transition: background-size 0.3s ease;
+  transition: background-size 0.3s ease-out;
 }
 
 .product-card:hover .card-cover {
@@ -488,18 +582,19 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   background: rgba(59, 130, 246, 0.06);
   color: #3B82F6;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease-out;
 }
 
 .product-card:hover .card-action {
   background: #3B82F6;
   color: white;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  transform: translateX(2px);
 }
 
 /* 售罄卡片降饱和 */
@@ -532,22 +627,35 @@ onMounted(async () => {
 
 /* ===== 桌面端响应式 ===== */
 @media (min-width: 768px) {
+  .filter-section {
+    padding: 20px 0 0;
+  }
+
   .section-container {
     padding: 0 24px;
   }
 
-  .search-section {
-    padding: 20px 0 0;
-  }
-
   .search-box {
-    max-width: 400px;
-    padding: 10px 14px;
-    border-radius: 10px;
+    max-width: 420px;
+    height: 44px;
+    padding: 0 16px;
   }
 
   .search-input {
     font-size: 14px;
+  }
+
+  .search-input::placeholder {
+    font-size: 14px;
+  }
+
+  .category-chip {
+    padding: 7px 20px;
+    font-size: 13px;
+  }
+
+  .products-section {
+    padding: 20px 0 0;
   }
 
   .product-grid {
@@ -556,7 +664,7 @@ onMounted(async () => {
   }
 
   .card-cover {
-    height: 140px;
+    height: 150px;
   }
 
   .product-card:hover {
@@ -586,6 +694,18 @@ onMounted(async () => {
     padding: 2px 8px;
   }
 
+  .section-title {
+    font-size: 16px;
+  }
+
+  .title-bar {
+    height: 18px;
+  }
+
+  .product-count {
+    font-size: 12px;
+  }
+
   .bottom-spacer {
     height: 24px;
   }
@@ -598,7 +718,7 @@ onMounted(async () => {
   }
 
   .section-title {
-    font-size: 16px;
+    font-size: 17px;
   }
 }
 
@@ -612,6 +732,12 @@ onMounted(async () => {
   }
   .product-card:hover .card-cover {
     background-size: 100%;
+  }
+  .category-chip {
+    transition: none;
+  }
+  .search-box {
+    transition: none;
   }
 }
 </style>
