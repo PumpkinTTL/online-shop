@@ -1068,7 +1068,7 @@
                   <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
                     <span style="font-weight:600;white-space:nowrap;">{{ getLogTypeLabel(currentLogType) }}：</span>
                     <el-select v-model="logQueryForm.filename" placeholder="选择日志文件" style="width:220px;"
-                      @change="queryLogs(false)" :loading="logLoading" filterable>
+                      @change="queryLogsWithReset" :loading="logLoading" filterable>
                       <el-option v-for="file in logFiles" :key="file.filename" :label="file.filename"
                         :value="file.filename">
                         <span style="float:left">{{ file.filename }}</span>
@@ -1078,7 +1078,7 @@
                   </div>
                   <div style="display:flex;gap:8px;align-items:center;">
                     <el-select v-model="logQueryForm.level" placeholder="日志级别" clearable style="width:110px"
-                      @change="queryLogs(false)">
+                      @change="queryLogsWithReset">
                       <el-option label="错误" value="error"></el-option>
                       <el-option label="警告" value="warn"></el-option>
                       <el-option label="成功" value="success"></el-option>
@@ -1086,16 +1086,14 @@
                       <el-option label="调试" value="debug"></el-option>
                     </el-select>
                     <el-input v-model="logQueryForm.keyword" placeholder="搜索关键词" clearable style="width:160px"
-                      @keyup.enter="queryLogs(false)">
+                      @keyup.enter="queryLogsWithReset">
                       <template #suffix>
-                        <el-icon @click="queryLogs(false)" style="cursor:pointer">
+                        <el-icon @click="queryLogsWithReset" style="cursor:pointer">
                           <search></search>
                         </el-icon>
                       </template>
                     </el-input>
-                    <el-input-number v-model="logQueryForm.limit" :min="10" :max="500" :step="10" style="width:100px"
-                      @change="queryLogs(false)" />
-                    <el-button @click="queryLogs(false)" :loading="logLoading">查询</el-button>
+                    <el-button @click="queryLogsWithReset" :loading="logLoading">查询</el-button>
                   </div>
                 </div>
               </template>
@@ -1248,10 +1246,19 @@
                 </el-table-column>
               </el-table>
 
-              <!-- 统计信息 -->
-              <div v-if="logQueryResult.logs && logQueryResult.logs.length > 0"
-                style="margin-top:16px;text-align:center;color:#909399;font-size:12px;">
-                共 {{ logQueryResult.total }} 条记录，显示 {{ logQueryResult.filtered }} 条
+              <!-- 分页 -->
+              <div v-if="logQueryResult.total > 0" style="margin-top:16px;display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;">
+                <span style="color:#909399;font-size:13px;">共 <strong>{{ logQueryResult.total }}</strong> 条记录</span>
+                <el-pagination
+                  :current-page="logCurrentPage"
+                  :page-size="logPageSize"
+                  :page-sizes="[20, 50, 100, 200, 500]"
+                  :total="logQueryResult.total"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  @current-change="handleLogPageChange"
+                  @size-change="handleLogPageSizeChange"
+                  background
+                ></el-pagination>
               </div>
             </el-card>
           </div>

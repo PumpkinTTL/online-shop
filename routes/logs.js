@@ -82,7 +82,7 @@ router.get('/files', auth, async (req, res) => {
 // 读取日志文件内容
 router.get('/content', auth, async (req, res) => {
   try {
-    const { type = 'system', filename, limit = 100, level, keyword } = req.query;
+    const { type = 'system', filename, limit = 100, level, keyword, page = 1, pageSize = 50 } = req.query;
     const logDir = LOG_DIRS[type] || LOG_DIRS.system;
     const filePath = path.join(logDir, filename);
 
@@ -126,14 +126,20 @@ router.get('/content', auth, async (req, res) => {
       );
     }
 
-    // 限制返回数量（倒序，最新的在前）
-    const limitNum = parseInt(limit) || 100;
-    logs = logs.slice(-limitNum).reverse();
+    // 倒序：最新的在前
+    const allFiltered = [...logs].reverse();
+    const total = allFiltered.length;
+
+    // 分页
+    const pageNum = parseInt(page) || 1;
+    const size = parseInt(pageSize) || parseInt(limit) || 50;
+    const startIdx = (pageNum - 1) * size;
+    const pagedLogs = allFiltered.slice(startIdx, startIdx + size);
 
     res.json({
-      total: lines.length,
-      filtered: logs.length,
-      logs,
+      total,
+      filtered: pagedLogs.length,
+      logs: pagedLogs,
     });
   } catch (error) {
     system.error('读取日志文件失败', { error: error.message });

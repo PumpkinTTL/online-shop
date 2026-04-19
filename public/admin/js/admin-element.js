@@ -835,6 +835,8 @@ const app = createApp({
       keyword: '',
       limit: 100,
     });
+    var logCurrentPage = ref(1);
+    var logPageSize = ref(50);
 
     // 选择日志类型
     var selectLogType = async function(type) {
@@ -843,6 +845,7 @@ const app = createApp({
       logQueryForm.value.filename = '';
       logQueryForm.value.level = '';
       logQueryForm.value.keyword = '';
+      logCurrentPage.value = 1;
       await loadLogFiles();
     };
 
@@ -949,14 +952,42 @@ const app = createApp({
       }
       logLoading.value = true;
       try {
-        var result = await AdminAPI.getLogContent(logQueryForm.value);
+        // 用分页参数覆盖limit
+        var params = Object.assign({}, logQueryForm.value, {
+          page: logCurrentPage.value,
+          pageSize: logPageSize.value,
+          limit: undefined
+        });
+        var result = await AdminAPI.getLogContent(params);
         logQueryResult.value = result;
+        if (result.logs && !result.total && result.filtered) {
+          // 兼容旧接口返回格式：filtered=总数，logs=当前页数据
+          logQueryResult.value.total = result.filtered;
+          logQueryResult.value.filtered = result.logs.length;
+        }
       } catch (e) {
         logQueryResult.value = { total: 0, filtered: 0, logs: [] };
         ElMsg.error(e.message || '查询日志失败');
       } finally {
         logLoading.value = false;
       }
+    };
+
+    // 日志分页处理
+    var handleLogPageChange = function(page) {
+      logCurrentPage.value = page;
+      queryLogs(false);
+    };
+    var handleLogPageSizeChange = function(size) {
+      logPageSize.value = size;
+      logCurrentPage.value = 1;
+      queryLogs(false);
+    };
+
+    // 带重置页码的日志查询（用于筛选条件变化时）
+    var queryLogsWithReset = async function() {
+      logCurrentPage.value = 1;
+      await queryLogs(false);
     };
 
     // ===== 修改密码 =====
@@ -1320,10 +1351,15 @@ const app = createApp({
       logFiles: logFiles,
       logQueryResult: logQueryResult,
       logQueryForm: logQueryForm,
+      logCurrentPage: logCurrentPage,
+      logPageSize: logPageSize,
       loadLogStats: loadLogStats,
       loadLogFiles: loadLogFiles,
       selectLogType: selectLogType,
       queryLogs: queryLogs,
+      queryLogsWithReset: queryLogsWithReset,
+      handleLogPageChange: handleLogPageChange,
+      handleLogPageSizeChange: handleLogPageSizeChange,
       getLogTypeLabel: getLogTypeLabel,
       getLogTypeColor: getLogTypeColor,
       getLogLevelType: getLogLevelType,
