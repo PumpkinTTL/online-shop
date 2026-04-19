@@ -122,6 +122,11 @@ async function bootstrap() {
     await dataSource.initialize();
     console.log('✅ 数据库连接成功');
 
+    system.info('app.start', {
+      message: '数据库连接成功',
+      env: process.env.NODE_ENV || 'development',
+    });
+
     // 等待表同步完成（开发环境）
     if (process.env.NODE_ENV === 'development') {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -144,9 +149,22 @@ async function bootstrap() {
     app.listen(PORT, () => {
       console.log(`🛒 在线商品小站已启动: http://localhost:${PORT}`);
       console.log(`🎨 后台管理: http://localhost:${PORT}/admin`);
+
+      system.info('app.start', {
+        message: '服务启动成功',
+        port: PORT,
+        env: process.env.NODE_ENV || 'development',
+      });
     });
   } catch (error) {
     console.error('❌ 数据库连接失败:', error.message);
+
+    system.error('app.start', {
+      message: '数据库连接失败',
+      error: error.message,
+      stack: error.stack,
+    });
+
     process.exit(1);
   }
 }

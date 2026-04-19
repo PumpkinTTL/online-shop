@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const userService = require('../services/UserService');
 const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 const { login: loginLimiter } = require('../middleware/rateLimiter');
+const { action } = require('../logger');
 
 const router = express.Router();
 
@@ -64,6 +65,13 @@ router.post('/register', [
         createdAt: user.createdAt
       }
     });
+
+    // 记录用户注册日志
+    action.success('user.register', {
+      userId: user.id,
+      username: user.username,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -102,6 +110,13 @@ router.post('/login', loginLimiter, [
         createdAt: user.createdAt
       }
     });
+
+    // 记录用户登录日志
+    action.success('user.login', {
+      userId: user.id,
+      username: user.username,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
@@ -111,6 +126,12 @@ router.post('/login', loginLimiter, [
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: '退出成功' });
+
+  // 记录用户登出日志
+  action.info('user.logout', {
+    userId: req.userId || null,
+    ip: req.ip,
+  });
 });
 
 // 获取当前用户信息（需要登录）

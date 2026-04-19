@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const adminService = require('../services/adminService');
 const pickupService = require('../services/pickupService');
 const { login: loginLimiter } = require('../middleware/rateLimiter');
+const { action, system } = require('../logger');
 
 const router = express.Router();
 
@@ -79,7 +80,21 @@ router.post('/login', loginLimiter, async (req, res) => {
         role: admin.role,
       },
     });
+
+    // 记录管理员登录日志
+    action.success('admin.login', {
+      adminId: admin.id,
+      username: admin.username,
+      role: admin.role,
+      ip: req.ip,
+    });
   } catch (error) {
+    // 记录登录失败
+    action.warn('admin.login.failed', {
+      username,
+      ip: req.ip,
+      error: error.message,
+    });
     res.status(401).json({ error: error.message });
   }
 });
@@ -92,6 +107,9 @@ router.post('/init', async (req, res) => {
       return res.status(400).json({ error: '管理员已存在' });
     }
     res.json({ message: '初始化成功' });
+
+    // 记录初始化日志
+    system.info('admin.init', { ip: req.ip });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -126,6 +144,12 @@ router.post('/change-password', auth, async (req, res) => {
     }
     await adminService.changePassword(req.admin.id, oldPassword, newPassword);
     res.json({ message: '密码修改成功' });
+
+    // 记录密码修改日志
+    action.success('admin.changePassword', {
+      adminId: req.admin.id,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -171,6 +195,13 @@ router.post('/products', auth, async (req, res) => {
   try {
     const product = await adminService.createProduct(req.body);
     res.status(201).json(product);
+
+    action.success('admin.product.create', {
+      adminId: req.admin.id,
+      productId: product.id,
+      productName: product.name,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -180,6 +211,13 @@ router.put('/products/:id', auth, async (req, res) => {
   try {
     const product = await adminService.updateProduct(parseInt(req.params.id), req.body);
     res.json(product);
+
+    action.success('admin.product.update', {
+      adminId: req.admin.id,
+      productId: product.id,
+      productName: product.name,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -187,8 +225,15 @@ router.put('/products/:id', auth, async (req, res) => {
 
 router.delete('/products/:id', auth, async (req, res) => {
   try {
-    await adminService.deleteProduct(parseInt(req.params.id));
+    const productId = parseInt(req.params.id);
+    await adminService.deleteProduct(productId);
     res.json({ message: '删除成功' });
+
+    action.success('admin.product.delete', {
+      adminId: req.admin.id,
+      productId,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -359,6 +404,14 @@ router.post('/card-keys/generate', auth, async (req, res) => {
 
     const result = await adminService.generateCardKeys(productId, prefix || '', count, cdkList || []);
     res.status(201).json(result);
+
+    action.success('admin.cardkey.generate', {
+      adminId: req.admin.id,
+      productId,
+      prefix,
+      count,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -374,6 +427,13 @@ router.post('/card-keys/manual', auth, async (req, res) => {
 
     const result = await adminService.manualAddCardKeys(productId, keys, cdkList || []);
     res.status(201).json(result);
+
+    action.success('admin.cardkey.manualAdd', {
+      adminId: req.admin.id,
+      productId,
+      count: keys.length,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -392,8 +452,15 @@ router.put('/card-keys/:id', auth, async (req, res) => {
 // 删除卡密
 router.delete('/card-keys/:id', auth, async (req, res) => {
   try {
-    await adminService.deleteCardKey(parseInt(req.params.id));
+    const cardKeyId = parseInt(req.params.id);
+    await adminService.deleteCardKey(cardKeyId);
     res.json({ message: '删除成功' });
+
+    action.success('admin.cardkey.delete', {
+      adminId: req.admin.id,
+      cardKeyId,
+      ip: req.ip,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

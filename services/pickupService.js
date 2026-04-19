@@ -69,25 +69,40 @@ class PickupService {
 
     if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置，请设置环境变量 MAAPI_TOKEN');
 
-    const res = await axios.get(url, { timeout: 15000 });
-    const data = res.data;
-    if (typeof data === 'string' && data.startsWith('ERROR:')) {
-      throw new Error(data.replace('ERROR:', '').trim());
+    try {
+      const res = await axios.get(url, { timeout: 15000 });
+      const data = res.data;
+      if (typeof data === 'string' && data.startsWith('ERROR:')) {
+        const errorMsg = data.replace('ERROR:', '').trim();
+        system.warn('maapi.getPhone', { error: errorMsg, keyword, phone, cardType, ip });
+        throw new Error(errorMsg);
+      }
+
+      // 写入接码记录（免费接码来源）
+      const smsRecordRepo = this.getSmsRecordRepo();
+      const record = smsRecordRepo.create({
+        phone: String(data),
+        keyword: keyword || '',
+        cardType: cardType || '全部',
+        status: 'active',
+        ip: ip || '',
+        source: 'free',
+      });
+      await smsRecordRepo.save(record);
+
+      return data; // 返回手机号
+    } catch (error) {
+      if (!error.message.includes('MAAPI')) {
+        system.error('maapi.getPhone', {
+          error: error.message,
+          keyword,
+          phone,
+          cardType,
+          ip,
+        });
+      }
+      throw error;
     }
-
-    // 写入接码记录（免费接码来源）
-    const smsRecordRepo = this.getSmsRecordRepo();
-    const record = smsRecordRepo.create({
-      phone: String(data),
-      keyword: keyword || '',
-      cardType: cardType || '全部',
-      status: 'active',
-      ip: ip || '',
-      source: 'free',
-    });
-    await smsRecordRepo.save(record);
-
-    return data; // 返回手机号
   }
 
   // 获取验证码（单次查询 MAAPI，由前端轮询调用），成功后更新接码记录
@@ -95,61 +110,75 @@ class PickupService {
     if (!MAAPI_TOKEN) throw new Error('MAAPI Token 未配置');
 
     const url = `${MAAPI_BASE}?code=getMsg&token=${MAAPI_TOKEN}&phone=${phone}&keyWord=${encodeURIComponent(keyword || '')}`;
-    const res = await axios.get(url, { timeout: 15000 });
-    const data = res.data;
 
-    if (typeof data === 'string' && data.startsWith('ERROR:')) {
-      throw new Error(data.replace('ERROR:', '').trim());
-    }
+    try {
+      const res = await axios.get(url, { timeout: 15000 });
+      const data = res.data;
 
-    // 尚未收到短信
-    if (typeof data === 'string' && data.includes('[尚未收到]')) {
-      return { received: false, code: '', content: '' };
-    }
-
-    // 提取验证码（4-6位数字）
-    let extractedCode = '';
-    const codeMatch = (typeof data === 'string') && data.match(/验证码[：:\s]*(\d{4,6})/);
-    if (codeMatch) {
-      extractedCode = codeMatch[1];
-    } else {
-      // 尝试直接匹配4-6位纯数字
-      const numMatch = (typeof data === 'string') && data.match(/\b(\d{4,6})\b/);
-      if (numMatch) {
-        extractedCode = numMatch[1];
+      if (typeof data === 'string' && data.startsWith('ERROR:')) {
+        const errorMsg = data.replace('ERROR:', '').trim();
+        system.warn('maapi.getVerifyCode', { error: errorMsg, phone, keyword });
+        throw new Error(errorMsg);
       }
-    }
 
-    const content = typeof data === 'string' ? data : JSON.stringify(data);
+      // 尚未收到短信
+      if (typeof data === 'string' && data.includes('[尚未收到]')) {
+        return { received: false, code: '', content: '' };
+      }
 
-    // 收到短信后更新/创建接码记录
-    if (extractedCode || content) {
-      const smsRecordRepo = this.getSmsRecordRepo();
-      const record = await smsRecordRepo.findOne({
-        where: { phone, status: 'active' },
-        order: { createdAt: 'DESC' },
-      });
-      if (record) {
-        // 更新已有记录
-        await smsRecordRepo.update(record.id, {
-          smsContent: content,
-          verifyCode: extractedCode,
-          status: extractedCode ? 'completed' : 'active',
-        });
+      // 提取验证码（4-6位数字）
+      let extractedCode = '';
+      const codeMatch = (typeof data === 'string') && data.match(/验证码[：:\s]*(\d{4,6})/);
+      if (codeMatch) {
+        extractedCode = codeMatch[1];
       } else {
-        // isCode商品：没有通过getPhone获取号码，直接创建记录（标记来源为iscode）
-        await smsRecordRepo.save(smsRecordRepo.create({
-          phone,
-          keyword: keyword || '',
-          smsContent: content,
-          verifyCode: extractedCode || '',
-          status: extractedCode ? 'completed' : 'active',
-          source: 'iscode',
-        }));
+        // 尝试直接匹配4-6位纯数字
+        const numMatch = (typeof data === 'string') && data.match(/\b(\d{4,6})\b/);
+        if (numMatch) {
+          extractedCode = numMatch[1];
+        }
       }
-    }
 
-    return { received: true, code: extractedCode, content };
+      const content = typeof data === 'string' ? data : JSON.stringify(data);
+
+      // 收到短信后更新/创建接码记录
+      if (extractedCode || content) {
+        const smsRecordRepo = this.getSmsRecordRepo();
+        const record = await smsRecordRepo.findOne({
+          where: { phone, status: 'active' },
+          order: { createdAt: 'DESC' },
+        });
+        if (record) {
+          // 更新已有记录
+          await smsRecordRepo.update(record.id, {
+            smsContent: content,
+            verifyCode: extractedCode,
+            status: extractedCode ? 'completed' : 'active',
+          });
+        } else {
+          // isCode商品：没有通过getPhone获取号码，直接创建记录（标记来源为iscode）
+          await smsRecordRepo.save(smsRecordRepo.create({
+            phone,
+            keyword: keyword || '',
+            smsContent: content,
+            verifyCode: extractedCode || '',
+            status: extractedCode ? 'completed' : 'active',
+            source: 'iscode',
+          }));
+        }
+      }
+
+      return { received: true, code: extractedCode, content };
+    } catch (error) {
+      if (!error.message.includes('MAAPI') && !error.message.includes('[尚未收到]')) {
+        system.error('maapi.getVerifyCode', {
+          error: error.message,
+          phone,
+          keyword,
+        });
+      }
+      throw error;
+    }
   }
 
   // 释放号码（同时更新接码记录状态）

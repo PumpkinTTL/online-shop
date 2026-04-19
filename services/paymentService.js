@@ -107,12 +107,26 @@ class PaymentService {
           expiredAt,
         };
       } else {
-        throw new Error(result.subMsg || result.msg || '预下单失败');
+        const errMsg = result.subMsg || result.msg || '预下单失败';
+        system.error('alipay.precreate', {
+          error: errMsg,
+          code: result.code,
+          orderNo,
+          productId,
+        });
+        throw new Error(errMsg);
       }
     } catch (error) {
       // 预下单失败
       await paymentRepo.update(paymentOrder.id, { status: 'failed' });
       const errMsg = error.subMsg || error.message || '未知错误';
+      if (!errMsg.includes('预下单')) {
+        system.error('alipay.precreate', {
+          error: errMsg,
+          orderNo,
+          productId,
+        });
+      }
       throw new Error('创建支付订单失败: ' + errMsg);
     }
   }
