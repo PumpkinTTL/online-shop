@@ -158,28 +158,4 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
-// 获取所有用户
-router.get('/', async (req, res) => {
-  try {
-    const users = await userService.findAll();
-    // 移除密码字段
-    const safeUsers = users.map(({ password, ...u }) => u);
-    res.json(safeUsers);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 获取单个用户
-router.get('/:id', async (req, res) => {
-  try {
-    const user = await userService.findOne(parseInt(req.params.id));
-    if (!user) return res.status(404).json({ error: '用户不存在' });
-    const { password, ...userInfo } = user;
-    res.json(userInfo);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 module.exports = router;
