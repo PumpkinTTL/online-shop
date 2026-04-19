@@ -4,9 +4,13 @@
       <h2 class="admin-page-title">商品管理</h2>
       <div class="admin-page-actions">
         <n-select v-model:value="filterCategory" :options="categoryOptions" placeholder="按类别筛选" clearable style="width:160px" @update:value="handleFilter" />
-        <n-button type="primary" @click="showForm = true; editingProduct = null; resetForm()">
+        <n-button type="primary" @click="openForm(null)">
           <template #icon><n-icon><AddOutline /></n-icon></template>
           新增商品
+        </n-button>
+        <n-button type="error" size="small" :disabled="!selectedKeys.length" @click="handleBatchDelete">
+          <template #icon><n-icon><TrashOutline /></n-icon></template>
+          批量删除 ({{ selectedKeys.length }})
         </n-button>
       </div>
     </div>
@@ -18,19 +22,17 @@
         :bordered="false"
         :loading="loading"
         :row-key="row => row.id"
+        :scroll-x="1400"
         v-model:checked-row-keys="selectedKeys"
         @update:checked-row-keys="keys => selectedKeys = keys"
       />
 
       <div class="admin-pagination">
-        <n-button type="error" size="small" :disabled="!selectedKeys.length" @click="handleBatchDelete">
-          批量删除 ({{ selectedKeys.length }})
-        </n-button>
         <n-pagination
           v-model:page="currentPage"
           v-model:page-size="pageSize"
           :item-count="adminStore.productsTotal"
-          :page-sizes="[10, 20, 50]"
+          :page-sizes="[10, 20, 30, 50]"
           show-size-picker
           @update:page="loadData"
           @update:page-size="handlePageSizeChange"
@@ -39,30 +41,49 @@
     </div>
 
     <!-- 新增/编辑弹窗 -->
-    <n-modal v-model:show="showForm" preset="card" :title="editingProduct ? '编辑商品' : '新增商品'" style="max-width:600px;">
-      <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="80">
-        <n-form-item label="名称" path="name">
-          <n-input v-model:value="form.name" placeholder="商品名称" />
+    <n-modal v-model:show="showForm" preset="card" :title="editingProduct ? '编辑商品' : '新增商品'" style="max-width:620px;">
+      <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="90">
+        <n-form-item label="商品名称" path="name">
+          <n-input v-model:value="form.name" placeholder="请输入商品名称" />
         </n-form-item>
-        <n-form-item label="类别" path="categoryId">
-          <n-select v-model:value="form.categoryId" :options="categoryOptions" placeholder="选择类别" />
+        <n-form-item label="商品代号" path="code">
+          <n-input v-model:value="form.code" placeholder="支付订单显示（可选）" />
         </n-form-item>
         <n-form-item label="价格" path="price">
-          <n-input-number v-model:value="form.price" :min="0" :precision="2" style="width:100%" placeholder="0.00" />
+          <n-input-number v-model:value="form.price" :min="0" :precision="2" :step="0.01" style="width:100%" placeholder="0.00" />
         </n-form-item>
-        <n-form-item label="封面图" path="coverImage">
-          <n-input v-model:value="form.coverImage" placeholder="图片URL" />
+        <n-form-item label="商品类别" path="categoryId">
+          <n-select v-model:value="form.categoryId" :options="categoryOptions" placeholder="选择类别" />
         </n-form-item>
-        <n-form-item label="描述" path="description">
-          <n-input v-model:value="form.description" type="textarea" :rows="3" placeholder="商品描述" />
+        <n-form-item label="描述">
+          <n-input v-model:value="form.description" type="textarea" :rows="2" placeholder="商品描述（可选）" />
         </n-form-item>
-        <n-form-item label="关键词" path="keyword">
+        <n-form-item label="库存">
+          <n-input :value="String(form.stock || 0)" disabled />
+          <span style="margin-left:8px;color:var(--text-light);font-size:12px;">由卡密自动计算</span>
+        </n-form-item>
+        <n-form-item label="销量">
+          <n-input-number v-model:value="form.sales" :min="0" style="width:100%" />
+        </n-form-item>
+        <n-form-item label="质保时间">
+          <n-input v-model:value="form.warranty" placeholder="例如：30天、永久、1个月（可选）" />
+        </n-form-item>
+        <n-form-item label="积分额度">
+          <n-input-number v-model:value="form.credit" :min="0" style="width:100%" placeholder="0" />
+        </n-form-item>
+        <n-form-item label="注意事项">
+          <n-input v-model:value="form.tips" type="textarea" :rows="2" placeholder="可选，购买页以红色警告展示" />
+        </n-form-item>
+        <n-form-item label="封面图">
+          <n-input v-model:value="form.coverImage" placeholder="图片URL（可选）" />
+        </n-form-item>
+        <n-form-item label="关键词">
           <n-input v-model:value="form.keyword" placeholder="MAAPI 关键词（接码类商品必填）" />
         </n-form-item>
-        <n-form-item label="排序" path="sort">
+        <n-form-item label="排序">
           <n-input-number v-model:value="form.sort" :min="0" style="width:100%" />
         </n-form-item>
-        <n-form-item label="显示" path="show">
+        <n-form-item label="首页显示">
           <n-switch v-model:value="form.show" />
         </n-form-item>
       </n-form>
@@ -81,9 +102,9 @@ import { ref, h, onMounted, computed } from 'vue'
 import {
   NButton, NIcon, NDataTable, NPagination,
   NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch,
-  NSpace, NTag, useMessage, useDialog
+  NSpace, NTag, NTooltip, useMessage, useDialog
 } from 'naive-ui'
-import { AddOutline } from '@vicons/ionicons5'
+import { AddOutline, TrashOutline, CreateOutline } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
 
 const adminStore = useAdminStore()
@@ -101,7 +122,11 @@ const editingProduct = ref(null)
 const submitting = ref(false)
 const formRef = ref(null)
 
-const defaultForm = { name: '', categoryId: null, price: 0, coverImage: '', description: '', keyword: '', sort: 0, show: true }
+const defaultForm = {
+  name: '', code: '', price: 0, categoryId: null, description: '',
+  stock: 0, sales: 0, warranty: '', credit: null, tips: '',
+  coverImage: '', keyword: '', sort: 0, show: true,
+}
 const form = ref({ ...defaultForm })
 
 const formRules = {
@@ -116,45 +141,109 @@ const categoryOptions = computed(() =>
 
 const columns = [
   { type: 'selection' },
-  { title: 'ID', key: 'id', width: 60 },
-  { title: '名称', key: 'name', ellipsis: { tooltip: true } },
+  { title: 'ID', key: 'id', width: 60, sorter: (a, b) => a.id - b.id },
   {
-    title: '类别', key: 'categoryName', width: 120,
+    title: '名称', key: 'name', minWidth: 140,
+    render: (row) => h('span', { style: 'font-weight:600' }, row.name),
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: '分类', key: 'categoryName', width: 100,
     render: (row) => {
       const cat = adminStore.categories.find(c => c.id === row.categoryId)
-      return cat?.name || '-'
+      if (!cat) return '-'
+      // 根据 code 着色
+      const typeMap = { AI: 'info', SMS: 'success' }
+      const tagType = cat.smsEnabled ? 'success' : (typeMap[cat.code] || 'warning')
+      return h(NTag, { type: tagType, size: 'small' }, () => cat.name)
     }
   },
-  { title: '价格', key: 'price', width: 100, render: (row) => `¥${row.price}` },
   {
-    title: '显示', key: 'show', width: 80,
-    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '显示' : '隐藏')
+    title: '价格', key: 'price', width: 90, sorter: (a, b) => a.price - b.price,
+    render: (row) => h('span', { style: 'color:#EF4444;font-weight:600' }, `¥${row.price}`),
   },
-  { title: '排序', key: 'sort', width: 60 },
   {
-    title: '操作', key: 'actions', width: 140, fixed: 'right',
-    render: (row) => h(NSpace, { size: 'small' }, () => [
-      h(NButton, { size: 'small', tertiary: true, onClick: () => handleEdit(row) }, () => '编辑'),
-      h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, () => '删除'),
+    title: '库存', key: 'stock', width: 70, sorter: (a, b) => (a.stock || 0) - (b.stock || 0),
+    render: (row) => h(NTag, {
+      type: row.stock > 0 ? 'success' : 'error', size: 'small'
+    }, () => row.stock || 0),
+  },
+  {
+    title: '销量', key: 'sales', width: 70, sorter: (a, b) => (a.sales || 0) - (b.sales || 0),
+    render: (row) => h('span', { style: 'font-weight:600;color:#6366F1' }, row.sales || 0),
+  },
+  {
+    title: '质保', key: 'warranty', width: 90,
+    render: (row) => row.warranty || '-',
+  },
+  {
+    title: '接码', key: 'isCode', width: 70,
+    render: (row) => h(NTag, {
+      type: row.isCode ? 'success' : 'default', size: 'small'
+    }, () => row.isCode ? '需要' : '否'),
+  },
+  {
+    title: '关键词', key: 'smKeyWord', width: 90,
+    render: (row) => row.smKeyWord || '-',
+  },
+  {
+    title: '注意事项', key: 'tips', width: 110,
+    render: (row) => row.tips
+      ? h(NTooltip, {}, { trigger: () => h('span', { style: 'cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;display:inline-block' }, row.tips), default: () => row.tips })
+      : h('span', { style: 'color:#94A3B8' }, '-'),
+  },
+  {
+    title: '积分', key: 'credit', width: 70, align: 'center',
+    render: (row) => row.credit
+      ? h(NTag, { type: 'warning', size: 'small' }, () => row.credit)
+      : h('span', { style: 'color:#94A3B8' }, '-'),
+  },
+  {
+    title: '显示', key: 'show', width: 70,
+    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '是' : '否'),
+  },
+  {
+    title: '创建时间', key: 'createdAt', width: 160, sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    render: (row) => formatDate(row.createdAt),
+  },
+  {
+    title: '操作', key: 'actions', width: 160, fixed: 'right',
+    render: (row) => h(NSpace, { size: 4, wrap: false }, () => [
+      h(NButton, { size: 'small', tertiary: true, onClick: () => openForm(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(CreateOutline)), default: () => '编辑' }),
+      h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(TrashOutline)), default: () => '删除' }),
     ])
   },
 ]
 
-function resetForm() {
-  form.value = { ...defaultForm }
+function formatDate(dateStr) {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-function handleEdit(row) {
-  editingProduct.value = row
-  form.value = {
-    name: row.name,
-    categoryId: row.categoryId,
-    price: row.price,
-    coverImage: row.coverImage || '',
-    description: row.description || '',
-    keyword: row.keyword || '',
-    sort: row.sort || 0,
-    show: row.show !== 0 && row.show !== false,
+function openForm(row) {
+  if (row) {
+    editingProduct.value = row
+    form.value = {
+      name: row.name || '',
+      code: row.code || '',
+      price: row.price || 0,
+      categoryId: row.categoryId || null,
+      description: row.description || '',
+      stock: row.stock || 0,
+      sales: row.sales || 0,
+      warranty: row.warranty || '',
+      credit: row.credit || null,
+      tips: row.tips || '',
+      coverImage: row.coverImage || '',
+      keyword: row.keyword || '',
+      sort: row.sort || 0,
+      show: row.show !== 0 && row.show !== false,
+    }
+  } else {
+    editingProduct.value = null
+    form.value = { ...defaultForm }
   }
   showForm.value = true
 }

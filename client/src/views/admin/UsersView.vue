@@ -2,6 +2,12 @@
   <div class="users-view">
     <div class="admin-page-header">
       <h2 class="admin-page-title">用户管理</h2>
+      <div class="admin-page-actions">
+        <n-button type="error" size="small" :disabled="!selectedKeys.length" @click="handleBatchDelete">
+          <template #icon><n-icon><TrashOutline /></n-icon></template>
+          批量删除 ({{ selectedKeys.length }})
+        </n-button>
+      </div>
     </div>
 
     <div class="admin-table-card">
@@ -14,9 +20,6 @@
         v-model:checked-row-keys="selectedKeys"
       />
       <div class="admin-pagination">
-        <n-button type="error" size="small" :disabled="!selectedKeys.length" @click="handleBatchDelete">
-          批量删除 ({{ selectedKeys.length }})
-        </n-button>
         <n-pagination
           v-model:page="currentPage"
           v-model:page-size="pageSize"
@@ -33,8 +36,9 @@
 
 <script setup>
 import { ref, h, onMounted } from 'vue'
+import { TrashOutline, ToggleOutline, CheckmarkOutline } from '@vicons/ionicons5'
 import {
-  NButton, NDataTable, NPagination,
+  NButton, NDataTable, NPagination, NIcon,
   NSpace, NTag, useMessage, useDialog
 } from 'naive-ui'
 import { useAdminStore } from '@/stores/admin'
@@ -60,9 +64,9 @@ const columns = [
   { title: '注册时间', key: 'createdAt', width: 170 },
   {
     title: '操作', key: 'actions', width: 180, fixed: 'right',
-    render: (row) => h(NSpace, { size: 'small' }, () => [
-      h(NButton, { size: 'small', tertiary: true, type: row.isActive ? 'warning' : 'success', onClick: () => handleToggle(row) }, () => row.isActive ? '禁用' : '启用'),
-      h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, () => '删除'),
+    render: (row) => h(NSpace, { size: 4, wrap: false }, () => [
+      h(NButton, { size: 'small', tertiary: true, type: row.isActive ? 'warning' : 'success', onClick: () => handleToggle(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(row.isActive ? ToggleOutline : CheckmarkOutline)), default: () => row.isActive ? '禁用' : '启用' }),
+      h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(TrashOutline)), default: () => '删除' }),
     ])
   },
 ]

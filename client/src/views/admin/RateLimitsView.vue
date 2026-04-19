@@ -39,8 +39,9 @@
 
 <script setup>
 import { ref, h, onMounted } from 'vue'
+import { CreateOutline } from '@vicons/ionicons5'
 import {
-  NButton, NDataTable, NModal, NForm, NFormItem,
+  NButton, NDataTable, NModal, NForm, NFormItem, NIcon,
   NInput, NInputNumber, NSwitch, NSpace, NTag, useMessage, useDialog
 } from 'naive-ui'
 import { useAdminStore } from '@/stores/admin'
@@ -64,8 +65,8 @@ const columns = [
     render: (row) => h(NTag, { type: row.enabled ? 'success' : 'error', size: 'small' }, () => row.enabled ? '启用' : '禁用')
   },
   {
-    title: '操作', key: 'actions', width: 80,
-    render: (row) => h(NButton, { size: 'small', tertiary: true, onClick: () => handleEdit(row) }, () => '编辑')
+    title: '操作', key: 'actions', width: 90,
+    render: (row) => h(NButton, { size: 'small', tertiary: true, onClick: () => handleEdit(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(CreateOutline)), default: () => '编辑' })
   },
 ]
 

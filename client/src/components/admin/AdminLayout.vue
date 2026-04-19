@@ -50,6 +50,15 @@
               </n-icon>
             </template>
           </n-button>
+          <!-- 刷新按钮 -->
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button quaternary circle size="small" @click="handleRefresh" class="refresh-btn">
+                <template #icon><n-icon size="18"><RefreshOutline /></n-icon></template>
+              </n-button>
+            </template>
+            刷新当前页
+          </n-tooltip>
           <n-dropdown :options="userDropdownOptions" @select="handleUserAction">
             <n-button quaternary size="small">
               <template #icon><n-icon><PersonOutline /></n-icon></template>
@@ -62,6 +71,27 @@
         <router-view />
       </n-layout-content>
     </n-layout>
+
+    <!-- 修改密码弹窗 -->
+    <n-modal v-model:show="showPasswordModal" preset="card" title="修改密码" style="width: 420px" :bordered="false">
+      <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-placement="left" label-width="80">
+        <n-form-item label="旧密码" path="oldPassword">
+          <n-input v-model:value="passwordForm.oldPassword" type="password" show-password-on="click" placeholder="请输入旧密码"></n-input>
+        </n-form-item>
+        <n-form-item label="新密码" path="newPassword">
+          <n-input v-model:value="passwordForm.newPassword" type="password" show-password-on="click" placeholder="请输入新密码（至少6位）"></n-input>
+        </n-form-item>
+        <n-form-item label="确认密码" path="confirmPassword">
+          <n-input v-model:value="passwordForm.confirmPassword" type="password" show-password-on="click" placeholder="请再次输入新密码"></n-input>
+        </n-form-item>
+      </n-form>
+      <template #action>
+        <n-space justify="end">
+          <n-button @click="showPasswordModal = false">取消</n-button>
+          <n-button type="primary" @click="handleChangePassword" :loading="passwordLoading">确认修改</n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </n-layout>
 </template>
 
@@ -70,17 +100,20 @@ import { ref, computed, h, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   NLayout, NLayoutSider, NLayoutHeader, NLayoutContent,
-  NMenu, NIcon, NButton, NDropdown, useMessage, useDialog
+  NMenu, NIcon, NButton, NDropdown, NTooltip, NModal, NForm, NFormItem,
+  NInput, NSpace, useMessage, useDialog
 } from 'naive-ui'
 import {
   FlashOutline, GridOutline, KeyOutline,
   ReceiptOutline, PeopleOutline, ShieldOutline,
   PhonePortraitOutline, DocumentTextOutline, SpeedometerOutline,
   AppsOutline, MenuOutline, PersonOutline,
-  SunnyOutline, MoonOutline
+  SunnyOutline, MoonOutline, RefreshOutline,
+  BusinessOutline, LockClosedOutline, SettingsOutline
 } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
 import { useTheme } from '@/composables/useTheme'
+import api from '@/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -123,11 +156,49 @@ const menuMap = {
   rateLimits: { label: '速率限制', icon: SpeedometerOutline },
 }
 
-const menuOptions = Object.entries(menuMap).map(([key, val]) => ({
-  label: val.label,
-  key,
-  icon: () => h(NIcon, null, () => h(val.icon)),
-}))
+function makeItem(key) {
+  const val = menuMap[key]
+  return { label: val.label, key, icon: () => h(NIcon, null, () => h(val.icon)) }
+}
+
+function makeGroup(label, key, iconComp) {
+  return {
+    type: 'group',
+    label: () => h('div', { style: 'display:flex;align-items:center;gap:6px;padding:2px 0' }, [
+      h(NIcon, { size: 13, style: 'opacity:0.6' }, () => h(iconComp)),
+      h('span', { style: 'font-size:11px;color:#64748B;letter-spacing:0.5px;font-weight:600' }, label),
+    ]),
+    key,
+    children: [],
+  }
+}
+
+const menuOptions = computed(() => {
+  if (collapsed.value) {
+    return Object.entries(menuMap).map(([key, val]) => makeItem(key))
+  }
+  return [
+    makeItem('dashboard'),
+    { type: 'divider', key: 'd1' },
+    { ...makeGroup('业务管理', 'g-business', BusinessOutline), children: [
+      makeItem('products'),
+      makeItem('categories'),
+      makeItem('cardKeys'),
+      makeItem('orders'),
+      makeItem('smsRecords'),
+    ]},
+    { type: 'divider', key: 'd2' },
+    { ...makeGroup('用户与权限', 'g-users', LockClosedOutline), children: [
+      makeItem('users'),
+      makeItem('admins'),
+    ]},
+    { type: 'divider', key: 'd3' },
+    { ...makeGroup('系统', 'g-system', SettingsOutline), children: [
+      makeItem('logs'),
+      makeItem('rateLimits'),
+    ]},
+  ]
+})
 
 const activeKey = computed(() => {
   const path = route.path
@@ -182,8 +253,63 @@ function handleUserAction(key) {
       },
     })
   } else if (key === 'changePassword') {
-    message.info('修改密码功能开发中')
+    showPasswordModal.value = true
   }
+}
+
+// ===== 修改密码 =====
+const showPasswordModal = ref(false)
+const passwordLoading = ref(false)
+const passwordFormRef = ref(null)
+const passwordForm = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
+const passwordRules = {
+  oldPassword: { required: true, message: '请输入旧密码', trigger: 'blur' },
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, message: '密码至少6位', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {
+      validator: (rule, value) => {
+        if (value !== passwordForm.value.newPassword) {
+          return new Error('两次密码不一致')
+        }
+        return true
+      },
+      trigger: 'blur',
+    },
+  ],
+}
+
+async function handleChangePassword() {
+  try {
+    await passwordFormRef.value?.validate()
+  } catch { return }
+  passwordLoading.value = true
+  try {
+    await api.changePassword(passwordForm.value.oldPassword, passwordForm.value.newPassword)
+    message.success('密码修改成功，请重新登录')
+    showPasswordModal.value = false
+    passwordForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
+    adminStore.logout()
+    router.push('/admin/login')
+  } catch (err) {
+    message.error(err.response?.data?.error || '修改失败')
+  } finally {
+    passwordLoading.value = false
+  }
+}
+
+// ===== 刷新 =====
+function handleRefresh() {
+  router.replace({ path: '/admin' + route.path.replace('/admin', '') })
+  message.success('已刷新')
 }
 </script>
 
@@ -262,6 +388,13 @@ function handleUserAction(key) {
   color: #F1F5F9;
 }
 
+.refresh-btn {
+  color: #94A3B8;
+}
+.refresh-btn:hover {
+  color: #F1F5F9;
+}
+
 /* ===== 浅色主题 ===== */
 .admin-layout.light-theme {
   background: #F1F5F9;
@@ -301,6 +434,13 @@ function handleUserAction(key) {
   color: #64748B;
 }
 .admin-layout.light-theme .theme-toggle:hover {
+  color: #1E293B;
+}
+
+.admin-layout.light-theme .refresh-btn {
+  color: #64748B;
+}
+.admin-layout.light-theme .refresh-btn:hover {
   color: #1E293B;
 }
 

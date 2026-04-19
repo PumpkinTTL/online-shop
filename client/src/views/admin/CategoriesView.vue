@@ -3,9 +3,13 @@
     <div class="admin-page-header">
       <h2 class="admin-page-title">类别管理</h2>
       <div class="admin-page-actions">
-        <n-button type="primary" @click="showForm = true; editingCategory = null; resetForm()">
+        <n-button type="primary" @click="openForm(null)">
           <template #icon><n-icon><AddOutline /></n-icon></template>
           新增类别
+        </n-button>
+        <n-button type="error" size="small" :disabled="!selectedKeys.length" @click="handleBatchDelete">
+          <template #icon><n-icon><TrashOutline /></n-icon></template>
+          批量删除 ({{ selectedKeys.length }})
         </n-button>
       </div>
     </div>
@@ -17,6 +21,8 @@
         :bordered="false"
         :loading="loading"
         :row-key="row => row.id"
+        v-model:checked-row-keys="selectedKeys"
+        @update:checked-row-keys="keys => selectedKeys = keys"
       />
     </div>
 
@@ -24,20 +30,23 @@
     <n-modal v-model:show="showForm" preset="card" :title="editingCategory ? '编辑类别' : '新增类别'" style="max-width:600px;">
       <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="100">
         <n-form-item label="类别名称" path="name">
-          <n-input v-model:value="form.name" placeholder="类别名称" />
+          <n-input v-model:value="form.name" placeholder="如：AI绘画" />
         </n-form-item>
         <n-form-item label="类别代码" path="code">
-          <n-input v-model:value="form.code" placeholder="类别代码（如 SMS）" />
+          <n-input v-model:value="form.code" placeholder="如：AI" />
         </n-form-item>
-        <n-form-item label="排序" path="sort">
+        <n-form-item label="说明">
+          <n-input v-model:value="form.description" type="textarea" :rows="2" placeholder="类别说明（可选）" />
+        </n-form-item>
+        <n-form-item label="排序">
           <n-input-number v-model:value="form.sort" :min="0" style="width:100%" />
         </n-form-item>
-        <n-form-item label="显示" path="show">
+        <n-form-item label="显示">
           <n-switch v-model:value="form.show" />
         </n-form-item>
         <n-divider>接码配置</n-divider>
         <n-form-item label="需要接码" path="smsEnabled">
-          <n-switch v-model:value="form.smsEnabled" />
+          <n-switch v-model:value="form.smsEnabled" @update:value="handleSmsToggle" />
         </n-form-item>
         <n-form-item v-if="form.smsEnabled" label="接码价格" path="smsPrice">
           <n-input-number v-model:value="form.smsPrice" :min="0" :precision="2" style="width:100%" placeholder="0.00" />
@@ -63,9 +72,10 @@
 import { ref, h, onMounted } from 'vue'
 import {
   NButton, NIcon, NDataTable, NModal, NForm, NFormItem,
-  NInput, NInputNumber, NSwitch, NDivider, NSpace, NTag, useMessage, useDialog
+  NInput, NInputNumber, NSwitch, NDivider, NSpace, NTag, NPopover,
+  useMessage, useDialog
 } from 'naive-ui'
-import { AddOutline } from '@vicons/ionicons5'
+import { AddOutline, TrashOutline, CreateOutline } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
 
 const adminStore = useAdminStore()
@@ -77,8 +87,9 @@ const showForm = ref(false)
 const editingCategory = ref(null)
 const submitting = ref(false)
 const formRef = ref(null)
+const selectedKeys = ref([])
 
-const defaultForm = { name: '', code: '', sort: 0, show: true, smsEnabled: false, smsPrice: 0, smsPaymentName: '', smKeyWord: '' }
+const defaultForm = { name: '', code: '', description: '', sort: 0, show: true, smsEnabled: false, smsPrice: 0, smsPaymentName: '', smKeyWord: '' }
 const form = ref({ ...defaultForm })
 
 const formRules = {
@@ -87,58 +98,104 @@ const formRules = {
 }
 
 const columns = [
+  { type: 'selection' },
   { title: 'ID', key: 'id', width: 60 },
-  { title: '名称', key: 'name' },
-  { title: '代码', key: 'code', width: 100 },
-  { title: '排序', key: 'sort', width: 60 },
   {
-    title: '显示', key: 'show', width: 80,
-    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '显示' : '隐藏')
+    title: '类别名称', key: 'name',
+    render: (row) => h('span', { style: 'font-weight:600' }, row.name),
   },
   {
-    title: '接码', key: 'smsEnabled', width: 80,
-    render: (row) => h(NTag, { type: row.smsEnabled ? 'info' : 'default', size: 'small' }, () => row.smsEnabled ? '需要' : '不需要')
+    title: '代号', key: 'code', width: 100,
+    render: (row) => h(NTag, { type: 'info', size: 'small' }, () => row.code),
   },
   {
-    title: '接码价格', key: 'smsPrice', width: 100,
-    render: (row) => row.smsEnabled ? `¥${row.smsPrice || 0}` : '-'
+    title: '说明', key: 'description', minWidth: 140,
+    render: (row) => h('span', {
+      style: 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;display:inline-block',
+      title: row.description || '-',
+    }, row.description || '-'),
   },
   {
-    title: '操作', key: 'actions', width: 140, fixed: 'right',
-    render: (row) => h(NSpace, { size: 'small' }, () => [
-      h(NButton, { size: 'small', tertiary: true, onClick: () => handleEdit(row) }, () => '编辑'),
-      h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, () => '删除'),
-    ])
+    title: '接码', key: 'smsEnabled', width: 100,
+    render: (row) => {
+      if (row.smsEnabled === 1 || row.smsEnabled === true) {
+        return h(NPopover, { trigger: 'click', placement: 'top' }, {
+          trigger: () => h(NTag, { type: 'success', size: 'small', style: 'cursor:pointer' }, () => '已启用'),
+          default: () => h('div', { style: 'font-size:13px;line-height:2' }, [
+            h('div', {}, [`价格: ¥${row.smsPrice || 0}`]),
+            h('div', {}, [`支付名: ${row.smsPaymentName || '-'}`]),
+            h('div', {}, [`关键词: ${row.smKeyWord || '-'}`]),
+          ]),
+        })
+      }
+      return h(NTag, { type: 'default', size: 'small' }, () => '未启用')
+    },
+  },
+  { title: '排序', key: 'sort', width: 70 },
+  {
+    title: '状态', key: 'show', width: 80,
+    render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '显示' : '隐藏'),
+  },
+  {
+    title: '操作', key: 'actions', width: 160, fixed: 'right',
+    render: (row) => h(NSpace, { size: 4, wrap: false }, () => [
+      h(NButton, { size: 'small', tertiary: true, onClick: () => openForm(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(CreateOutline)), default: () => '编辑' }),
+      h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(TrashOutline)), default: () => '删除' }),
+    ]),
   },
 ]
 
-function resetForm() {
-  form.value = { ...defaultForm }
+// 关闭接码时清空相关字段
+function handleSmsToggle(val) {
+  if (!val) {
+    form.value.smsPrice = 0
+    form.value.smsPaymentName = ''
+    form.value.smKeyWord = ''
+  }
 }
 
-function handleEdit(row) {
-  editingCategory.value = row
-  form.value = {
-    name: row.name,
-    code: row.code || '',
-    sort: row.sort || 0,
-    show: row.show !== 0 && row.show !== false,
-    smsEnabled: row.smsEnabled === 1 || row.smsEnabled === true,
-    smsPrice: row.smsPrice || 0,
-    smsPaymentName: row.smsPaymentName || '',
-    smKeyWord: row.smKeyWord || '',
+function openForm(row) {
+  if (row) {
+    editingCategory.value = row
+    form.value = {
+      name: row.name,
+      code: row.code || '',
+      description: row.description || '',
+      sort: row.sort || 0,
+      show: row.show !== 0 && row.show !== false,
+      smsEnabled: row.smsEnabled === 1 || row.smsEnabled === true,
+      smsPrice: row.smsPrice || 0,
+      smsPaymentName: row.smsPaymentName || '',
+      smKeyWord: row.smKeyWord || '',
+    }
+  } else {
+    editingCategory.value = null
+    form.value = { ...defaultForm }
   }
   showForm.value = true
 }
 
 async function handleSubmit() {
   try { await formRef.value?.validate() } catch { return }
+
+  // 接码校验
+  if (form.value.smsEnabled && !form.value.smsPrice && form.value.smsPrice !== 0) {
+    message.warning('启用接码服务时必须设置接码价格')
+    return
+  }
+
   submitting.value = true
   try {
     const data = {
       ...form.value,
       show: form.value.show ? 1 : 0,
       smsEnabled: form.value.smsEnabled ? 1 : 0,
+    }
+    // 关闭接码时清空
+    if (!data.smsEnabled) {
+      data.smsPrice = null
+      data.smsPaymentName = ''
+      data.smKeyWord = ''
     }
     if (editingCategory.value) {
       await adminStore.updateCategory(editingCategory.value.id, data)
@@ -166,6 +223,25 @@ function handleDelete(row) {
       try {
         await adminStore.deleteCategory(row.id)
         message.success('删除成功')
+        loadData()
+      } catch (e) {
+        message.error(e.response?.data?.error || '删除失败')
+      }
+    },
+  })
+}
+
+function handleBatchDelete() {
+  dialog.warning({
+    title: '批量删除',
+    content: `确定删除选中的 ${selectedKeys.value.length} 个类别吗？`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await adminStore.batchDeleteCategories(selectedKeys.value)
+        message.success('批量删除成功')
+        selectedKeys.value = []
         loadData()
       } catch (e) {
         message.error(e.response?.data?.error || '删除失败')
