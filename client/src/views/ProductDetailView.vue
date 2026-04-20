@@ -68,7 +68,7 @@
             <p class="card-text">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
             <!-- 商品特有注意事项 -->
             <div v-if="product.tips" class="inline-tips">
-              <n-icon :size="14" color="#F59E0B"><warning-outline></warning-outline></n-icon>
+              <n-icon :size="14" color="#DC2626"><warning-outline></warning-outline></n-icon>
               <span>{{ product.tips }}</span>
             </div>
             <!-- 特点标签 -->
@@ -1041,10 +1041,10 @@ onMounted(async () => {
   gap: 8px;
   margin-top: 14px;
   padding: 12px 14px;
-  background: #FEF3C7;
+  background: #FEE2E2;
   border-radius: 10px;
   font-size: 13px;
-  color: #78350F;
+  color: #991B1B;
   line-height: 1.6;
 }
 
