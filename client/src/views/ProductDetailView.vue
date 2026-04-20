@@ -1040,14 +1040,20 @@ onMounted(async () => {
 /* 内联提示 */
 .inline-tips {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: #FEF3C7;
-  border-radius: 8px;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border-radius: 10px;
   font-size: 13px;
   color: #78350F;
+  line-height: 1.6;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.inline-tips span {
+  flex: 1;
 }
 
 /* ===== 特点小卡片 ===== */
@@ -1350,7 +1356,8 @@ onMounted(async () => {
 
 /* ===== 温馨提示 ===== */
 .notice-card {
-  background: #FFFBEB;
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  border: 1px solid rgba(245, 158, 11, 0.15);
 }
 
 .notice-title {
@@ -1381,12 +1388,13 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   align-self: flex-start;
-  padding: 10px 14px;
-  background: #FEF3C7;
-  border-radius: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
-  color: #78350F;
+  color: #92400E;
+  border: 1px solid rgba(146, 64, 14, 0.1);
 }
 
 /* ===== 弹窗 ===== */

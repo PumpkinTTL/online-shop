@@ -7,8 +7,8 @@
       <router-view></router-view>
     </main>
 
-    <!-- 移动端底部 Tab Bar -->
-    <nav class="mobile-tabbar">
+    <!-- 移动端底部 Tab Bar（商品详情页隐藏） -->
+    <nav v-if="!isProductDetail" class="mobile-tabbar">
       <router-link
         to="/"
         class="tabbar-item"
@@ -148,6 +148,9 @@ function isActive(key) {
   if (key === 'mine') return false
   return false
 }
+
+// 是否是商品详情页
+const isProductDetail = computed(() => /^\/product\/\w+/.test(route.path))
 </script>
 
 <style scoped>
