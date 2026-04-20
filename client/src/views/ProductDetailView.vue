@@ -321,7 +321,7 @@
                 </template>
               </p>
               <div class="notice-contact">
-                <n-icon :size="14" color="#94A3B8"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
+                <n-icon :size="16" color="#F59E0B"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
                 <span>客服联系：bitlesu</span>
               </div>
             </div>
@@ -1386,14 +1386,15 @@ onMounted(async () => {
 .notice-contact {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   align-self: flex-start;
-  padding: 10px 16px;
-  background: #FDE68A;
-  border-radius: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 600;
-  color: #92400E;
+  font-weight: 500;
+  color: #78350F;
+  border: 1px solid rgba(146, 64, 14, 0.1);
 }
 
 /* ===== 弹窗 ===== */
