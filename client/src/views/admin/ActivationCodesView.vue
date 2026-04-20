@@ -3,10 +3,15 @@
     <div class="admin-page-header">
       <h2 class="admin-page-title">激活码管理</h2>
       <div class="admin-page-actions">
-        <n-select v-model:value="filterType" :options="typeOptions" placeholder="类型筛选" clearable style="width: 130px" @update:value="loadData" />
-        <n-select v-model:value="filterStatus" :options="statusOptions" placeholder="状态筛选" clearable style="width: 120px" @update:value="loadData" />
+        <n-select v-model:value="filterType" :options="typeOptions" placeholder="按类型筛选" clearable style="width:140px" @update:value="loadData" />
+        <n-select v-model:value="filterStatus" :options="statusOptions" placeholder="按状态筛选" clearable style="width:140px" @update:value="loadData" />
         <n-button type="primary" @click="showGenerate = true">
+          <template #icon><n-icon><AddOutline /></n-icon></template>
           生成激活码
+        </n-button>
+        <n-button type="error" size="small" :disabled="!selectedIds.length" @click="handleBatchDelete">
+          <template #icon><n-icon><TrashOutline /></n-icon></template>
+          批量删除 ({{ selectedIds.length }})
         </n-button>
       </div>
     </div>
@@ -18,14 +23,24 @@
         :bordered="false"
         :loading="loading"
         :row-key="row => row.id"
-        :remote
-        :pagination="pagination"
-        @update:page="handlePageChange"
+        v-model:checked-row-keys="selectedIds"
+        :scroll-x="900"
       />
+      <div class="admin-pagination">
+        <n-pagination
+          v-model:page="currentPage"
+          v-model:page-size="pageSize"
+          :item-count="total"
+          :page-sizes="[10, 20, 30, 50]"
+          show-size-picker
+          @update:page="loadData"
+          @update:page-size="handlePageSizeChange"
+        />
+      </div>
     </div>
 
     <!-- 生成弹窗 -->
-    <n-modal v-model:show="showGenerate" preset="card" title="生成激活码" :style="{ maxWidth: '460px', width: '90vw' }">
+    <n-modal v-model:show="showGenerate" preset="card" title="生成激活码" style="max-width:460px;">
       <n-form label-placement="left" label-width="80">
         <n-form-item label="类型">
           <n-select v-model:value="genForm.type" :options="genTypeOptions" />
@@ -52,7 +67,7 @@
     </n-modal>
 
     <!-- 生成结果弹窗 -->
-    <n-modal v-model:show="showResult" preset="card" title="生成结果" :style="{ maxWidth: '500px', width: '90vw' }">
+    <n-modal v-model:show="showResult" preset="card" title="生成结果" style="max-width:500px;">
       <n-alert type="success" :title="`成功生成 ${generatedCodes.length} 个激活码`" style="margin-bottom: 12px" />
       <n-input
         type="textarea"
@@ -74,9 +89,12 @@
 <script setup>
 import { ref, h, onMounted } from 'vue'
 import {
-  NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber,
-  NSelect, NSpace, NTag, NDatePicker, NAlert, useMessage, useDialog
+  NButton, NIcon, NDataTable, NPagination,
+  NModal, NForm, NFormItem, NInput, NInputNumber, NSelect,
+  NSpace, NTag, NDatePicker, NAlert,
+  useMessage, useDialog
 } from 'naive-ui'
+import { AddOutline, TrashOutline, CopyOutline } from '@vicons/ionicons5'
 import { adminApi } from '@/api'
 
 const message = useMessage()
@@ -84,6 +102,10 @@ const dialog = useDialog()
 
 const loading = ref(false)
 const items = ref([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(20)
+const selectedIds = ref([])
 const filterType = ref(null)
 const filterStatus = ref(null)
 const showGenerate = ref(false)
@@ -116,38 +138,58 @@ const genForm = ref({
   expiredAt: null,
 })
 
-const pagination = ref({
-  page: 1,
-  pageSize: 20,
-  itemCount: 0,
-  showSizePicker: false,
-})
-
 const typeLabel = { invite: '邀请码', coupon: '优惠券' }
 const typeColor = { invite: 'info', coupon: 'warning' }
 const statusLabel = { unused: '未使用', used: '已使用', expired: '已过期' }
 const statusColor = { unused: 'success', used: 'default', expired: 'error' }
 
+function formatDate(dateStr) {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+async function copyCode(code) {
+  try {
+    await navigator.clipboard.writeText(code)
+    message.success('已复制')
+  } catch {
+    message.error('复制失败')
+  }
+}
+
 const columns = [
-  { title: 'ID', key: 'id', width: 60 },
-  { title: '激活码', key: 'code', ellipsis: { tooltip: true } },
+  { type: 'selection' },
+  { title: 'ID', key: 'id', width: 60, sorter: (a, b) => a.id - b.id },
+  {
+    title: '激活码', key: 'code', minWidth: 180,
+    render: (row) => h('div', { style: 'display:flex;align-items:center;gap:4px' }, [
+      h('code', {}, row.code),
+      h(NIcon, {
+        size: 14,
+        style: 'cursor:pointer;opacity:0.5;flex-shrink:0',
+        onClick: () => copyCode(row.code),
+      }, () => h(CopyOutline)),
+    ]),
+  },
   {
     title: '类型', key: 'type', width: 100,
-    render: (row) => h(NTag, { size: 'small', type: typeColor[row.type] || 'default', bordered: false }, () => typeLabel[row.type] || row.type),
+    render: (row) => h(NTag, { size: 'small', type: typeColor[row.type] || 'default' }, () => typeLabel[row.type] || row.type),
   },
   {
     title: '状态', key: 'status', width: 90,
-    render: (row) => h(NTag, { size: 'small', type: statusColor[row.status] || 'default', bordered: false }, () => statusLabel[row.status] || row.status),
+    render: (row) => h(NTag, { size: 'small', type: statusColor[row.status] || 'default' }, () => statusLabel[row.status] || row.status),
   },
-  { title: '使用者ID', key: 'usedBy', width: 80, render: (row) => row.usedBy || '-' },
+  { title: '使用者', key: 'usedBy', width: 80, render: (row) => row.usedBy || '-' },
   { title: '备注', key: 'remark', width: 120, ellipsis: { tooltip: true }, render: (row) => row.remark || '-' },
-  { title: '创建时间', key: 'createdAt', width: 160, render: (row) => row.createdAt ? new Date(row.createdAt).toLocaleString() : '-' },
+  { title: '创建时间', key: 'createdAt', width: 160, sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt), render: (row) => formatDate(row.createdAt) },
   {
-    title: '操作', key: 'actions', width: 80,
-    render: (row) => h(NButton, {
-      size: 'small', type: 'error', quaternary: true,
-      onClick: () => handleDelete(row),
-    }, () => '删除'),
+    title: '操作', key: 'actions', width: 140, fixed: 'right',
+    render: (row) => h(NSpace, { size: 4, wrap: false }, () => [
+      h(NButton, { size: 'small', tertiary: true, onClick: () => copyCode(row.code) }, { icon: () => h(NIcon, { size: 14 }, () => h(CopyOutline)), default: () => '复制' }),
+      h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(TrashOutline)), default: () => '删除' }),
+    ]),
   },
 ]
 
@@ -155,13 +197,13 @@ async function loadData() {
   loading.value = true
   try {
     const res = await adminApi.getActivationCodes({
-      page: pagination.value.page,
-      pageSize: pagination.value.pageSize,
+      page: currentPage.value,
+      pageSize: pageSize.value,
       type: filterType.value || '',
       status: filterStatus.value || '',
     })
     items.value = res.items
-    pagination.value.itemCount = res.total
+    total.value = res.total
   } catch (err) {
     message.error('加载失败')
   } finally {
@@ -169,8 +211,8 @@ async function loadData() {
   }
 }
 
-function handlePageChange(page) {
-  pagination.value.page = page
+function handlePageSizeChange() {
+  currentPage.value = 1
   loadData()
 }
 
@@ -215,6 +257,25 @@ function handleDelete(row) {
       try {
         await adminApi.deleteActivationCode(row.id)
         message.success('删除成功')
+        loadData()
+      } catch (err) {
+        message.error('删除失败')
+      }
+    },
+  })
+}
+
+function handleBatchDelete() {
+  dialog.warning({
+    title: '批量删除',
+    content: `确定删除选中的 ${selectedIds.value.length} 个激活码？`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await adminApi.batchDeleteActivationCodes(selectedIds.value)
+        message.success('删除成功')
+        selectedIds.value = []
         loadData()
       } catch (err) {
         message.error('删除失败')
