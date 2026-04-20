@@ -61,9 +61,7 @@
           </div>
         </div>
 
-        <n-divider style="margin: 16px 0" />
-
-        <n-form ref="authFormRef" :model="authForm" :rules="authRules" :show-label="false">
+        <n-form ref="authFormRef" :model="authForm" :rules="authRules" :show-label="false" style="margin-top: 20px">
           <n-form-item path="username">
             <n-input v-model:value="authForm.username" placeholder="用户名" size="large">
               <template #prefix><n-icon :size="18" color="#94A3B8"><person-outline></person-outline></n-icon></template>
@@ -103,7 +101,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { NModal, NCard, NDivider, NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
+import { NModal, NCard, NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
 import {
   HomeOutline, PhonePortraitOutline, ReceiptOutline,
   PersonOutline, LockClosedOutline, KeyOutline, ShieldCheckmarkOutline
@@ -287,7 +285,7 @@ const isProductDetail = computed(() => /^\/product\/\w+/.test(route.path))
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366F1, #818CF8);
+  background: #3B82F6;
   display: flex;
   align-items: center;
   justify-content: center;
