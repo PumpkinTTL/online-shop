@@ -4,18 +4,26 @@ import { pickupApi } from '@/api'
 
 export const useOrderStore = defineStore('order', () => {
   const orders = ref([])
+  const total = ref(0)
   const loading = ref(false)
 
   async function fetchOrders(params) {
     loading.value = true
     try {
-      const res = await pickupApi.getOrders(typeof params === 'object' ? params : { userId: params })
-      orders.value = Array.isArray(res) ? res : (res.items || [])
+      const query = typeof params === 'object' ? params : { userId: params }
+      const res = await pickupApi.getOrders(query)
+      if (Array.isArray(res)) {
+        orders.value = res
+        total.value = res.length
+      } else {
+        orders.value = res.items || []
+        total.value = res.total || 0
+      }
       return res
     } finally {
       loading.value = false
     }
   }
 
-  return { orders, loading, fetchOrders }
+  return { orders, total, loading, fetchOrders }
 })

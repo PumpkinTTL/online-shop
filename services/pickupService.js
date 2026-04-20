@@ -331,17 +331,42 @@ class PickupService {
     if (filter.status) where.status = filter.status;
     if (filter.productId) where.productId = parseInt(filter.productId);
 
-    // 如果没有任何条件，不允许查询（防止全表扫描）
-    if (Object.keys(where).length === 0) {
+    // keyword 模式：OR 搜索 contact / orderNo / phone
+    const hasKeyword = !!filter.keyword;
+    const hasOtherConditions = Object.keys(where).length > 0;
+
+    // 没有任何条件，不允许查询（防止全表扫描）
+    if (!hasKeyword && !hasOtherConditions) {
       return { items: [], total: 0 };
     }
 
-    const [items, total] = await orderRepo.findAndCount({
-      where: Object.keys(where).length > 0 ? where : undefined,
-      order: { createdAt: 'DESC' },
-      skip: ((filter.page || 1) - 1) * (filter.pageSize || 20),
-      take: filter.pageSize || 20,
-    });
+    let query = orderRepo.createQueryBuilder('o')
+      .orderBy('o.createdAt', 'DESC');
+
+    // keyword OR 条件
+    if (hasKeyword) {
+      const kw = `%${filter.keyword}%`;
+      query = query.where(
+        '(o.contact LIKE :kw OR o.orderNo LIKE :kw OR o.phone LIKE :kw)',
+        { kw }
+      );
+      // 其他条件 AND
+      if (filter.userId) query = query.andWhere('o.userId = :uid', { uid: parseInt(filter.userId) });
+      if (filter.status) query = query.andWhere('o.status = :st', { st: filter.status });
+      if (filter.productId) query = query.andWhere('o.productId = :pid', { pid: parseInt(filter.productId) });
+    } else {
+      // 无 keyword，用传统 AND 查询
+      Object.entries(where).forEach(([key, val]) => {
+        query = query.andWhere(`o.${key} = :${key}`, { [key]: val });
+      });
+    }
+
+    // 分页
+    const page = filter.page || 1;
+    const pageSize = filter.pageSize || 20;
+    query = query.skip((page - 1) * pageSize).take(pageSize);
+
+    const [items, total] = await query.getManyAndCount();
 
     // 关联查询商品信息（名称+价格）
     const productRepo = dataSource.getRepository(require('../entities/Product'));

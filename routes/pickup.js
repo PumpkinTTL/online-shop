@@ -227,9 +227,10 @@ router.get('/balance', async (req, res) => {
 // 查询订单（免登录，支持多条件；已登录用户可按 userId 查询）
 router.get('/orders', async (req, res) => {
   try {
-    const { contact, orderNo, phone, status, productId, userId, page, pageSize } = req.query;
+    const { keyword, contact, orderNo, phone, status, productId, userId, page, pageSize } = req.query;
     const filter = {};
     if (userId) filter.userId = userId;
+    if (keyword) filter.keyword = keyword.trim();
     if (contact) filter.contact = contact.trim();
     if (orderNo) filter.orderNo = orderNo.trim();
     if (phone) filter.phone = phone.trim();
