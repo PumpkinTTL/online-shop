@@ -107,6 +107,7 @@ import {
   FlashOutline, GridOutline, KeyOutline,
   ReceiptOutline, PeopleOutline, ShieldOutline,
   PhonePortraitOutline, DocumentTextOutline, SpeedometerOutline,
+  TicketOutline,
   AppsOutline, MenuOutline, PersonOutline,
   SunnyOutline, MoonOutline, RefreshOutline,
   BusinessOutline, LockClosedOutline, SettingsOutline
@@ -154,6 +155,7 @@ const menuMap = {
   smsRecords: { label: '接码记录', icon: PhonePortraitOutline },
   logs: { label: '日志管理', icon: DocumentTextOutline },
   rateLimits: { label: '速率限制', icon: SpeedometerOutline },
+  activationCodes: { label: '激活码管理', icon: TicketOutline },
 }
 
 function makeItem(key) {
@@ -196,6 +198,7 @@ const menuOptions = computed(() => {
     { ...makeGroup('系统', 'g-system', SettingsOutline), children: [
       makeItem('logs'),
       makeItem('rateLimits'),
+      makeItem('activationCodes'),
     ]},
   ]
 })
@@ -211,6 +214,7 @@ const activeKey = computed(() => {
   if (path.includes('/admin/sms-records')) return 'smsRecords'
   if (path.includes('/admin/logs')) return 'logs'
   if (path.includes('/admin/rate-limits')) return 'rateLimits'
+  if (path.includes('/admin/activation-codes')) return 'activationCodes'
   return 'dashboard'
 })
 
@@ -228,6 +232,7 @@ function handleMenuClick(key) {
     smsRecords: '/admin/sms-records',
     logs: '/admin/logs',
     rateLimits: '/admin/rate-limits',
+    activationCodes: '/admin/activation-codes',
   }
   router.push(routeMap[key] || '/admin')
   // 移动端点击菜单后关闭侧边栏

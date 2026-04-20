@@ -13,8 +13,8 @@ export const useUserStore = defineStore('user', () => {
     return res
   }
 
-  async function register(username, password) {
-    const res = await userApi.register(username, password)
+  async function register(username, password, inviteCode) {
+    const res = await userApi.register(username, password, inviteCode)
     user.value = res.user
     localStorage.setItem('user', JSON.stringify(res.user))
     return res

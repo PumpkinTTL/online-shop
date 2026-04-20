@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const userService = require('../services/UserService');
+const activationCodeService = require('../services/ActivationCodeService');
 const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 const { login: loginLimiter } = require('../middleware/rateLimiter');
 const { action } = require('../logger');
@@ -43,10 +44,21 @@ router.post('/register', [
   body('password')
     .isLength({ min: 6 })
     .withMessage('密码长度至少6位'),
+  body('inviteCode')
+    .trim()
+    .notEmpty()
+    .withMessage('邀请码不能为空'),
 ], handleValidationErrors, async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, inviteCode } = req.body;
+
+    // 验证邀请码
+    await activationCodeService.validate(inviteCode, 'invite');
+
     const user = await userService.register(username, password);
+
+    // 使用邀请码
+    await activationCodeService.use(inviteCode, user.id, 'invite');
 
     // 生成 token
     const token = generateToken(user.id);

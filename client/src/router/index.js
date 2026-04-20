@@ -110,6 +110,12 @@ const routes = [
         component: () => import('@/views/admin/RateLimitsView.vue'),
         meta: { title: '速率限制' },
       },
+      {
+        path: 'activation-codes',
+        name: 'AdminActivationCodes',
+        component: () => import('@/views/admin/ActivationCodesView.vue'),
+        meta: { title: '激活码管理' },
+      },
     ],
   },
   // 404

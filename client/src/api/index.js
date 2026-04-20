@@ -66,7 +66,7 @@ window.__captchaVerified = function () {
 export const userApi = {
   getMe: () => http.get('/users/me'),
   login: (username, password) => http.post('/users/login', { username, password }),
-  register: (username, password) => http.post('/users/register', { username, password }),
+  register: (username, password, inviteCode) => http.post('/users/register', { username, password, inviteCode }),
   logout: () => http.post('/users/logout'),
 }
 
@@ -100,6 +100,11 @@ export const paymentApi = {
   createSms: (cardKeyId, productId, contact) => http.post('/payment/create-sms', { cardKeyId, productId, contact }),
   queryStatus: (orderNo) => http.get('/payment/status', { params: { orderNo } }),
   updateContact: (orderNo, contact) => http.post('/payment/update-contact', { orderNo, contact }),
+}
+
+// ===== 激活码 API（前台） =====
+export const activationCodeApi = {
+  validate: (code) => http.post('/users/validate-invite-code', { code }),
 }
 
 // ===== 验证码 API =====
@@ -175,6 +180,12 @@ export const adminApi = {
   getRateLimit: (key) => http.get(`/admin/rate-limits/${key}`),
   updateRateLimit: (key, data) => http.put(`/admin/rate-limits/${key}`, data),
   resetRateLimits: () => http.post('/admin/rate-limits/reset'),
+
+  // 激活码管理
+  getActivationCodes: (params) => http.get('/admin/activation-codes', { params }),
+  generateActivationCodes: (data) => http.post('/admin/activation-codes/generate', data),
+  deleteActivationCode: (id) => http.delete(`/admin/activation-codes/${id}`),
+  batchDeleteActivationCodes: (ids) => http.post('/admin/activation-codes/batch-delete', { ids }),
 }
 
 export { CaptchaRequiredError }

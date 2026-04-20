@@ -15,6 +15,7 @@ const paymentRouter = require('./routes/payment');
 const adminRateLimitsRouter = require('./routes/adminRateLimits');
 const logsRouter = require('./routes/logs');
 const captchaRouter = require('./routes/captcha');
+const adminActivationCodesRouter = require('./routes/adminActivationCodes');
 const adminService = require('./services/adminService');
 const rateLimitService = require('./services/rateLimitService');
 const limiters = require('./middleware/rateLimiter');
@@ -70,6 +71,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/admin/rate-limits', adminRateLimitsRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/admin/logs', logsRouter);
+app.use('/api/admin/activation-codes', adminActivationCodesRouter);
 
 // 主页
 app.get('/', (req, res) => {
