@@ -66,11 +66,6 @@
               <span>商品描述</span>
             </div>
             <p class="card-text">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
-            <!-- 商品特有注意事项 -->
-            <div v-if="product.tips" class="inline-tips">
-              <n-icon :size="14" color="#DC2626"><warning-outline></warning-outline></n-icon>
-              <span>{{ product.tips }}</span>
-            </div>
             <!-- 特点标签 -->
             <div class="features-inline">
               <div class="feature-tag">
@@ -97,6 +92,12 @@
                 <n-icon :size="12" color="#8B5CF6"><LogInOutline></LogInOutline></n-icon>
                 <span>首登</span>
               </div>
+            </div>
+
+            <!-- 商品特有注意事项 -->
+            <div v-if="product.tips" class="inline-tips">
+              <n-icon :size="14" color="#DC2626"><warning-outline></warning-outline></n-icon>
+              <span>{{ product.tips }}</span>
             </div>
 
             <!-- 温馨提示 -->
