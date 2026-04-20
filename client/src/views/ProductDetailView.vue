@@ -124,31 +124,6 @@
             </div>
           </div>
 
-          <!-- 温馨提示（移动端独立卡片，PC端隐藏） -->
-          <div class="bento-card bento-span-2 notice-card-mobile">
-            <div class="notice-title">
-              <n-icon :size="18" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
-              <span>温馨提示</span>
-            </div>
-            <div class="notice-content">
-              <p class="notice-text">
-                <template v-if="isSmsProduct">
-                  本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
-                </template>
-                <template v-else-if="product.warranty">
-                  本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。
-                </template>
-                <template v-else>
-                  本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。
-                </template>
-              </p>
-              <div class="notice-contact">
-                <n-icon :size="18" color="#D97706"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
-                <span>客服联系：bitlesu</span>
-              </div>
-            </div>
-          </div>
-
           <!-- 购买操作卡片 -->
           <div class="bento-card bento-span-2 purchase-section">
             <!-- 未完成购买 -->
@@ -346,6 +321,31 @@
                     接码成功，请使用号码和验证码登录
                   </n-alert>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 温馨提示（移动端独立卡片，PC端隐藏） -->
+          <div class="bento-card bento-span-2 notice-card-mobile">
+            <div class="notice-title">
+              <n-icon :size="18" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
+              <span>温馨提示</span>
+            </div>
+            <div class="notice-content">
+              <p class="notice-text">
+                <template v-if="isSmsProduct">
+                  本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
+                </template>
+                <template v-else-if="product.warranty">
+                  本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。
+                </template>
+                <template v-else>
+                  本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。
+                </template>
+              </p>
+              <div class="notice-contact">
+                <n-icon :size="18" color="#D97706"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
+                <span>客服联系：bitlesu</span>
               </div>
             </div>
           </div>
