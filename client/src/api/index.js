@@ -185,6 +185,7 @@ export const adminApi = {
   getActivationCodes: (params) => http.get('/admin/activation-codes', { params }),
   generateActivationCodes: (data) => http.post('/admin/activation-codes/generate', data),
   deleteActivationCode: (id) => http.delete(`/admin/activation-codes/${id}`),
+  updateActivationCode: (id, data) => http.put(`/admin/activation-codes/${id}`, data),
   batchDeleteActivationCodes: (ids) => http.post('/admin/activation-codes/batch-delete', { ids }),
 }
 

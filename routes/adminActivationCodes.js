@@ -59,6 +59,24 @@ router.post('/generate', auth, async (req, res) => {
   }
 });
 
+// 更新激活码
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const repo = dataSource.getRepository(require('../entities/ActivationCode'));
+    const record = await repo.findOne({ where: { id: Number(req.params.id) } });
+    if (!record) return res.status(404).json({ error: '激活码不存在' });
+    const { type, status, remark, expiredAt } = req.body;
+    if (type) record.type = type;
+    if (status) record.status = status;
+    if (remark !== undefined) record.remark = remark;
+    if (expiredAt !== undefined) record.expiredAt = expiredAt ? new Date(expiredAt) : null;
+    await repo.save(record);
+    res.json({ message: '更新成功' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // 删除激活码
 router.delete('/:id', auth, async (req, res) => {
   try {
