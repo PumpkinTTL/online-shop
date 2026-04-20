@@ -33,6 +33,7 @@ http.interceptors.response.use(
     }
 
     if (error.response?.status === 429 && error.response.data?.captchaRequired) {
+      window.dispatchEvent(new CustomEvent('close-payment-modals'))
       return new Promise((resolve, reject) => {
         pendingCaptchaRetry = { resolve, reject, config: error.config }
         window.dispatchEvent(new CustomEvent('captcha-required'))

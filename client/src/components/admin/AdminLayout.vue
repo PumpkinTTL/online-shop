@@ -73,7 +73,7 @@
     </n-layout>
 
     <!-- 修改密码弹窗 -->
-    <n-modal v-model:show="showPasswordModal" preset="card" title="修改密码" style="width: 420px" :bordered="false">
+    <n-modal v-model:show="showPasswordModal" preset="card" title="修改密码" :style="{ maxWidth: '420px', width: '90vw' }" :bordered="false">
       <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-placement="left" label-width="80">
         <n-form-item label="旧密码" path="oldPassword">
           <n-input v-model:value="passwordForm.oldPassword" type="password" show-password-on="click" placeholder="请输入旧密码"></n-input>

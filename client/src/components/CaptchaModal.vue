@@ -1,5 +1,5 @@
 <template>
-  <n-modal v-model:show="visible" preset="card" title="安全验证" style="max-width: 360px;" :closable="true" :mask-closable="false">
+  <n-modal v-model:show="visible" preset="card" title="安全验证" :style="{ maxWidth: '360px', width: '90vw' }" :closable="true" :mask-closable="false">
     <n-p depth="3" style="margin-bottom: 12px;">请求过于频繁，请完成验证码后继续操作</n-p>
     <n-space align="center" :size="12">
       <n-tag type="info" size="large" :bordered="false" style="font-size: 16px; font-weight: 600; letter-spacing: 1px;">

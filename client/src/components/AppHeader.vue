@@ -86,7 +86,7 @@
     <div v-if="userMenuOpen" class="menu-overlay" @click="userMenuOpen = false"></div>
 
     <!-- 登录注册弹窗 -->
-    <n-modal v-model:show="showAuthModal" preset="card" :title="isLogin ? '登录' : '注册'" style="max-width: 400px;">
+    <n-modal v-model:show="showAuthModal" preset="card" :title="isLogin ? '登录' : '注册'" :style="{ maxWidth: '400px', width: '90vw' }">
       <n-form ref="authFormRef" :model="authForm" :rules="authRules">
         <n-form-item label="用户名" path="username">
           <n-input v-model:value="authForm.username" placeholder="3-20位英文、数字、下划线"></n-input>

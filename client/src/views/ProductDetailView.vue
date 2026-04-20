@@ -357,7 +357,7 @@
     </template>
 
     <!-- 支付宝二维码弹窗 -->
-    <n-modal v-model:show="showQrModal" :mask-closable="true" preset="card" title="支付宝扫码支付" class="pay-modal" :style="{ width: '400px' }">
+    <n-modal v-model:show="showQrModal" :mask-closable="true" preset="card" title="支付宝扫码支付" class="pay-modal" :style="{ maxWidth: '400px', width: '90vw' }">
       <!-- 加载中 -->
       <div v-if="qrLoading" class="modal-state">
         <n-spin size="medium" />
@@ -419,7 +419,7 @@
     </n-modal>
 
     <!-- 接码服务支付弹窗 -->
-    <n-modal v-model:show="showSmsPayModal" :mask-closable="true" preset="card" title="支付接码服务费" class="pay-modal" :style="{ width: '400px' }">
+    <n-modal v-model:show="showSmsPayModal" :mask-closable="true" preset="card" title="支付接码服务费" class="pay-modal" :style="{ maxWidth: '400px', width: '90vw' }">
       <!-- 加载中 -->
       <div v-if="smsQrLoading" class="modal-state">
         <n-spin size="medium" />
@@ -682,7 +682,7 @@ const startPolling = () => {
   pollTimer = setInterval(async () => {
     if (!orderNo.value || payStatus.value === 'paid') return
     try {
-      const res = await paymentApi.getStatus(orderNo.value)
+      const res = await paymentApi.queryStatus(orderNo.value)
       if (res.status === 'paid') {
         payStatus.value = 'paid'
         cdKey.value = res.cdKey
@@ -814,7 +814,7 @@ const startSmsPolling = () => {
   smsPollTimer = setInterval(async () => {
     if (!smsOrderNo.value || smsPayStatus.value === 'paid') return
     try {
-      const res = await paymentApi.getStatus(smsOrderNo.value)
+      const res = await paymentApi.queryStatus(smsOrderNo.value)
       if (res.status === 'paid') {
         smsPayStatus.value = 'paid'
         stopSmsPolling()
@@ -889,15 +889,25 @@ const goHome = () => {
   router.push({ name: 'Home' })
 }
 
+const handleClosePaymentModals = () => {
+  showQrModal.value = false
+  qrLoading.value = false
+  payLoading.value = false
+  showSmsPayModal.value = false
+  smsQrLoading.value = false
+}
+
+onMounted(async () => {
+  window.addEventListener('close-payment-modals', handleClosePaymentModals)
+  await loadProduct()
+  await checkAndPrefillContact()
+})
+
 onUnmounted(() => {
+  window.removeEventListener('close-payment-modals', handleClosePaymentModals)
   stopPolling()
   stopSmsPolling()
   if (countdownTimer) clearInterval(countdownTimer)
-})
-
-onMounted(async () => {
-  await loadProduct()
-  await checkAndPrefillContact()
 })
 </script>
 
