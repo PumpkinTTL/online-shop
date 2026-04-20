@@ -19,6 +19,15 @@ http.interceptors.request.use((config) => {
 // 429 验证码处理
 let pendingCaptchaRetry = null
 
+// 自定义错误标识，用于组件识别 429 挂起
+class CaptchaRequiredError extends Error {
+  constructor() {
+    super('需要完成验证码验证')
+    this.name = 'CaptchaRequiredError'
+    this.isCaptchaRequired = true
+  }
+}
+
 http.interceptors.response.use(
   (response) => response.data,
   (error) => {
@@ -33,11 +42,9 @@ http.interceptors.response.use(
     }
 
     if (error.response?.status === 429 && error.response.data?.captchaRequired) {
-      window.dispatchEvent(new CustomEvent('close-payment-modals'))
-      return new Promise((resolve, reject) => {
-        pendingCaptchaRetry = { resolve, reject, config: error.config }
-        window.dispatchEvent(new CustomEvent('captcha-required'))
-      })
+      pendingCaptchaRetry = { config: error.config }
+      window.dispatchEvent(new CustomEvent('captcha-required'))
+      return Promise.reject(new CaptchaRequiredError())
     }
     return Promise.reject(error)
   }
@@ -45,9 +52,13 @@ http.interceptors.response.use(
 
 window.__captchaVerified = function () {
   if (pendingCaptchaRetry) {
-    const { resolve, reject, config } = pendingCaptchaRetry
+    const { config } = pendingCaptchaRetry
     pendingCaptchaRetry = null
-    http.request(config).then(resolve).catch(reject)
+    http.request(config).then(res => {
+      window.dispatchEvent(new CustomEvent('captcha-retry-success', { detail: res }))
+    }).catch(err => {
+      window.dispatchEvent(new CustomEvent('captcha-retry-error', { detail: err }))
+    })
   }
 }
 
@@ -166,4 +177,5 @@ export const adminApi = {
   resetRateLimits: () => http.post('/admin/rate-limits/reset'),
 }
 
+export { CaptchaRequiredError }
 export default http
