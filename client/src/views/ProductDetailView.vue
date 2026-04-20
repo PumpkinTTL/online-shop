@@ -305,7 +305,7 @@
           <!-- 温馨提示卡片 -->
           <div class="bento-card bento-span-2 notice-card">
             <div class="notice-title">
-              <n-icon :size="18" color="#64748B"><information-circle-outline></information-circle-outline></n-icon>
+              <n-icon :size="18" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
               <span>温馨提示</span>
             </div>
             <div class="notice-content">
@@ -321,7 +321,7 @@
                 </template>
               </p>
               <div class="notice-contact">
-                <n-icon :size="18" color="#3B82F6"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
+                <n-icon :size="18" color="#D97706"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
                 <span>客服联系：bitlesu</span>
               </div>
             </div>
@@ -1356,8 +1356,8 @@ onMounted(async () => {
 
 /* ===== 温馨提示 ===== */
 .notice-card {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
 }
 
 .notice-title {
@@ -1366,7 +1366,7 @@ onMounted(async () => {
   gap: 8px;
   font-size: 15px;
   font-weight: 600;
-  color: #475569;
+  color: #92400E;
   margin-bottom: 12px;
 }
 
@@ -1379,7 +1379,7 @@ onMounted(async () => {
 .notice-text {
   font-size: 14px;
   line-height: 1.7;
-  color: #64748B;
+  color: #78350F;
   margin: 0;
 }
 
@@ -1389,12 +1389,11 @@ onMounted(async () => {
   gap: 8px;
   align-self: flex-start;
   padding: 10px 14px;
-  background: white;
-  border: 1px solid #E2E8F0;
+  background: rgba(254, 243, 199, 0.8);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: #92400E;
 }
 
 /* ===== 弹窗 ===== */
