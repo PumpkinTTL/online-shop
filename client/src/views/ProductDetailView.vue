@@ -889,7 +889,7 @@ onMounted(async () => {
 /* ===== 返回按钮 ===== */
 .back-btn {
   position: fixed;
-  top: 16px;
+  top: 70px;
   left: 16px;
   z-index: 100;
   width: 44px;
@@ -916,7 +916,7 @@ onMounted(async () => {
 .detail-container {
   max-width: 640px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 16px 16px 0;
 }
 
 /* ===== Hero 封面区 ===== */
@@ -1044,16 +1044,18 @@ onMounted(async () => {
   gap: 8px;
   margin-top: 14px;
   padding: 12px 14px;
-  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  background: #FEF3C7;
   border-radius: 10px;
   font-size: 13px;
   color: #78350F;
   line-height: 1.6;
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-left: 3px solid #F59E0B;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
 }
 
 .inline-tips span {
   flex: 1;
+  font-weight: 500;
 }
 
 /* ===== 特点小卡片 ===== */
@@ -1356,8 +1358,9 @@ onMounted(async () => {
 
 /* ===== 温馨提示 ===== */
 .notice-card {
-  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-  border: 1px solid rgba(245, 158, 11, 0.15);
+  background: #FFFBEB;
+  border-left: 3px solid #F59E0B;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
 }
 
 .notice-title {
@@ -1381,6 +1384,7 @@ onMounted(async () => {
   line-height: 1.7;
   color: #78350F;
   margin: 0;
+  font-weight: 500;
 }
 
 .notice-contact {
@@ -1389,12 +1393,11 @@ onMounted(async () => {
   gap: 6px;
   align-self: flex-start;
   padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 10px;
+  background: #FDE68A;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #92400E;
-  border: 1px solid rgba(146, 64, 14, 0.1);
 }
 
 /* ===== 弹窗 ===== */
