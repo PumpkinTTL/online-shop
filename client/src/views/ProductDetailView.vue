@@ -71,33 +71,32 @@
               <n-icon :size="14" color="#F59E0B"><warning-outline></warning-outline></n-icon>
               <span>{{ product.tips }}</span>
             </div>
-          </div>
-
-          <!-- 特点小卡片容器 -->
-          <div class="features-row">
-            <div class="feature-mini">
-              <n-icon :size="12" color="#3B82F6"><PricetagOutline></PricetagOutline></n-icon>
-              <span>特惠价格</span>
-            </div>
-            <div class="feature-mini">
-              <n-icon :size="12" color="#EC4899"><DiamondOutline></DiamondOutline></n-icon>
-              <span>渠道专享</span>
-            </div>
-            <div class="feature-mini">
-              <n-icon :size="12" color="#F59E0B"><FlashOutline></FlashOutline></n-icon>
-              <span>即开即用</span>
-            </div>
-            <div class="feature-mini">
-              <n-icon :size="12" color="#06B6D4"><RocketOutline></RocketOutline></n-icon>
-              <span>快速激活</span>
-            </div>
-            <div class="feature-mini">
-              <n-icon :size="12" color="#22C55E"><ShieldCheckmarkOutline></ShieldCheckmarkOutline></n-icon>
-              <span>{{ product.warranty || '无质保' }}</span>
-            </div>
-            <div class="feature-mini">
-              <n-icon :size="12" color="#8B5CF6"><LogInOutline></LogInOutline></n-icon>
-              <span>首登</span>
+            <!-- 特点标签 -->
+            <div class="features-inline">
+              <div class="feature-tag">
+                <n-icon :size="12" color="#3B82F6"><PricetagOutline></PricetagOutline></n-icon>
+                <span>特惠价格</span>
+              </div>
+              <div class="feature-tag">
+                <n-icon :size="12" color="#EC4899"><DiamondOutline></DiamondOutline></n-icon>
+                <span>渠道专享</span>
+              </div>
+              <div class="feature-tag">
+                <n-icon :size="12" color="#F59E0B"><FlashOutline></FlashOutline></n-icon>
+                <span>即开即用</span>
+              </div>
+              <div class="feature-tag">
+                <n-icon :size="12" color="#06B6D4"><RocketOutline></RocketOutline></n-icon>
+                <span>快速激活</span>
+              </div>
+              <div class="feature-tag">
+                <n-icon :size="12" color="#22C55E"><ShieldCheckmarkOutline></ShieldCheckmarkOutline></n-icon>
+                <span>{{ product.warranty || '无质保' }}</span>
+              </div>
+              <div class="feature-tag">
+                <n-icon :size="12" color="#8B5CF6"><LogInOutline></LogInOutline></n-icon>
+                <span>首登</span>
+              </div>
             </div>
           </div>
 
@@ -1202,37 +1201,24 @@ onMounted(async () => {
   }
 }
 
-/* ===== 特点小卡片容器 ===== */
-.features-row {
-  grid-column: span 2;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.feature-mini {
+/* ===== 特点标签（集成到商品描述卡片） ===== */
+.features-inline {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.feature-tag {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 4px;
-  padding: 10px 6px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-}
-
-.feature-mini:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-}
-
-.feature-mini span {
-  font-size: 11px;
+  padding: 6px 10px;
+  background: #F1F5F9;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 500;
   color: #475569;
-  text-align: center;
 }
 
 /* ===== 方式内容 ===== */
@@ -1498,11 +1484,6 @@ onMounted(async () => {
 
   .bento-span-2 {
     grid-column: span 2;
-  }
-
-  .features-row {
-    grid-column: span 2;
-    grid-template-columns: repeat(6, 1fr);
   }
 
   .hero-cover {
