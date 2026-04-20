@@ -86,42 +86,52 @@
     <div v-if="userMenuOpen" class="menu-overlay" @click="userMenuOpen = false"></div>
 
     <!-- 登录注册弹窗 -->
-    <n-modal v-model:show="showAuthModal" preset="card" :title="isLogin ? '登录' : '注册'" :style="{ maxWidth: '400px', width: '90vw' }" :closable="true" class="auth-card">
-      <template #header>
-        <div class="auth-header-wrap">
-          <div class="auth-accent-bar"></div>
-          <span class="auth-header-title">{{ isLogin ? '登录' : '注册' }}</span>
-          <p class="auth-header-desc">{{ isLogin ? '登录你的账号继续使用' : '输入邀请码注册新账号' }}</p>
+    <n-modal v-model:show="showAuthModal" :mask-closable="true" :style="{ maxWidth: '400px', width: '90vw' }" :transform-origin="'center'">
+      <n-card :bordered="false" class="auth-card" :closable="true" @close="showAuthModal = false">
+        <div class="auth-brand">
+          <div class="auth-brand-icon">
+            <n-icon :size="20" color="#fff"><shield-checkmark-outline></shield-checkmark-outline></n-icon>
+          </div>
+          <div>
+            <div class="auth-brand-title">{{ isLogin ? '登录' : '注册' }}</div>
+            <div class="auth-brand-desc">{{ isLogin ? '登录你的账号继续使用' : '输入邀请码注册新账号' }}</div>
+          </div>
         </div>
-      </template>
-      <n-form ref="authFormRef" :model="authForm" :rules="authRules" :show-label="false" class="auth-form">
-        <n-form-item path="username">
-          <n-input v-model:value="authForm.username" placeholder="用户名" size="large">
-            <template #prefix><n-icon :size="18" color="#94A3B8"><person-outline></person-outline></n-icon></template>
-          </n-input>
-        </n-form-item>
-        <n-form-item path="password">
-          <n-input v-model:value="authForm.password" type="password" placeholder="密码" size="large" show-password-on="click">
-            <template #prefix><n-icon :size="18" color="#94A3B8"><lock-closed-outline></lock-closed-outline></n-icon></template>
-          </n-input>
-        </n-form-item>
-        <n-form-item v-if="!isLogin" path="confirmPassword">
-          <n-input v-model:value="authForm.confirmPassword" type="password" placeholder="确认密码" size="large" show-password-on="click">
-            <template #prefix><n-icon :size="18" color="#94A3B8"><lock-closed-outline></lock-closed-outline></n-icon></template>
-          </n-input>
-        </n-form-item>
-        <n-form-item v-if="!isLogin" path="inviteCode">
-          <n-input v-model:value="authForm.inviteCode" placeholder="邀请码（必填）" size="large">
-            <template #prefix><n-icon :size="18" color="#94A3B8"><key-outline></key-outline></n-icon></template>
-          </n-input>
-        </n-form-item>
-      </n-form>
-      <template #footer>
-        <div class="auth-footer">
-          <n-button text size="small" @click="isLogin = !isLogin">{{ isLogin ? '没有账号？去注册' : '已有账号？去登录' }}</n-button>
-          <n-button type="primary" size="large" :loading="authLoading" @click="handleAuth" class="auth-submit-btn">{{ isLogin ? '登录' : '注册' }}</n-button>
+
+        <n-divider style="margin: 16px 0" />
+
+        <n-form ref="authFormRef" :model="authForm" :rules="authRules" :show-label="false">
+          <n-form-item path="username">
+            <n-input v-model:value="authForm.username" placeholder="用户名" size="large">
+              <template #prefix><n-icon :size="18" color="#94A3B8"><person-outline></person-outline></n-icon></template>
+            </n-input>
+          </n-form-item>
+          <n-form-item path="password">
+            <n-input v-model:value="authForm.password" type="password" placeholder="密码" size="large" show-password-on="click">
+              <template #prefix><n-icon :size="18" color="#94A3B8"><lock-closed-outline></lock-closed-outline></n-icon></template>
+            </n-input>
+          </n-form-item>
+          <n-form-item v-if="!isLogin" path="confirmPassword">
+            <n-input v-model:value="authForm.confirmPassword" type="password" placeholder="确认密码" size="large" show-password-on="click">
+              <template #prefix><n-icon :size="18" color="#94A3B8"><lock-closed-outline></lock-closed-outline></n-icon></template>
+            </n-input>
+          </n-form-item>
+          <n-form-item v-if="!isLogin" path="inviteCode">
+            <n-input v-model:value="authForm.inviteCode" placeholder="邀请码（必填）" size="large">
+              <template #prefix><n-icon :size="18" color="#94A3B8"><key-outline></key-outline></n-icon></template>
+            </n-input>
+          </n-form-item>
+        </n-form>
+
+        <n-button type="primary" block size="large" :loading="authLoading" @click="handleAuth" class="auth-submit">
+          {{ isLogin ? '登录' : '注册' }}
+        </n-button>
+
+        <div class="auth-switch">
+          <span class="auth-switch-text">{{ isLogin ? '还没有账号？' : '已有账号？' }}</span>
+          <n-button text type="primary" size="small" @click="isLogin = !isLogin">{{ isLogin ? '立即注册' : '去登录' }}</n-button>
         </div>
-      </template>
+      </n-card>
     </n-modal>
   </header>
 </template>
@@ -129,11 +139,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { NButton, NIcon, NModal, NForm, NFormItem, NInput, useMessage } from 'naive-ui'
+import { NButton, NIcon, NModal, NCard, NDivider, NForm, NFormItem, NInput, useMessage } from 'naive-ui'
 import {
   HomeOutline, PhonePortraitOutline, ReceiptOutline,
   PersonOutline, LogOutOutline, ChevronDownOutline,
-  LockClosedOutline, KeyOutline
+  LockClosedOutline, KeyOutline, ShieldCheckmarkOutline
 } from '@vicons/ionicons5'
 import { useUserStore } from '@/stores/user'
 
@@ -726,51 +736,58 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 }
 
 /* ===== 登录注册弹窗 ===== */
-.auth-card :deep(.n-card) {
-  border-radius: 16px;
-  overflow: hidden;
+.auth-card {
+  border-radius: 16px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1) !important;
 }
 
-.auth-header-wrap {
-  padding: 4px 0 0;
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.auth-accent-bar {
+.auth-brand-icon {
   width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #6366F1, #818CF8);
-  margin-bottom: 12px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.auth-header-title {
-  display: block;
-  font-size: 20px;
+.auth-brand-title {
+  font-size: 18px;
   font-weight: 700;
   color: #1E293B;
-  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
-.auth-header-desc {
-  margin: 4px 0 0;
+.auth-brand-desc {
   font-size: 13px;
   color: #94A3B8;
-  font-weight: 400;
+  line-height: 1.4;
 }
 
-.auth-form :deep(.n-input) {
-  border-radius: 10px;
-}
-
-.auth-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.auth-submit-btn {
+.auth-submit {
+  margin-top: 8px;
   border-radius: 8px;
   font-weight: 600;
-  padding: 0 28px;
+  height: 42px;
+}
+
+.auth-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 14px;
+  font-size: 13px;
+}
+
+.auth-switch-text {
+  color: #94A3B8;
 }
 </style>
