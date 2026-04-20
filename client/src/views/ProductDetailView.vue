@@ -100,8 +100,8 @@
               <span>{{ product.tips }}</span>
             </div>
 
-            <!-- 温馨提示 -->
-            <div class="notice-section">
+            <!-- 温馨提示（PC端显示，移动端隐藏） -->
+            <div class="notice-section notice-section-inline">
               <div class="notice-title-inline">
                 <n-icon :size="16" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
                 <span>温馨提示</span>
@@ -119,6 +119,31 @@
               </p>
               <div class="notice-contact-inline">
                 <n-icon :size="16" color="#D97706"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
+                <span>客服联系：bitlesu</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 温馨提示（移动端独立卡片，PC端隐藏） -->
+          <div class="bento-card bento-span-2 notice-card-mobile">
+            <div class="notice-title">
+              <n-icon :size="18" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
+              <span>温馨提示</span>
+            </div>
+            <div class="notice-content">
+              <p class="notice-text">
+                <template v-if="isSmsProduct">
+                  本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
+                </template>
+                <template v-else-if="product.warranty">
+                  本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。
+                </template>
+                <template v-else>
+                  本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。
+                </template>
+              </p>
+              <div class="notice-contact">
+                <n-icon :size="18" color="#D97706"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
                 <span>客服联系：bitlesu</span>
               </div>
             </div>
@@ -1220,11 +1245,12 @@ onMounted(async () => {
   color: #475569;
 }
 
-/* ===== 温馨提示（集成版） ===== */
+/* ===== 温馨提示（集成版 - PC端显示） ===== */
 .notice-section {
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid #E5E7EB;
+  display: none;
 }
 
 .notice-title-inline {
@@ -1254,6 +1280,13 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 500;
   color: #92400E;
+}
+
+/* ===== 温馨提示（移动端独立卡片） ===== */
+.notice-card-mobile {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  display: block;
 }
 
 /* ===== 方式内容 ===== */
@@ -1533,6 +1566,15 @@ onMounted(async () => {
     font-size: 42px;
   }
 
+  /* PC端：显示集成版温馨提示，隐藏移动端独立卡片 */
+  .notice-section {
+    display: block;
+  }
+
+  .notice-card-mobile {
+    display: none;
+  }
+
   .bottom-safe {
     height: 0;
   }
@@ -1544,3 +1586,4 @@ onMounted(async () => {
   }
 }
 </style>
+ 
