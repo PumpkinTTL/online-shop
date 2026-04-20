@@ -1049,8 +1049,6 @@ onMounted(async () => {
   font-size: 13px;
   color: #78350F;
   line-height: 1.6;
-  border-left: 3px solid #F59E0B;
-  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
 }
 
 .inline-tips span {
@@ -1359,8 +1357,6 @@ onMounted(async () => {
 /* ===== 温馨提示 ===== */
 .notice-card {
   background: #FFFBEB;
-  border-left: 3px solid #F59E0B;
-  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
 }
 
 .notice-title {
