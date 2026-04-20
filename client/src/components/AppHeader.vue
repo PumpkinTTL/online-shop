@@ -86,61 +86,70 @@
     <div v-if="userMenuOpen" class="menu-overlay" @click="userMenuOpen = false"></div>
 
     <!-- 登录注册弹窗 -->
-    <n-modal v-model:show="showAuthModal" :mask-closable="true" :style="{ maxWidth: '420px', width: '90vw' }">
-      <div class="auth-modal-content">
-        <!-- 头部装饰 -->
-        <div class="auth-header">
-          <div class="auth-header-bg"></div>
-          <div class="auth-header-icon">
-            <n-icon :size="28" color="white"><shield-checkmark-outline></shield-checkmark-outline></n-icon>
+    <n-modal v-model:show="showAuthModal" :mask-closable="true" :style="{ maxWidth: '400px', width: '90vw' }">
+      <div class="auth-modal">
+        <!-- 装饰背景 -->
+        <div class="auth-deco">
+          <div class="auth-deco-orb auth-deco-orb-1"></div>
+          <div class="auth-deco-orb auth-deco-orb-2"></div>
+          <div class="auth-deco-orb auth-deco-orb-3"></div>
+        </div>
+
+        <!-- 关闭按钮 -->
+        <button class="auth-close" @click="showAuthModal = false">
+          <n-icon :size="18" color="#64748B"><close-outline></close-outline></n-icon>
+        </button>
+
+        <!-- Logo + 标题 -->
+        <div class="auth-top">
+          <div class="auth-logo">
+            <n-icon :size="22" color="white"><shield-checkmark-outline></shield-checkmark-outline></n-icon>
           </div>
-          <h2 class="auth-title">{{ isLogin ? '欢迎回来' : '加入我们' }}</h2>
-          <p class="auth-subtitle">{{ isLogin ? '登录你的账号继续使用' : '创建账号开始使用服务' }}</p>
+          <h2 class="auth-title">{{ isLogin ? '欢迎回来' : '创建账号' }}</h2>
+          <p class="auth-desc">{{ isLogin ? '登录以继续使用服务' : '输入邀请码注册新账号' }}</p>
         </div>
 
         <!-- 表单 -->
-        <div class="auth-body">
-          <n-form ref="authFormRef" :model="authForm" :rules="authRules" :show-label="false">
-            <n-form-item path="username">
-              <n-input v-model:value="authForm.username" placeholder="用户名" size="large">
-                <template #prefix>
-                  <n-icon :size="18" color="#94A3B8"><person-outline></person-outline></n-icon>
-                </template>
-              </n-input>
-            </n-form-item>
-            <n-form-item path="password">
-              <n-input v-model:value="authForm.password" type="password" placeholder="密码" size="large" show-password-on="click">
-                <template #prefix>
-                  <n-icon :size="18" color="#94A3B8"><lock-closed-outline></lock-closed-outline></n-icon>
-                </template>
-              </n-input>
-            </n-form-item>
-            <n-form-item v-if="!isLogin" path="confirmPassword">
-              <n-input v-model:value="authForm.confirmPassword" type="password" placeholder="确认密码" size="large" show-password-on="click">
-                <template #prefix>
-                  <n-icon :size="18" color="#94A3B8"><lock-closed-outline></lock-closed-outline></n-icon>
-                </template>
-              </n-input>
-            </n-form-item>
-            <n-form-item v-if="!isLogin" path="inviteCode">
-              <n-input v-model:value="authForm.inviteCode" placeholder="邀请码（必填）" size="large">
-                <template #prefix>
-                  <n-icon :size="18" color="#94A3B8"><key-outline></key-outline></n-icon>
-                </template>
-              </n-input>
-            </n-form-item>
-          </n-form>
+        <n-form ref="authFormRef" :model="authForm" :rules="authRules" :show-label="false" class="auth-form">
+          <n-form-item path="username">
+            <n-input v-model:value="authForm.username" placeholder="用户名" size="large">
+              <template #prefix>
+                <n-icon :size="18" color="#94A3B8"><person-outline></person-outline></n-icon>
+              </template>
+            </n-input>
+          </n-form-item>
+          <n-form-item path="password">
+            <n-input v-model:value="authForm.password" type="password" placeholder="密码" size="large" show-password-on="click">
+              <template #prefix>
+                <n-icon :size="18" color="#94A3B8"><lock-closed-outline></lock-closed-outline></n-icon>
+              </template>
+            </n-input>
+          </n-form-item>
+          <n-form-item v-if="!isLogin" path="confirmPassword">
+            <n-input v-model:value="authForm.confirmPassword" type="password" placeholder="确认密码" size="large" show-password-on="click">
+              <template #prefix>
+                <n-icon :size="18" color="#94A3B8"><lock-closed-outline></lock-closed-outline></n-icon>
+              </template>
+            </n-input>
+          </n-form-item>
+          <n-form-item v-if="!isLogin" path="inviteCode">
+            <n-input v-model:value="authForm.inviteCode" placeholder="邀请码（必填）" size="large">
+              <template #prefix>
+                <n-icon :size="18" color="#94A3B8"><key-outline></key-outline></n-icon>
+              </template>
+            </n-input>
+          </n-form-item>
+        </n-form>
 
-          <n-button type="primary" block size="large" :loading="authLoading" @click="handleAuth" class="auth-submit">
-            {{ isLogin ? '登 录' : '注 册' }}
-          </n-button>
+        <!-- 提交按钮 -->
+        <n-button type="primary" block size="large" :loading="authLoading" @click="handleAuth" class="auth-btn">
+          {{ isLogin ? '登录' : '注册' }}
+        </n-button>
 
-          <div class="auth-switch">
-            <span class="auth-switch-text">{{ isLogin ? '还没有账号？' : '已有账号？' }}</span>
-            <n-button text type="primary" @click="isLogin = !isLogin">
-              {{ isLogin ? '立即注册' : '去登录' }}
-            </n-button>
-          </div>
+        <!-- 切换 -->
+        <div class="auth-footer">
+          <span>{{ isLogin ? '还没有账号？' : '已有账号？' }}</span>
+          <button class="auth-toggle" @click="isLogin = !isLogin">{{ isLogin ? '立即注册' : '去登录' }}</button>
         </div>
       </div>
     </n-modal>
@@ -154,7 +163,7 @@ import { NButton, NIcon, NModal, NForm, NFormItem, NInput, useMessage } from 'na
 import {
   HomeOutline, PhonePortraitOutline, ReceiptOutline,
   PersonOutline, LogOutOutline, ChevronDownOutline,
-  LockClosedOutline, KeyOutline, ShieldCheckmarkOutline
+  LockClosedOutline, KeyOutline, ShieldCheckmarkOutline, CloseOutline
 } from '@vicons/ionicons5'
 import { useUserStore } from '@/stores/user'
 
@@ -747,97 +756,176 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 }
 
 /* ===== 登录注册弹窗 ===== */
-.auth-modal-content {
-  overflow: hidden;
-  border-radius: 16px;
-  background: white;
-}
-
-.auth-header {
+.auth-modal {
   position: relative;
-  padding: 32px 28px 24px;
-  text-align: center;
   overflow: hidden;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(40px);
+  padding: 32px 28px 28px;
 }
 
-.auth-header-bg {
+.auth-deco {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #6366F1 0%, #818CF8 50%, #A5B4FC 100%);
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.auth-header-icon {
+.auth-deco-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+}
+
+.auth-deco-orb-1 {
+  width: 200px;
+  height: 200px;
+  background: #818CF8;
+  top: -60px;
+  right: -40px;
+}
+
+.auth-deco-orb-2 {
+  width: 160px;
+  height: 160px;
+  background: #38BDF8;
+  bottom: -40px;
+  left: -30px;
+}
+
+.auth-deco-orb-3 {
+  width: 100px;
+  height: 100px;
+  background: #A78BFA;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.auth-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(100, 116, 139, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 200ms;
+}
+
+.auth-close:hover {
+  background: rgba(100, 116, 139, 0.16);
+}
+
+.auth-top {
   position: relative;
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 14px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
 }
 
 .auth-title {
-  position: relative;
   margin: 0;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  color: white;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.02em;
+  color: #1E293B;
+  letter-spacing: -0.01em;
 }
 
-.auth-subtitle {
-  position: relative;
-  margin: 6px 0 0;
+.auth-desc {
+  margin: 4px 0 0;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 400;
+  color: #64748B;
 }
 
-.auth-body {
-  padding: 24px 28px 28px;
+.auth-form {
+  position: relative;
 }
 
-.auth-body :deep(.n-form-item) {
-  margin-bottom: 16px;
+.auth-form :deep(.n-form-item) {
+  margin-bottom: 14px;
 }
 
-.auth-body :deep(.n-form-item:last-child) {
+.auth-form :deep(.n-form-item:last-child) {
   margin-bottom: 0;
 }
 
-.auth-body :deep(.n-input) {
+.auth-form :deep(.n-input) {
   border-radius: 10px;
+  background: rgba(255, 255, 255, 0.6);
 }
 
-.auth-submit {
-  margin-top: 20px;
+.auth-btn {
+  position: relative;
+  margin-top: 18px;
   border-radius: 10px;
   font-weight: 600;
   font-size: 15px;
   height: 44px;
   background: linear-gradient(135deg, #6366F1, #818CF8);
   border: none;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+  transition: box-shadow 200ms, transform 200ms;
 }
 
-.auth-submit:hover {
+.auth-btn:hover {
   background: linear-gradient(135deg, #4F46E5, #6366F1);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
-.auth-switch {
+.auth-btn:active {
+  transform: scale(0.98);
+}
+
+.auth-footer {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   margin-top: 16px;
   font-size: 13px;
+  color: #64748B;
 }
 
-.auth-switch-text {
-  color: #94A3B8;
+.auth-toggle {
+  border: none;
+  background: none;
+  color: #6366F1;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 200ms;
+}
+
+.auth-toggle:hover {
+  color: #4F46E5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-btn { transition: none; }
+  .auth-close { transition: none; }
+  .auth-toggle { transition: none; }
+  .auth-btn:active { transform: none; }
 }
 </style>
