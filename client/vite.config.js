@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   server: {
-    host: '0.0.0.0',
+    strictPort: true,
     port: 5173,
     proxy: {
       // 开发环境：API 请求代理到 Express 后端
