@@ -1156,25 +1156,44 @@ onMounted(async () => {
 .tab-icon-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
+  gap: 6px;
+  font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .recommend-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 1px 6px;
   background: #F59E0B;
   color: white;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  border-radius: 10px;
-  margin-left: 4px;
+  border-radius: 8px;
+  margin-left: 2px;
+  flex-shrink: 0;
 }
 
 .method-tab.active .recommend-badge {
   background: rgba(255, 255, 255, 0.25);
+}
+
+/* ===== 移动端优化 ===== */
+@media (max-width: 767px) {
+  .tab-icon-wrap {
+    font-size: 13px;
+    gap: 4px;
+  }
+
+  .recommend-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+
+  .method-tab {
+    padding: 12px 8px;
+  }
 }
 
 /* ===== 特点小卡片容器 ===== */
