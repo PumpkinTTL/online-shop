@@ -66,38 +66,39 @@
               <span>商品描述</span>
             </div>
             <p class="card-text">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
+            <!-- 商品特有注意事项 -->
+            <div v-if="product.tips" class="inline-tips">
+              <n-icon :size="14" color="#F59E0B"><warning-outline></warning-outline></n-icon>
+              <span>{{ product.tips }}</span>
+            </div>
           </div>
 
-          <!-- 特点卡片 1 -->
-          <div class="bento-card">
-            <div class="feature-icon feature-blue">
-              <n-icon :size="22"><pricetag-outline></pricetag-outline></n-icon>
+          <!-- 特点小卡片容器 -->
+          <div class="features-row">
+            <div class="feature-mini">
+              <n-icon :size="12" color="#3B82F6"><PricetagOutline></PricetagOutline></n-icon>
+              <span>特惠价格</span>
             </div>
-            <div class="feature-title">特惠价格</div>
-            <div class="feature-desc">渠道专享</div>
-          </div>
-
-          <!-- 特点卡片 2 -->
-          <div class="bento-card">
-            <div class="feature-icon feature-orange">
-              <n-icon :size="22"><flash-outline></flash-outline></n-icon>
+            <div class="feature-mini">
+              <n-icon :size="12" color="#EC4899"><DiamondOutline></DiamondOutline></n-icon>
+              <span>渠道专享</span>
             </div>
-            <div class="feature-title">即开即用</div>
-            <div class="feature-desc">快速上手</div>
-          </div>
-
-          <!-- 质保状态卡片 -->
-          <div class="bento-card" :class="product.warranty ? 'card-green' : 'card-gray'">
-            <div class="feature-icon" :class="product.warranty ? 'feature-green' : 'feature-gray'">
-              <n-icon :size="22" v-if="product.warranty">
-                <shield-checkmark-outline></shield-checkmark-outline>
-              </n-icon>
-              <n-icon :size="22" v-else>
-                <warning-outline></warning-outline>
-              </n-icon>
+            <div class="feature-mini">
+              <n-icon :size="12" color="#F59E0B"><FlashOutline></FlashOutline></n-icon>
+              <span>即开即用</span>
             </div>
-            <div class="feature-title">{{ product.warranty ? '质保保障' : '无质保' }}</div>
-            <div class="feature-desc">{{ product.warranty || '售后自理' }}</div>
+            <div class="feature-mini">
+              <n-icon :size="12" color="#06B6D4"><RocketOutline></RocketOutline></n-icon>
+              <span>快速激活</span>
+            </div>
+            <div class="feature-mini">
+              <n-icon :size="12" color="#22C55E"><ShieldCheckmarkOutline></ShieldCheckmarkOutline></n-icon>
+              <span>{{ product.warranty || '无质保' }}</span>
+            </div>
+            <div class="feature-mini">
+              <n-icon :size="12" color="#8B5CF6"><LogInOutline></LogInOutline></n-icon>
+              <span>首登</span>
+            </div>
           </div>
 
           <!-- 购买操作卡片 -->
@@ -106,15 +107,16 @@
             <div v-if="!actionResult">
               <!-- 联系方式 -->
               <div class="contact-section">
-                <label class="input-label">
-                  <n-icon :size="16" color="#64748B"><call-outline></call-outline></n-icon>
-                  联系方式
-                </label>
+                <div class="contact-header">
+                  <n-icon :size="16" color="#3B82F6"><call-outline></call-outline></n-icon>
+                  <span class="contact-title">联系方式</span>
+                  <span class="contact-desc">用于订单查询</span>
+                </div>
                 <n-input
                   v-model:value="contact"
                   placeholder="手机号 / QQ / 邮箱"
                   size="large"
-                  :input-props="{ autocomplete: 'off' }"
+                  :input-props="{ autocomplete: 'off', inputmode: 'tel' }"
                 />
               </div>
 
@@ -125,16 +127,21 @@
                   :class="{ active: payMethod === 'alipay' }"
                   @click="payMethod = 'alipay'"
                 >
-                  <n-icon :size="20"><logo-alipay></logo-alipay></n-icon>
-                  <span>支付宝购买</span>
+                  <div class="tab-icon-wrap">
+                    <n-icon :size="20"><logo-alipay></logo-alipay></n-icon>
+                    <span>支付宝购买</span>
+                    <span class="recommend-badge">推荐</span>
+                  </div>
                 </div>
                 <div
                   class="method-tab"
                   :class="{ active: payMethod === 'card' }"
                   @click="payMethod = 'card'"
                 >
-                  <n-icon :size="20"><key-outline></key-outline></n-icon>
-                  <span>卡密兑换</span>
+                  <div class="tab-icon-wrap">
+                    <n-icon :size="20"><key-outline></key-outline></n-icon>
+                    <span>卡密兑换</span>
+                  </div>
                 </div>
               </div>
 
@@ -301,17 +308,23 @@
               <n-icon :size="18" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
               <span>温馨提示</span>
             </div>
-            <p class="notice-text">
-              <template v-if="isSmsProduct">
-                本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
-              </template>
-              <template v-else-if="product.warranty">
-                本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。
-              </template>
-              <template v-else>
-                本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。
-              </template>
-            </p>
+            <div class="notice-content">
+              <p class="notice-text">
+                <template v-if="isSmsProduct">
+                  本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
+                </template>
+                <template v-else-if="product.warranty">
+                  本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。
+                </template>
+                <template v-else>
+                  本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。
+                </template>
+              </p>
+              <div class="notice-contact">
+                <n-icon :size="14" color="#94A3B8"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
+                <span>客服联系：bitlesu</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -446,7 +459,8 @@ import {
   SparklesOutline, PricetagOutline, FlashOutline, BagHandleOutline, CallOutline,
   LogoAlipay, KeyOutline, CartOutline, CopyOutline, OpenOutline,
   CheckmarkCircleOutline, ChatbubblesOutline, PaperPlaneOutline,
-  TimeOutline, CloseCircleOutline, InformationCircleOutline
+  TimeOutline, CloseCircleOutline, InformationCircleOutline,
+  ChatbubbleEllipsesOutline, LogInOutline, DiamondOutline, RocketOutline
 } from '@vicons/ionicons5'
 import { productApi, pickupApi, paymentApi } from '@/api'
 import { useUserStore } from '@/stores/user'
@@ -1023,6 +1037,19 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* 内联提示 */
+.inline-tips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #FEF3C7;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #78350F;
+}
+
 /* ===== 特点小卡片 ===== */
 .feature-icon {
   display: flex;
@@ -1069,14 +1096,23 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-.input-label {
+.contact-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #334155;
   margin-bottom: 12px;
+}
+
+.contact-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.contact-desc {
+  margin-left: auto;
+  font-size: 12px;
+  color: #94A3B8;
 }
 
 /* ===== 方式切换 ===== */
@@ -1087,18 +1123,15 @@ onMounted(async () => {
 }
 
 .method-tab {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px;
   border: 1.5px solid #E2E8F0;
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 15px;
-  font-weight: 500;
   color: #64748B;
 }
 
@@ -1118,6 +1151,63 @@ onMounted(async () => {
   background: #3B82F6;
   border-color: #3B82F6;
   color: white;
+}
+
+.tab-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.recommend-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #F59E0B;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+.method-tab.active .recommend-badge {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ===== 特点小卡片容器 ===== */
+.features-row {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.feature-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.feature-mini:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.feature-mini span {
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+  text-align: center;
 }
 
 /* ===== 方式内容 ===== */
@@ -1217,6 +1307,28 @@ onMounted(async () => {
   margin: 8px 0 0 0;
 }
 
+/* ===== 商品特有注意事项 ===== */
+.tips-card {
+  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+}
+
+.tips-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400E;
+  margin-bottom: 10px;
+}
+
+.tips-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #78350F;
+  margin: 0;
+}
+
 /* ===== 温馨提示 ===== */
 .notice-card {
   background: #FFFBEB;
@@ -1226,17 +1338,36 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #92400E;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.notice-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .notice-text {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.7;
-  color: #92400E;
+  color: #78350F;
   margin: 0;
+}
+
+.notice-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 10px 14px;
+  background: #FEF3C7;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #78350F;
 }
 
 /* ===== 弹窗 ===== */
@@ -1341,6 +1472,11 @@ onMounted(async () => {
 
   .bento-span-2 {
     grid-column: span 2;
+  }
+
+  .features-row {
+    grid-column: span 2;
+    grid-template-columns: repeat(6, 1fr);
   }
 
   .hero-cover {
