@@ -3,13 +3,13 @@
     <div class="admin-page-header">
       <h2 class="admin-page-title">激活码管理</h2>
       <div class="admin-page-actions">
-        <n-select v-model:value="filterType" :options="typeOptions" placeholder="按类型筛选" clearable style="width:140px" @update:value="loadData" />
-        <n-select v-model:value="filterStatus" :options="statusOptions" placeholder="按状态筛选" clearable style="width:140px" @update:value="loadData" />
+        <n-select v-model:value="filterType" :options="typeOptions" placeholder="按类型筛选" clearable class="filter-select" @update:value="loadData" />
+        <n-select v-model:value="filterStatus" :options="statusOptions" placeholder="按状态筛选" clearable class="filter-select" @update:value="loadData" />
         <n-button type="primary" @click="showGenerate = true">
           <template #icon><n-icon><AddOutline /></n-icon></template>
           生成激活码
         </n-button>
-        <n-button type="error" size="small" :disabled="!selectedIds.length" @click="handleBatchDelete">
+        <n-button type="error" :disabled="!selectedIds.length" @click="handleBatchDelete">
           <template #icon><n-icon><TrashOutline /></n-icon></template>
           批量删除 ({{ selectedIds.length }})
         </n-button>
@@ -185,11 +185,8 @@ const columns = [
   { title: '备注', key: 'remark', width: 120, ellipsis: { tooltip: true }, render: (row) => row.remark || '-' },
   { title: '创建时间', key: 'createdAt', width: 160, sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt), render: (row) => formatDate(row.createdAt) },
   {
-    title: '操作', key: 'actions', width: 140, fixed: 'right',
-    render: (row) => h(NSpace, { size: 4, wrap: false }, () => [
-      h(NButton, { size: 'small', tertiary: true, onClick: () => copyCode(row.code) }, { icon: () => h(NIcon, { size: 14 }, () => h(CopyOutline)), default: () => '复制' }),
-      h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(TrashOutline)), default: () => '删除' }),
-    ]),
+    title: '操作', key: 'actions', width: 100,
+    render: (row) => h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(TrashOutline)), default: () => '删除' }),
   },
 ]
 
@@ -290,5 +287,16 @@ onMounted(loadData)
 <style scoped>
 .activation-codes-view {
   padding: 0;
+}
+
+.filter-select {
+  width: 140px;
+}
+
+@media (max-width: 480px) {
+  .filter-select {
+    flex: 1;
+    width: auto;
+  }
 }
 </style>
