@@ -35,6 +35,12 @@ const routes = [
         component: () => import('@/views/OrdersView.vue'),
         meta: { title: '我的订单' },
       },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/ProfileView.vue'),
+        meta: { title: '个人中心', requiresAuth: true },
+      },
     ],
   },
   // ===== Admin 登录（独立页面，无侧边栏） =====

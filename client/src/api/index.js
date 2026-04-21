@@ -68,6 +68,7 @@ export const userApi = {
   login: (username, password) => http.post('/users/login', { username, password }),
   register: (username, password, inviteCode) => http.post('/users/register', { username, password, inviteCode }),
   logout: () => http.post('/users/logout'),
+  changePassword: (oldPassword, newPassword) => http.post('/users/change-password', { oldPassword, newPassword }),
 }
 
 // ===== 商品 API（前台） =====

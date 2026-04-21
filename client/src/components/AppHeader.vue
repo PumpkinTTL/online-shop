@@ -66,6 +66,10 @@
                 <n-icon :size="16"><receipt-outline></receipt-outline></n-icon>
                 我的订单
               </router-link>
+              <router-link to="/profile" class="dropdown-item" @click="userMenuOpen = false">
+                <n-icon :size="16"><person-outline></person-outline></n-icon>
+                个人中心
+              </router-link>
               <button class="dropdown-item dropdown-item-danger" @click="handleLogout">
                 <n-icon :size="16"><log-out-outline></log-out-outline></n-icon>
                 退出登录

@@ -84,6 +84,25 @@ class UserService {
     await this.getRepository().remove(user);
     return true;
   }
+
+  // 修改密码
+  async changePassword(userId, oldPassword, newPassword) {
+    const user = await this.findOne(userId);
+    if (!user) {
+      throw new Error('用户不存在');
+    }
+
+    // 验证原密码
+    const isValid = await this.comparePassword(oldPassword, user.password);
+    if (!isValid) {
+      throw new Error('原密码错误');
+    }
+
+    // 加密新密码
+    const hash = await this.hashPassword(newPassword);
+    user.password = hash;
+    await this.getRepository().save(user);
+  }
 }
 
 module.exports = new UserService();

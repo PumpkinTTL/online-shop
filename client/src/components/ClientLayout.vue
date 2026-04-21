@@ -39,7 +39,7 @@
       <div
         class="tabbar-item"
         :class="{ active: isActive('mine') }"
-        @click="userStore.isLoggedIn ? null : (showAuthModal = true, isLogin = true)"
+        @click="userStore.isLoggedIn ? router.push({ name: 'Profile' }) : (showAuthModal = true, isLogin = true)"
       >
         <div class="tabbar-icon-wrap">
           <n-icon :size="22"><person-outline></person-outline></n-icon>
@@ -100,7 +100,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { NModal, NCard, NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
 import {
   HomeOutline, PhonePortraitOutline, ReceiptOutline,
@@ -111,6 +111,7 @@ import CaptchaModal from '@/components/CaptchaModal.vue'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
+const router = useRouter()
 const message = useMessage()
 const userStore = useUserStore()
 
@@ -170,7 +171,7 @@ function isActive(key) {
   if (key === 'home') return route.path === '/'
   if (key === 'orders') return route.path === '/orders'
   if (key === 'sms') return route.path === '/sms'
-  if (key === 'mine') return false
+  if (key === 'mine') return route.path === '/profile'
   return false
 }
 

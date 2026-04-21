@@ -150,11 +150,11 @@ router.post('/logout', (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const user = await userService.findOne(req.userId);
-    
+
     if (!user) {
       return res.status(404).json({ error: '用户不存在' });
     }
-    
+
     // 脱敏：只返回必要字段
     const userInfo = {
       id: user.id,
@@ -163,10 +163,36 @@ router.get('/me', requireAuth, async (req, res) => {
       avatar: user.avatar,
       createdAt: user.createdAt
     };
-    
+
     res.json(userInfo);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// 修改密码（需要登录）
+router.post('/change-password', [
+  body('oldPassword')
+    .trim()
+    .notEmpty()
+    .withMessage('请输入原密码'),
+  body('newPassword')
+    .trim()
+    .isLength({ min: 6 })
+    .withMessage('新密码长度至少6位'),
+], handleValidationErrors, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    await userService.changePassword(req.userId, oldPassword, newPassword);
+    res.json({ message: '密码修改成功' });
+
+    // 记录密码修改日志
+    action.success('user.changePassword', {
+      userId: req.userId,
+      ip: req.ip,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
