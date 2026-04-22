@@ -297,7 +297,7 @@
                     type="primary"
                     size="large"
                     block
-                    :loading="smsQrLoading"
+                    :loading="smsPayBtnLoading"
                     @click="startSmsServicePay"
                   >
                     <template #icon><n-icon><logo-alipay></logo-alipay></n-icon></template>
@@ -357,15 +357,9 @@
     </template>
 
     <!-- 支付宝二维码弹窗 -->
-    <n-modal v-model:show="showQrModal" :mask-closable="true" preset="card" title="支付宝扫码支付" class="pay-modal" :style="{ maxWidth: '400px', width: '90vw' }">
-      <!-- 加载中 -->
-      <div v-if="qrLoading" class="modal-state">
-        <n-spin size="medium" />
-        <p>正在创建支付订单...</p>
-      </div>
-
+    <n-modal v-model:show="showQrModal" :mask-closable="true" preset="card" title="支付宝扫码支付" class="pay-modal" :style="{ maxWidth: '400px', width: '90vw' }" @after-leave="onQrModalClosed">
       <!-- 错误 -->
-      <div v-else-if="qrError" class="modal-state modal-error">
+      <div v-if="qrError" class="modal-state modal-error">
         <n-icon :size="56" color="#EF4444"><close-circle-outline></close-circle-outline></n-icon>
         <p>{{ qrError }}</p>
         <n-button type="primary" @click="closeQrModal">关闭</n-button>
@@ -419,15 +413,9 @@
     </n-modal>
 
     <!-- 接码服务支付弹窗 -->
-    <n-modal v-model:show="showSmsPayModal" :mask-closable="true" preset="card" title="支付接码服务费" class="pay-modal" :style="{ maxWidth: '400px', width: '90vw' }">
-      <!-- 加载中 -->
-      <div v-if="smsQrLoading" class="modal-state">
-        <n-spin size="medium" />
-        <p>正在创建支付订单...</p>
-      </div>
-
+    <n-modal v-model:show="showSmsPayModal" :mask-closable="true" preset="card" title="支付接码服务费" class="pay-modal" :style="{ maxWidth: '400px', width: '90vw' }" @after-leave="onSmsPayModalClosed">
       <!-- 错误 -->
-      <div v-else-if="smsQrError" class="modal-state modal-error">
+      <div v-if="smsQrError" class="modal-state modal-error">
         <n-icon :size="56" color="#EF4444"><close-circle-outline></close-circle-outline></n-icon>
         <p>{{ smsQrError }}</p>
         <n-button type="primary" @click="closeSmsPayModal">关闭</n-button>
@@ -546,6 +534,7 @@ const smsPayAmount = ref('')
 const smsPayStatus = ref('pending')
 const smsOrderNo = ref('')
 const smsPayUrl = ref('')
+const smsPayBtnLoading = ref(false)
 
 // 倒计时文本
 const countdownText = computed(() => {
@@ -637,31 +626,31 @@ const startAlipayPay = async () => {
   }
   localStorage.setItem('lastContact', contact.value.trim())
   payLoading.value = true
-  showQrModal.value = true
-  qrLoading.value = true
-  qrError.value = ''
-  payStatus.value = 'pending'
-  cdKey.value = ''
-  qrImageUrl.value = ''
 
   try {
     const res = await paymentApi.create(product.value.id, contact.value.trim())
+    // API 成功后才开弹窗，避免 429 时弹窗卡 loading
     orderNo.value = res.orderNo
     payAmount.value = res.amount
     payUrl.value = res.payUrl || ''
+    payStatus.value = 'pending'
+    cdKey.value = ''
+    qrError.value = ''
 
     await generateQR(res.qrCode)
 
     const expiredAt = new Date(res.expiredAt)
     countdown.value = Math.max(0, Math.floor((expiredAt - Date.now()) / 1000))
+
+    showQrModal.value = true
     startCountdown()
     startPolling()
   } catch (err) {
     console.error('[Payment/Create] Error:', err)
-    qrError.value = err.response?.data?.error || err.message || '创建支付订单失败'
+    message.error(err.response?.data?.error || err.message || '创建支付订单失败')
   } finally {
-    qrLoading.value = false
     payLoading.value = false
+    qrLoading.value = false
   }
 }
 
@@ -734,6 +723,16 @@ const closeQrModal = () => {
   }
 }
 
+/** 弹窗关闭后（不管怎么关的）清理轮询和状态 */
+const onQrModalClosed = () => {
+  stopPolling()
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+    countdownTimer = null
+  }
+  payLoading.value = false
+}
+
 const getSmsCode = async () => {
   smsLoading.value = true
   smsError.value = ''
@@ -775,11 +774,11 @@ const startSmsServicePay = async () => {
     return
   }
 
-  showSmsPayModal.value = true
   smsQrLoading.value = true
   smsQrError.value = ''
   smsPayStatus.value = 'pending'
   smsQrImageUrl.value = ''
+  smsPayBtnLoading.value = true
 
   try {
     const res = await paymentApi.createSms(
@@ -801,11 +800,14 @@ const startSmsServicePay = async () => {
       console.error('二维码生成失败:', err)
     }
 
+    // API 成功后才开弹窗
+    showSmsPayModal.value = true
     startSmsPolling()
   } catch (err) {
-    smsQrError.value = err.response?.data?.error || err.message || '创建支付订单失败'
+    message.error(err.response?.data?.error || err.message || '创建支付订单失败')
   } finally {
     smsQrLoading.value = false
+    smsPayBtnLoading.value = false
   }
 }
 
@@ -841,6 +843,12 @@ const stopSmsPolling = () => {
 const closeSmsPayModal = () => {
   showSmsPayModal.value = false
   stopSmsPolling()
+}
+
+/** 接码支付弹窗关闭后清理 */
+const onSmsPayModalClosed = () => {
+  stopSmsPolling()
+  smsPayBtnLoading.value = false
 }
 
 const copyText = async (text, msg) => {

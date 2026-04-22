@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useCaptchaStore } from '@/stores/captcha'
 
 // ===== HTTP 实例 =====
 const http = axios.create({
@@ -39,17 +40,16 @@ http.interceptors.response.use(
         return Promise.reject(error)
       }
 
-      // 动态导入避免循环依赖（api → store → api）
       try {
-        const { useCaptchaStore } = await import('@/stores/captcha')
         const captchaStore = useCaptchaStore()
 
         // 等待验证码通过（返回一个 Promise）
-        // 如果在冷却期内或刚通过验证码的重试又 429，放弃重试
+        // cooldown 期间会等 cooldown 结束后自动弹窗
+        // 刚通过验证码的重试又 429 会 reject → 放弃重试
         try {
           await captchaStore.waitForCaptcha()
         } catch {
-          // 冷却期 / 刚通过验证码的重试又被限流 → 不再弹窗，返回原始错误
+          // justResolved / 用户关闭弹窗 → 不再弹窗，返回原始错误
           return Promise.reject(error)
         }
 
