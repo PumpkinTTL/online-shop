@@ -272,7 +272,7 @@ router.post('/validate-coupon', pickup, async (req, res) => {
       return res.status(400).json({ error: '商品不存在' });
     }
 
-    const result = await paymentService.validateCoupon(code.trim(), productId, product.price);
+    const result = await paymentService.validateCoupon(code.trim(), productId, product.price, req.userId || null, req.ip || null);
     if (result.valid) {
       res.json({
         valid: true,

@@ -19,6 +19,8 @@ module.exports = new EntitySchema({
     usedCount: { type: 'int', default: 0 }, // 已使用次数
     validFrom: { type: 'datetime', nullable: true }, // 生效时间
     validTo: { type: 'datetime', nullable: true }, // 过期时间
+    userId: { type: 'int', nullable: true }, // 绑定用户ID（null=不限）
+    bindIp: { type: 'varchar', length: 45, nullable: true }, // 绑定IP（null=不限）
     createdAt: { type: 'datetime', createDate: true },
     usedAt: { type: 'datetime', nullable: true },
   },

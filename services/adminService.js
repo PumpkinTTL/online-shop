@@ -605,6 +605,8 @@ class AdminService {
       usedCount: 0,
       validFrom: data.validFrom || null,
       validTo: data.validTo || null,
+      userId: data.userId || null, // null 表示不限用户
+      bindIp: data.bindIp || null, // null 表示不限IP
       status: 'active',
     });
 
@@ -652,6 +654,8 @@ class AdminService {
         usedCount: 0,
         validFrom: data.validFrom || null,
         validTo: data.validTo || null,
+        userId: data.userId || null,
+        bindIp: data.bindIp || null,
         status: 'active',
       }));
     }

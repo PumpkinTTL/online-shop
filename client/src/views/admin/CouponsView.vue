@@ -48,7 +48,13 @@
           <n-input v-model:value="createForm.code" placeholder="留空则自动生成" />
         </n-form-item>
         <n-form-item label="适用商品">
-          <n-select v-model:value="createForm.productId" :options="productOptions" placeholder="全场通用" clearable />
+          <n-select v-model:value="createForm.productId" :options="productOptions" placeholder="不限（全场通用）" clearable />
+        </n-form-item>
+        <n-form-item label="绑定用户">
+          <n-select v-model:value="createForm.userId" :options="userOptions" placeholder="不限" clearable filterable />
+        </n-form-item>
+        <n-form-item label="绑定IP">
+          <n-input v-model:value="createForm.bindIp" placeholder="不限" clearable />
         </n-form-item>
         <n-form-item label="折扣类型">
           <n-radio-group v-model:value="createForm.discountType">
@@ -93,7 +99,13 @@
           <n-input-number v-model:value="batchForm.count" :min="1" :max="100" style="width:100%" />
         </n-form-item>
         <n-form-item label="适用商品">
-          <n-select v-model:value="batchForm.productId" :options="productOptions" placeholder="全场通用" clearable />
+          <n-select v-model:value="batchForm.productId" :options="productOptions" placeholder="不限（全场通用）" clearable />
+        </n-form-item>
+        <n-form-item label="绑定用户">
+          <n-select v-model:value="batchForm.userId" :options="userOptions" placeholder="不限" clearable filterable />
+        </n-form-item>
+        <n-form-item label="绑定IP">
+          <n-input v-model:value="batchForm.bindIp" placeholder="不限" clearable />
         </n-form-item>
         <n-form-item label="折扣类型">
           <n-radio-group v-model:value="batchForm.discountType">
@@ -150,7 +162,9 @@ const pageSize = ref(10)
 const selectedIds = ref([])
 const filterStatus = ref(null)
 const allProducts = ref([])
+const allUsers = ref([])
 const productOptions = computed(() => allProducts.value.map(p => ({ label: p.name, value: p.id })))
+const userOptions = computed(() => allUsers.value.map(u => ({ label: u.username || u.contact || `#${u.id}`, value: u.id })))
 
 const statusFilterOptions = [
   { label: '可用', value: 'active' },
@@ -169,6 +183,8 @@ const saving = ref(false)
 const emptyForm = () => ({
   code: '',
   productId: null,
+  userId: null,
+  bindIp: '',
   discountType: 'percent',
   discount: null,
   deduction: null,
@@ -191,16 +207,35 @@ const columns = [
     title: '折扣', key: 'discount', width: 120,
     render: (row) => {
       if (row.deduction) return h(NTag, { type: 'warning', size: 'small' }, () => `抵扣 ¥${row.deduction}`)
-      if (row.discount) return h(NTag, { type: 'success', size: 'small' }, () => `${row.discount}% OFF`)
+      if (row.discount) {
+        const off = row.discount
+        const fold = ((100 - off) / 10).toFixed(1).replace(/\.0$/, '')
+        return h(NTag, { type: 'success', size: 'small' }, () => `打${fold}折`)
+      }
       return h('span', { style: 'color:#94A3B8' }, '-')
     },
   },
   {
     title: '适用商品', key: 'productId', width: 140,
     render: (row) => {
-      if (!row.productId) return h('span', { style: 'color:#F59E0B;font-weight:500' }, '全场通用')
+      if (!row.productId) return h('span', { style: 'color:#94A3B8' }, '-')
       const p = allProducts.value.find(p => p.id === row.productId)
       return h('span', { style: 'color:#64748B' }, p?.name || `商品#${row.productId}`)
+    },
+  },
+  {
+    title: '绑定用户', key: 'userId', width: 110,
+    render: (row) => {
+      if (!row.userId) return h('span', { style: 'color:#94A3B8' }, '-')
+      const u = allUsers.value.find(u => u.id === row.userId)
+      return h('span', { style: 'color:#64748B' }, u ? (u.username || u.contact || `#${row.userId}`) : `用户#${row.userId}`)
+    },
+  },
+  {
+    title: '绑定IP', key: 'bindIp', width: 130,
+    render: (row) => {
+      if (!row.bindIp) return h('span', { style: 'color:#94A3B8' }, '-')
+      return h('code', { style: 'font-size:12px;color:#64748B' }, row.bindIp)
     },
   },
   {
@@ -292,6 +327,8 @@ async function handleCreate() {
     const data = {
       code: f.code || undefined,
       productId: f.productId || undefined,
+      userId: f.userId || undefined,
+      bindIp: f.bindIp || undefined,
       discount: f.discountType === 'percent' ? f.discount : undefined,
       deduction: f.discountType === 'fixed' ? f.deduction : undefined,
       maxUses: f.maxUses || undefined,
@@ -326,6 +363,8 @@ async function handleBatchGenerate() {
       prefix: f.prefix || 'CPN',
       count: f.count,
       productId: f.productId || undefined,
+      userId: f.userId || undefined,
+      bindIp: f.bindIp || undefined,
       discount: f.discountType === 'percent' ? f.discount : undefined,
       deduction: f.discountType === 'fixed' ? f.deduction : undefined,
       maxUses: f.maxUses || undefined,
@@ -401,6 +440,10 @@ onMounted(async () => {
   try {
     const res = await adminApi.getProducts({ pageSize: 0 })
     allProducts.value = Array.isArray(res) ? res : (res.items || [])
+  } catch {}
+  try {
+    const res = await adminApi.getUsers({ pageSize: 0 })
+    allUsers.value = Array.isArray(res) ? res : (res.items || [])
   } catch {}
   loadData()
 })

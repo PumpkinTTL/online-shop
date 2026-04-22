@@ -40,7 +40,7 @@ class PaymentService {
   }
 
   // 创建支付订单（调用支付宝预下单 alipay.trade.precreate）
-  async createPayment(productId, contact, userId = null, couponCode = null) {
+  async createPayment(productId, contact, userId = null, couponCode = null, ip = null) {
     const productRepo = this.getProductRepo();
     const paymentRepo = this.getPaymentOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
@@ -62,7 +62,7 @@ class PaymentService {
     let couponInfo = null;
 
     if (couponCode) {
-      const couponResult = await this.validateCoupon(couponCode, productId, product.price);
+      const couponResult = await this.validateCoupon(couponCode, productId, product.price, userId, ip);
       if (couponResult.valid) {
         finalAmount = couponResult.finalAmount;
         couponId = couponResult.coupon.id;
@@ -162,7 +162,7 @@ class PaymentService {
   }
 
   // 验证优惠码（不使用，仅验证+计算价格）
-  validateCoupon(code, productId, productPrice) {
+  validateCoupon(code, productId, productPrice, userId, ip) {
     const cardKeyRepo = this.getCardKeyRepo();
 
     return (async () => {
@@ -195,6 +195,16 @@ class PaymentService {
       // 商品匹配检查（productId 为 null 表示全场通用）
       if (coupon.productId && coupon.productId !== productId) {
         return { valid: false, error: '该优惠码不适用于此商品' };
+      }
+
+      // 绑定用户检查（userId 不为 null 时必须匹配）
+      if (coupon.userId && coupon.userId !== userId) {
+        return { valid: false, error: '该优惠码不适用于当前用户' };
+      }
+
+      // 绑定IP检查（bindIp 不为 null 时必须匹配）
+      if (coupon.bindIp && coupon.bindIp !== ip) {
+        return { valid: false, error: '该优惠码不适用于当前IP' };
       }
 
       // 计算折扣
