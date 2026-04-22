@@ -267,18 +267,18 @@ const columns = [
     title: '折扣', key: 'discount', width: 120,
     render: (row) => {
       if (row.deduction) {
-        return h('div', { class: 'discount-badge discount-badge--fixed' }, [
-          h(NIcon, { size: 13, color: '#F59E0B' }, () => h(WalletOutline)),
-          h('span', { class: 'discount-badge__text' }, `-¥${parseFloat(row.deduction).toFixed(2)}`),
-        ])
+        return h(NTag, { type: 'warning', size: 'small', round: true }, {
+          icon: () => h(NIcon, { size: 13 }, () => h(WalletOutline)),
+          default: () => `-¥${parseFloat(row.deduction).toFixed(2)}`,
+        })
       }
       if (row.discount) {
         const d = parseFloat(row.discount)
         const fold = (10 - d / 10).toFixed(1).replace(/\.0$/, '')
-        return h('div', { class: 'discount-badge discount-badge--percent' }, [
-          h(NIcon, { size: 13, color: '#22C55E' }, () => h(PricetagsOutline)),
-          h('span', { class: 'discount-badge__text' }, `${fold}折`),
-        ])
+        return h(NTag, { type: 'success', size: 'small', round: true }, {
+          icon: () => h(NIcon, { size: 13 }, () => h(PricetagsOutline)),
+          default: () => `${fold}折`,
+        })
       }
       return h('span', { style: 'color:#94A3B8' }, '-')
     },
@@ -576,31 +576,3 @@ onMounted(async () => {
   loadData()
 })
 </script>
-
-<style scoped>
-.discount-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.discount-badge--percent {
-  background: rgba(34, 197, 94, 0.1);
-  color: #16A34A;
-}
-
-.discount-badge--fixed {
-  background: rgba(245, 158, 11, 0.1);
-  color: #D97706;
-}
-
-.discount-badge__text {
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.3px;
-}
-</style>
