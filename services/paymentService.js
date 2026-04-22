@@ -3,6 +3,7 @@ const PaymentOrder = require('../entities/PaymentOrder');
 const CardKey = require('../entities/CardKey');
 const Product = require('../entities/Product');
 const Order = require('../entities/Order');
+const couponService = require('./couponService');
 const { getAlipaySdk } = require('../config/alipay');
 const { business, system } = require('../logger');
 
@@ -53,7 +54,7 @@ class PaymentService {
     if (!product) throw new Error('商品不存在');
 
     // 检查库存（可用卡密数量）
-    const stock = await cardKeyRepo.count({ where: { productId, status: 'unused', type: 'cardkey' } });
+    const stock = await cardKeyRepo.count({ where: { productId, status: 'unused' } });
     if (stock <= 0) throw new Error('商品已售罄，暂无库存');
 
     // 计算优惠价格
@@ -62,7 +63,7 @@ class PaymentService {
     let couponInfo = null;
 
     if (couponCode) {
-      const couponResult = await this.validateCoupon(couponCode, productId, product.price, userId, ip);
+      const couponResult = await couponService.validateCoupon(couponCode, productId, product.price, userId, ip);
       if (couponResult.valid) {
         finalAmount = couponResult.finalAmount;
         couponId = couponResult.coupon.id;
@@ -158,102 +159,6 @@ class PaymentService {
         });
       }
       throw new Error('创建支付订单失败: ' + errMsg);
-    }
-  }
-
-  // 验证优惠码（不使用，仅验证+计算价格）
-  validateCoupon(code, productId, productPrice, userId, ip) {
-    const cardKeyRepo = this.getCardKeyRepo();
-
-    return (async () => {
-      const coupon = await cardKeyRepo.findOne({
-        where: { code, type: 'coupon' },
-      });
-
-      if (!coupon) return { valid: false, error: '优惠码不存在' };
-
-      // 状态检查
-      if (coupon.status === 'disabled') return { valid: false, error: '优惠码已禁用' };
-      if (coupon.status === 'expired') return { valid: false, error: '优惠码已过期' };
-
-      // 时间检查
-      const now = new Date();
-      if (coupon.validFrom && new Date(coupon.validFrom) > now) {
-        return { valid: false, error: '优惠码尚未生效' };
-      }
-      if (coupon.validTo && new Date(coupon.validTo) < now) {
-        // 自动标记过期
-        await cardKeyRepo.update(coupon.id, { status: 'expired' });
-        return { valid: false, error: '优惠码已过期' };
-      }
-
-      // 使用次数检查
-      if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
-        return { valid: false, error: '优惠码已用完' };
-      }
-
-      // 商品匹配检查（productId 为 null 表示全场通用）
-      if (coupon.productId && coupon.productId !== productId) {
-        return { valid: false, error: '该优惠码不适用于此商品' };
-      }
-
-      // 绑定用户检查（userId 不为 null 时必须匹配）
-      if (coupon.userId && coupon.userId !== userId) {
-        return { valid: false, error: '该优惠码不适用于当前用户' };
-      }
-
-      // 绑定IP检查（bindIp 不为 null 时必须匹配）
-      if (coupon.bindIp && coupon.bindIp !== ip) {
-        return { valid: false, error: '该优惠码不适用于当前IP' };
-      }
-
-      // 计算折扣
-      const originalPrice = parseFloat(productPrice);
-      let finalAmount = originalPrice;
-
-      if (coupon.deduction) {
-        // 固定抵扣
-        finalAmount = originalPrice - parseFloat(coupon.deduction);
-      } else if (coupon.discount) {
-        // 百分比折扣（如 discount=10 表示打9折，即价格 * (1 - 10/100)）
-        finalAmount = originalPrice * (1 - parseFloat(coupon.discount) / 100);
-      }
-
-      // 最低 0.01
-      if (finalAmount < 0.01) finalAmount = 0.01;
-
-      // 保留两位小数
-      finalAmount = Math.round(finalAmount * 100) / 100;
-
-      return { valid: true, coupon, finalAmount };
-    })();
-  }
-
-  // 使用优惠码（支付成功后调用，递增 usedCount）
-  async useCoupon(couponId) {
-    if (!couponId) return;
-    try {
-      const cardKeyRepo = this.getCardKeyRepo();
-      const coupon = await cardKeyRepo.findOne({ where: { id: couponId, type: 'coupon' } });
-      if (!coupon) return;
-
-      const newUsedCount = coupon.usedCount + 1;
-      const updateData = { usedCount: newUsedCount };
-
-      // 如果达到最大使用次数，标记为 expired
-      if (coupon.maxUses && newUsedCount >= coupon.maxUses) {
-        updateData.status = 'expired';
-      }
-
-      await cardKeyRepo.update(couponId, updateData);
-      business.success('coupon.use', {
-        couponId,
-        code: coupon.code,
-        usedCount: newUsedCount,
-        maxUses: coupon.maxUses,
-      });
-    } catch (e) {
-      console.warn('[Payment] 使用优惠码计数失败:', e.message);
     }
   }
 
@@ -450,7 +355,7 @@ class PaymentService {
 
     // 使用优惠码（如果有）
     if (order.couponId) {
-      this.useCoupon(order.couponId);
+      couponService.useCoupon(order.couponId);
     }
     business.success('payment.alipay', {
       orderNo: order.orderNo,

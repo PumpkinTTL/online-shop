@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const adminService = require('../services/adminService');
+const couponService = require('../services/couponService');
 const pickupService = require('../services/pickupService');
 const { login: loginLimiter } = require('../middleware/rateLimiter');
 const { action, system } = require('../logger');
@@ -561,7 +562,7 @@ router.post('/sms-records/batch-delete', auth, async (req, res) => {
 router.get('/coupons', auth, async (req, res) => {
   try {
     const { status, page = 1, pageSize = 20 } = req.query;
-    const result = await adminService.getCoupons({
+    const result = await couponService.getCoupons({
       status: status || '',
       page: parseInt(page),
       pageSize: parseInt(pageSize),
@@ -575,7 +576,7 @@ router.get('/coupons', auth, async (req, res) => {
 // 创建优惠码
 router.post('/coupons', auth, async (req, res) => {
   try {
-    const coupon = await adminService.createCoupon(req.body);
+    const coupon = await couponService.createCoupon(req.body);
     res.status(201).json(coupon);
 
     action.success('admin.coupon.create', {
@@ -592,7 +593,7 @@ router.post('/coupons', auth, async (req, res) => {
 // 批量生成优惠码
 router.post('/coupons/generate', auth, async (req, res) => {
   try {
-    const result = await adminService.generateCoupons(req.body);
+    const result = await couponService.generateCoupons(req.body);
     res.status(201).json(result);
 
     action.success('admin.coupon.generate', {
@@ -608,7 +609,7 @@ router.post('/coupons/generate', auth, async (req, res) => {
 // 更新优惠码
 router.put('/coupons/:id', auth, async (req, res) => {
   try {
-    const coupon = await adminService.updateCoupon(parseInt(req.params.id), req.body);
+    const coupon = await couponService.updateCoupon(parseInt(req.params.id), req.body);
     res.json(coupon);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -618,7 +619,7 @@ router.put('/coupons/:id', auth, async (req, res) => {
 // 删除优惠码
 router.delete('/coupons/:id', auth, async (req, res) => {
   try {
-    await adminService.deleteCoupon(parseInt(req.params.id));
+    await couponService.deleteCoupon(parseInt(req.params.id));
     res.json({ message: '删除成功' });
 
     action.success('admin.coupon.delete', {
@@ -638,7 +639,7 @@ router.post('/coupons/batch-delete', auth, async (req, res) => {
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: '请选择要删除的优惠码' });
     }
-    const result = await adminService.batchDeleteCoupons(ids);
+    const result = await couponService.batchDeleteCoupons(ids);
     res.json({ message: `成功删除 ${result} 个优惠码`, count: result });
   } catch (error) {
     res.status(400).json({ error: error.message });

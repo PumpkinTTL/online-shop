@@ -1,6 +1,6 @@
 const express = require('express');
 const pickupService = require('../services/pickupService');
-const paymentService = require('../services/paymentService');
+const couponService = require('../services/couponService');
 const dataSource = require('../config/database');
 const Product = require('../entities/Product');
 const { optionalAuth } = require('../middleware/auth');
@@ -272,7 +272,7 @@ router.post('/validate-coupon', pickup, async (req, res) => {
       return res.status(400).json({ error: '商品不存在' });
     }
 
-    const result = await paymentService.validateCoupon(code.trim(), productId, product.price, req.userId || null, req.ip || null);
+    const result = await couponService.validateCoupon(code.trim(), productId, product.price, req.userId || null, req.ip || null);
     if (result.valid) {
       res.json({
         valid: true,
@@ -283,7 +283,7 @@ router.post('/validate-coupon', pickup, async (req, res) => {
         description: result.coupon.deduction
           ? `抵扣 ¥${result.coupon.deduction}`
           : result.coupon.discount
-            ? `${result.coupon.discount}% OFF`
+            ? `减${result.coupon.discount}%`
             : '',
       });
     } else {
