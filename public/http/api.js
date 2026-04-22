@@ -11,7 +11,7 @@
 const http = axios.create({
   baseURL: '/api',
   timeout: 10000,
-  withCredentials: true,  // 自动携带 httpOnly cookie（JWT token + captcha_verified）
+  withCredentials: true,  // 自动携带 httpOnly cookie（JWT token）
 });
 
 // 待重试的请求队列（验证码通过后自动重试）

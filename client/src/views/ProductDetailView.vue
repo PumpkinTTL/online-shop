@@ -486,7 +486,6 @@ import {
   ChatbubbleEllipsesOutline, LogInOutline, DiamondOutline, RocketOutline
 } from '@vicons/ionicons5'
 import { productApi, pickupApi, paymentApi } from '@/api'
-import { CaptchaRequiredError } from '@/api'
 import { useUserStore } from '@/stores/user'
 import QRCode from 'qrcode'
 
@@ -607,11 +606,6 @@ const checkAndPrefillContact = async () => {
   }
 }
 
-// 记录被 429 中断的操作类型
-const captchaRetryAction = ref(null)
-
-const isCaptchaError = (err) => err?.isCaptchaRequired
-
 // 卡密兑换
 const handleRedeem = async () => {
   if (!contact.value.trim()) {
@@ -623,14 +617,12 @@ const handleRedeem = async () => {
     return
   }
   redeeming.value = true
-  captchaRetryAction.value = 'redeem'
   try {
     const response = await pickupApi.redeem(redeemCode.value.trim(), product.value.id, contact.value.trim())
     localStorage.setItem('lastContact', contact.value.trim())
     actionResult.value = { type: 'redeem', CDK: response.CDK, cardKeyId: response.id }
     message.success('兑换成功！')
   } catch (err) {
-    if (isCaptchaError(err)) return
     message.error(err.response?.data?.error || '兑换失败')
   } finally {
     redeeming.value = false
@@ -652,7 +644,6 @@ const startAlipayPay = async () => {
   cdKey.value = ''
   qrImageUrl.value = ''
 
-  captchaRetryAction.value = 'alipay'
   try {
     const res = await paymentApi.create(product.value.id, contact.value.trim())
     orderNo.value = res.orderNo
@@ -666,10 +657,6 @@ const startAlipayPay = async () => {
     startCountdown()
     startPolling()
   } catch (err) {
-    if (isCaptchaError(err)) {
-      showQrModal.value = false
-      return
-    }
     console.error('[Payment/Create] Error:', err)
     qrError.value = err.response?.data?.error || err.message || '创建支付订单失败'
   } finally {
@@ -750,7 +737,6 @@ const closeQrModal = () => {
 const getSmsCode = async () => {
   smsLoading.value = true
   smsError.value = ''
-  captchaRetryAction.value = 'smsCode'
   try {
     const res = await pickupApi.iscodeGetVerifyCode(
       actionResult.value.CDK,
@@ -765,7 +751,6 @@ const getSmsCode = async () => {
       smsError.value = '暂未收到验证码，请稍后重试'
     }
   } catch (err) {
-    if (isCaptchaError(err)) return
     const errMsg = err.response?.data?.error || '获取验证码失败'
     if (errMsg === 'NEED_PURCHASE') {
       smsError.value = '本次接码需要支付服务费，请点击下方按钮完成支付'
@@ -795,7 +780,6 @@ const startSmsServicePay = async () => {
   smsQrError.value = ''
   smsPayStatus.value = 'pending'
   smsQrImageUrl.value = ''
-  captchaRetryAction.value = 'smsPay'
 
   try {
     const res = await paymentApi.createSms(
@@ -819,10 +803,6 @@ const startSmsServicePay = async () => {
 
     startSmsPolling()
   } catch (err) {
-    if (isCaptchaError(err)) {
-      showSmsPayModal.value = false
-      return
-    }
     smsQrError.value = err.response?.data?.error || err.message || '创建支付订单失败'
   } finally {
     smsQrLoading.value = false
@@ -909,23 +889,12 @@ const goHome = () => {
   router.push({ name: 'Home' })
 }
 
-const handleCaptchaRetrySuccess = () => {
-  const action = captchaRetryAction.value
-  captchaRetryAction.value = null
-  if (action === 'redeem') handleRedeem()
-  else if (action === 'alipay') startAlipayPay()
-  else if (action === 'smsCode') getSmsCode()
-  else if (action === 'smsPay') startSmsServicePay()
-}
-
 onMounted(async () => {
-  window.addEventListener('captcha-retry-success', handleCaptchaRetrySuccess)
   await loadProduct()
   await checkAndPrefillContact()
 })
 
 onUnmounted(() => {
-  window.removeEventListener('captcha-retry-success', handleCaptchaRetrySuccess)
   stopPolling()
   stopSmsPolling()
   if (countdownTimer) clearInterval(countdownTimer)

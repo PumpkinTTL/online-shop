@@ -82,7 +82,7 @@ router.get('/:key', auth, async (req, res) => {
 // 更新速率限制配置（需要管理员权限）
 router.put('/:key', [
   param('key')
-    .isIn(['global', 'login', 'payment', 'api', 'admin'])
+    .isIn(['global', 'login', 'payment', 'api', 'admin', 'pickup', 'pickupVerify', 'pickupRedeem', 'captcha'])
     .withMessage('无效的配置键'),
   body('windowMs')
     .optional()

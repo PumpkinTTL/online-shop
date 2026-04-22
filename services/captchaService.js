@@ -53,33 +53,13 @@ class CaptchaService {
     };
   }
 
-  // 校验验证码（一次性使用）
+  // 校验验证码（一次性使用，无论对错都删除，防止重试）
   verify(captchaId, answer) {
     const data = captchaStore.get(captchaId);
     if (!data) return false;
-    // 无论对错都删除，防止重试
     captchaStore.delete(captchaId);
     if (data.expiresAt < Date.now()) return false;
     return data.answer === String(answer).trim();
-  }
-
-  // 生成验证通过的签名token
-  generateVerifiedToken() {
-    const payload = {
-      verified: true,
-      exp: Date.now() + 10 * 60 * 1000, // 10分钟有效
-    };
-    return Buffer.from(JSON.stringify(payload)).toString('base64url');
-  }
-
-  // 校验签名token
-  verifyToken(token) {
-    try {
-      const payload = JSON.parse(Buffer.from(token, 'base64url').toString());
-      return payload.verified === true && payload.exp > Date.now();
-    } catch {
-      return false;
-    }
   }
 }
 

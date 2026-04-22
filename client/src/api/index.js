@@ -16,51 +16,61 @@ http.interceptors.request.use((config) => {
   return config
 })
 
-// 429 验证码处理
-let pendingCaptchaRetry = null
-
-// 自定义错误标识，用于组件识别 429 挂起
-class CaptchaRequiredError extends Error {
-  constructor() {
-    super('需要完成验证码验证')
-    this.name = 'CaptchaRequiredError'
-    this.isCaptchaRequired = true
-  }
-}
-
+// 响应拦截器
 http.interceptors.response.use(
   (response) => response.data,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config
+
     // Admin 接口 401 → 清除 token
-    if (error.response?.status === 401 && error.config?.url?.startsWith('/admin')) {
+    if (error.response?.status === 401 && originalRequest?.url?.startsWith('/admin')) {
       localStorage.removeItem('admin_token')
       localStorage.removeItem('admin_info')
-      // 如果在 admin 页面内，跳转登录
       if (window.location.hash.startsWith('#/admin')) {
         window.location.hash = '#/admin/login'
       }
     }
 
+    // 429 → 等待验证码通过后重新发起请求
     if (error.response?.status === 429 && error.response.data?.captchaRequired) {
-      pendingCaptchaRetry = { config: error.config }
-      window.dispatchEvent(new CustomEvent('captcha-required'))
-      return Promise.reject(new CaptchaRequiredError())
+      // 验证码接口自身的 429 不触发弹窗（防止自循环）
+      const url = originalRequest?.url || ''
+      if (url.includes('/captcha')) {
+        return Promise.reject(error)
+      }
+
+      // 动态导入避免循环依赖（api → store → api）
+      try {
+        const { useCaptchaStore } = await import('@/stores/captcha')
+        const captchaStore = useCaptchaStore()
+
+        // 等待验证码通过（返回一个 Promise）
+        // 如果在冷却期内或刚通过验证码的重试又 429，放弃重试
+        try {
+          await captchaStore.waitForCaptcha()
+        } catch {
+          // 冷却期 / 刚通过验证码的重试又被限流 → 不再弹窗，返回原始错误
+          return Promise.reject(error)
+        }
+
+        // 验证码通过，重新发起原始请求（全新请求）
+        // 此时后端已 resetAllKeys，新请求从 0 开始计数
+        return http.request({
+          method: originalRequest.method,
+          url: originalRequest.url,
+          data: originalRequest.data,
+          params: originalRequest.params,
+          headers: originalRequest.headers,
+        })
+      } catch {
+        // store 未初始化等异常，静默处理
+        return Promise.reject(error)
+      }
     }
+
     return Promise.reject(error)
   }
 )
-
-window.__captchaVerified = function () {
-  if (pendingCaptchaRetry) {
-    const { config } = pendingCaptchaRetry
-    pendingCaptchaRetry = null
-    http.request(config).then(res => {
-      window.dispatchEvent(new CustomEvent('captcha-retry-success', { detail: res }))
-    }).catch(err => {
-      window.dispatchEvent(new CustomEvent('captcha-retry-error', { detail: err }))
-    })
-  }
-}
 
 // ===== 前台用户 API =====
 export const userApi = {
@@ -190,5 +200,4 @@ export const adminApi = {
   batchDeleteActivationCodes: (ids) => http.post('/admin/activation-codes/batch-delete', { ids }),
 }
 
-export { CaptchaRequiredError }
 export default http
