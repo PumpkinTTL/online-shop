@@ -143,6 +143,52 @@
                   <n-icon :size="14" color="#64748B"><information-circle-outline></information-circle-outline></n-icon>
                   扫码支付，自动发放{{ isSmsProduct ? '登录号码' : '兑换码' }}
                 </p>
+                <!-- 优惠码输入 -->
+                <div class="coupon-row">
+                  <n-input
+                    v-model:value="couponCode"
+                    placeholder="优惠码（选填）"
+                    size="large"
+                    :input-props="{ autocomplete: 'off' }"
+                    :disabled="couponValidating"
+                    @keyup.enter="validateCoupon"
+                  >
+                    <template #prefix>
+                      <n-icon :size="16" color="#94A3B8"><pricetag-outline></pricetag-outline></n-icon>
+                    </template>
+                  </n-input>
+                  <n-button
+                    v-if="!hasValidCoupon"
+                    size="large"
+                    :loading="couponValidating"
+                    @click="validateCoupon"
+                  >
+                    验证
+                  </n-button>
+                  <n-button
+                    v-else
+                    size="large"
+                    type="success"
+                    ghost
+                    @click="clearCoupon"
+                  >
+                    取消
+                  </n-button>
+                </div>
+                <!-- 优惠码验证结果 -->
+                <div v-if="couponError" class="coupon-error">
+                  <n-icon :size="14" color="#EF4444"><alert-circle-outline></alert-circle-outline></n-icon>
+                  {{ couponError }}
+                </div>
+                <div v-if="hasValidCoupon" class="coupon-success">
+                  <n-icon :size="14" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
+                  优惠码可用！{{ couponResult.description }}
+                </div>
+                <!-- 价格展示 -->
+                <div class="price-display">
+                  <span v-if="hasValidCoupon" class="price-original">¥{{ product.price }}</span>
+                  <span class="price-final" :class="{ 'price-discounted': hasValidCoupon }">¥{{ finalPrice }}</span>
+                </div>
                 <n-button
                   type="primary"
                   size="large"
@@ -153,7 +199,7 @@
                   <template #icon>
                     <n-icon><logo-alipay></logo-alipay></n-icon>
                   </template>
-                  立即购买 ¥{{ product.price }}
+                  立即购买 ¥{{ finalPrice }}
                 </n-button>
               </div>
 
@@ -454,7 +500,7 @@ import {
   ChatbubbleEllipsesOutline, LogInOutline, DiamondOutline, RocketOutline,
   ScanOutline
 } from '@vicons/ionicons5'
-import { productApi, pickupApi, paymentApi } from '@/api'
+import { productApi, pickupApi, paymentApi, couponApi } from '@/api'
 import { useUserStore } from '@/stores/user'
 import QRCode from 'qrcode'
 
@@ -517,6 +563,12 @@ const smsOrderNo = ref('')
 const smsPayUrl = ref('')
 const smsPayBtnLoading = ref(false)
 
+// 优惠码相关状态
+const couponCode = ref('')
+const couponValidating = ref(false)
+const couponResult = ref(null) // { valid, originalPrice, finalAmount, discount, deduction, description }
+const couponError = ref('')
+
 // 倒计时文本
 const countdownText = computed(() => {
   const m = Math.floor(countdown.value / 60)
@@ -529,6 +581,45 @@ const coverSrc = computed(() => {
   if (product.value?.image) return `/images/${product.value.image}`
   return product.value?.coverImage || ''
 })
+
+// 最终价格（考虑优惠码）
+const finalPrice = computed(() => {
+  if (couponResult.value?.valid) return couponResult.value.finalAmount
+  return product.value?.price || 0
+})
+
+// 是否有有效优惠码
+const hasValidCoupon = computed(() => couponResult.value?.valid === true)
+
+// 验证优惠码
+const validateCoupon = async () => {
+  if (!couponCode.value.trim()) {
+    couponResult.value = null
+    couponError.value = ''
+    return
+  }
+  couponValidating.value = true
+  couponError.value = ''
+  try {
+    const res = await couponApi.validate(couponCode.value.trim(), product.value.id)
+    couponResult.value = res
+    if (!res.valid) {
+      couponError.value = res.error || '优惠码无效'
+    }
+  } catch (err) {
+    couponError.value = err.response?.data?.error || '验证失败'
+    couponResult.value = null
+  } finally {
+    couponValidating.value = false
+  }
+}
+
+// 清除优惠码
+const clearCoupon = () => {
+  couponCode.value = ''
+  couponResult.value = null
+  couponError.value = ''
+}
 
 // 定时器
 let pollTimer = null
@@ -606,7 +697,7 @@ const startAlipayPay = async () => {
   payLoading.value = true
 
   try {
-    const res = await paymentApi.create(product.value.id, contact.value.trim())
+    const res = await paymentApi.create(product.value.id, contact.value.trim(), hasValidCoupon.value ? couponCode.value.trim() : null)
     // API 成功后才开弹窗，避免 429 时弹窗卡 loading
     orderNo.value = res.orderNo
     payAmount.value = res.amount
@@ -1169,6 +1260,56 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+/* ===== 优惠码 ===== */
+.coupon-row {
+  display: flex;
+  gap: 8px;
+}
+
+.coupon-row .n-input {
+  flex: 1;
+}
+
+.coupon-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #EF4444;
+}
+
+.coupon-success {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #22C55E;
+  font-weight: 500;
+}
+
+.price-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.price-original {
+  font-size: 16px;
+  color: #94A3B8;
+  text-decoration: line-through;
+}
+
+.price-final {
+  font-family: 'Poppins', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #F59E0B;
+}
+
+.price-final.price-discounted {
+  color: #EF4444;
 }
 
 .method-hint {

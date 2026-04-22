@@ -212,4 +212,24 @@ const AdminAPI = {
   cleanupLogs(data) {
     return this.getHttp().post('/logs/cleanup', data);
   },
+
+  // 优惠码管理
+  getCoupons(params) {
+    return this.getHttp().get('/coupons', { params });
+  },
+  createCoupon(data) {
+    return this.getHttp().post('/coupons', data);
+  },
+  generateCoupons(data) {
+    return this.getHttp().post('/coupons/generate', data);
+  },
+  updateCoupon(id, data) {
+    return this.getHttp().put(`/coupons/${id}`, data);
+  },
+  deleteCoupon(id) {
+    return this.getHttp().delete(`/coupons/${id}`);
+  },
+  batchDeleteCoupons(ids) {
+    return this.getHttp().post('/coupons/batch-delete', { ids });
+  },
 };

@@ -112,6 +112,12 @@
               </el-icon>
               <template #title>接码记录</template>
             </el-menu-item>
+            <el-menu-item index="coupons">
+              <el-icon>
+                <ticket></ticket>
+              </el-icon>
+              <template #title>优惠码管理</template>
+            </el-menu-item>
             <el-menu-item index="ratelimits">
               <el-icon>
                 <monitor></monitor>
@@ -220,6 +226,12 @@
                   <iphone></iphone>
                 </el-icon>
                 <template #title>接码记录</template>
+              </el-menu-item>
+              <el-menu-item index="coupons">
+                <el-icon>
+                  <ticket></ticket>
+                </el-icon>
+                <template #title>优惠码管理</template>
               </el-menu-item>
               <el-menu-item index="ratelimits">
                 <el-icon>
@@ -952,6 +964,161 @@
                 v-model:current-page="smsRecordFilter.page" v-model:page-size="smsRecordFilter.pageSize"
                 @current-change="loadSmsRecords" @size-change="handleSmsRecordPageSizeChange" />
             </div>
+          </div>
+
+          <!-- 优惠码管理 -->
+          <div v-if="currentPage === 'coupons'">
+            <div class="page-toolbar">
+              <el-button type="primary" @click="openCouponModal">
+                <el-icon><plus></plus></el-icon> 创建优惠码
+              </el-button>
+              <el-button @click="openGenerateCouponModal">
+                <el-icon><plus></plus></el-icon> 批量生成
+              </el-button>
+              <el-button type="danger" v-if="selectedCouponIds.length > 0" @click="handleBatchDeleteCoupons">
+                <el-icon><delete></delete></el-icon> {{ '批量删除 (' + selectedCouponIds.length + ')' }}
+              </el-button>
+              <div style="flex:1"></div>
+              <el-select v-model="couponFilter.status" placeholder="全部状态" clearable style="width:120px"
+                @change="loadCoupons">
+                <el-option label="可用" value="active"></el-option>
+                <el-option label="已禁用" value="disabled"></el-option>
+                <el-option label="已过期" value="expired"></el-option>
+              </el-select>
+              <el-button @click="loadCoupons"><el-icon>
+                  <refresh></refresh>
+                </el-icon></el-button>
+            </div>
+
+            <el-table :data="coupons" v-loading="couponLoading" stripe style="width:100%"
+              @selection-change="handleCouponSelectionChange" row-key="id">
+              <el-table-column type="selection" width="45" :reserve-selection="true"></el-table-column>
+              <el-table-column prop="id" label="ID" width="60" sortable></el-table-column>
+              <el-table-column label="优惠码" width="180">
+                <template #default="{ row }"><code style="color:#3B82F6;font-weight:500">{{ row.code }}</code></template>
+              </el-table-column>
+              <el-table-column label="折扣类型" width="120">
+                <template #default="{ row }">
+                  <el-tag size="small" :type="row.deduction ? 'warning' : 'success'">{{ couponDiscountLabel(row) }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="适用商品" width="140">
+                <template #default="{ row }">
+                  <span v-if="!row.productId" style="color:#F59E0B;font-weight:500">全场通用</span>
+                  <span v-else style="color:#64748B">{{ allProducts.find(p => p.id === row.productId)?.name || '商品#' + row.productId }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="使用情况" width="120">
+                <template #default="{ row }">
+                  <span>{{ row.usedCount || 0 }}<span v-if="row.maxUses" style="color:#94A3B8"> / {{ row.maxUses }}</span></span>
+                </template>
+              </el-table-column>
+              <el-table-column label="有效期" width="200">
+                <template #default="{ row }">
+                  <span v-if="!row.validFrom && !row.validTo" style="color:#94A3B8">永久有效</span>
+                  <span v-else style="font-size:12px;color:#64748B">
+                    {{ row.validFrom ? formatDate(row.validFrom) : '...' }} ~ {{ row.validTo ? formatDate(row.validTo) : '...' }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column label="状态" width="90">
+                <template #default="{ row }">
+                  <el-tag size="small" :type="couponStatusType(row.status)">{{ couponStatusLabel(row.status) }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="创建时间" width="160" sortable>
+                <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
+              </el-table-column>
+              <el-table-column label="操作" width="160" fixed="right">
+                <template #default="{ row }">
+                  <el-button size="small" type="primary" link v-if="row.status === 'active'"
+                    @click="handleToggleCouponStatus(row, 'disabled')">禁用</el-button>
+                  <el-button size="small" type="success" link v-if="row.status === 'disabled'"
+                    @click="handleToggleCouponStatus(row, 'active')">启用</el-button>
+                  <el-button size="small" type="danger" link @click="handleDeleteCoupon(row.id)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div class="pagination-wrap">
+              <el-pagination layout="total, sizes, prev, pager, next" :total="couponTotal"
+                :page-sizes="[10, 20, 30, 50]" :page-size="couponFilter.pageSize"
+                v-model:current-page="couponFilter.page" v-model:page-size="couponFilter.pageSize"
+                @current-change="loadCoupons" @size-change="handleCouponPageSizeChange" />
+            </div>
+
+            <!-- 创建优惠码弹窗 -->
+            <el-dialog v-model="couponModalVisible" title="创建优惠码" width="480px" :close-on-click-modal="false">
+              <el-form :model="couponForm" label-width="90px">
+                <el-form-item label="优惠码">
+                  <el-input v-model="couponForm.code" placeholder="留空则自动生成"></el-input>
+                </el-form-item>
+                <el-form-item label="适用商品">
+                  <el-select v-model="couponForm.productId" placeholder="全场通用" clearable style="width:100%">
+                    <el-option v-for="p in allProducts" :key="p.id" :label="p.name" :value="p.id"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="百分比折扣">
+                  <el-input-number v-model="couponForm.discount" :min="1" :max="99" :precision="1" placeholder="如10=打9折" style="width:100%"></el-input-number>
+                  <div style="font-size:12px;color:#94A3B8;margin-top:4px">填10表示打9折(减10%)，与抵扣二选一</div>
+                </el-form-item>
+                <el-form-item label="固定抵扣">
+                  <el-input-number v-model="couponForm.deduction" :min="0.01" :precision="2" placeholder="如5.00=减5元" style="width:100%"></el-input-number>
+                  <div style="font-size:12px;color:#94A3B8;margin-top:4px">直接减金额，与折扣二选一</div>
+                </el-form-item>
+                <el-form-item label="最大次数">
+                  <el-input-number v-model="couponForm.maxUses" :min="1" placeholder="留空=无限" style="width:100%"></el-input-number>
+                </el-form-item>
+                <el-form-item label="生效时间">
+                  <el-date-picker v-model="couponForm.validFrom" type="datetime" placeholder="留空=立即生效" style="width:100%"></el-date-picker>
+                </el-form-item>
+                <el-form-item label="过期时间">
+                  <el-date-picker v-model="couponForm.validTo" type="datetime" placeholder="留空=永不过期" style="width:100%"></el-date-picker>
+                </el-form-item>
+              </el-form>
+              <template #footer>
+                <el-button @click="couponModalVisible = false">取消</el-button>
+                <el-button type="primary" :loading="saving" @click="handleSaveCoupon">创建</el-button>
+              </template>
+            </el-dialog>
+
+            <!-- 批量生成优惠码弹窗 -->
+            <el-dialog v-model="generateCouponModalVisible" title="批量生成优惠码" width="480px" :close-on-click-modal="false">
+              <el-form :model="generateCouponForm" label-width="90px">
+                <el-form-item label="前缀">
+                  <el-input v-model="generateCouponForm.prefix" placeholder="CPN"></el-input>
+                </el-form-item>
+                <el-form-item label="生成数量">
+                  <el-input-number v-model="generateCouponForm.count" :min="1" :max="100" style="width:100%"></el-input-number>
+                </el-form-item>
+                <el-form-item label="适用商品">
+                  <el-select v-model="generateCouponForm.productId" placeholder="全场通用" clearable style="width:100%">
+                    <el-option v-for="p in allProducts" :key="p.id" :label="p.name" :value="p.id"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="百分比折扣">
+                  <el-input-number v-model="generateCouponForm.discount" :min="1" :max="99" :precision="1" placeholder="如10=打9折" style="width:100%"></el-input-number>
+                  <div style="font-size:12px;color:#94A3B8;margin-top:4px">与抵扣二选一</div>
+                </el-form-item>
+                <el-form-item label="固定抵扣">
+                  <el-input-number v-model="generateCouponForm.deduction" :min="0.01" :precision="2" placeholder="如5.00=减5元" style="width:100%"></el-input-number>
+                  <div style="font-size:12px;color:#94A3B8;margin-top:4px">与折扣二选一</div>
+                </el-form-item>
+                <el-form-item label="最大次数">
+                  <el-input-number v-model="generateCouponForm.maxUses" :min="1" placeholder="留空=无限" style="width:100%"></el-input-number>
+                </el-form-item>
+                <el-form-item label="生效时间">
+                  <el-date-picker v-model="generateCouponForm.validFrom" type="datetime" placeholder="留空=立即生效" style="width:100%"></el-date-picker>
+                </el-form-item>
+                <el-form-item label="过期时间">
+                  <el-date-picker v-model="generateCouponForm.validTo" type="datetime" placeholder="留空=永不过期" style="width:100%"></el-date-picker>
+                </el-form-item>
+              </el-form>
+              <template #footer>
+                <el-button @click="generateCouponModalVisible = false">取消</el-button>
+                <el-button type="primary" :loading="saving" @click="handleGenerateCoupons">生成</el-button>
+              </template>
+            </el-dialog>
           </div>
 
           <!-- 限速配置 -->

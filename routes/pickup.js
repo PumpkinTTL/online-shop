@@ -1,5 +1,6 @@
 const express = require('express');
 const pickupService = require('../services/pickupService');
+const paymentService = require('../services/paymentService');
 const dataSource = require('../config/database');
 const Product = require('../entities/Product');
 const { optionalAuth } = require('../middleware/auth');
@@ -248,6 +249,48 @@ router.get('/orders', async (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== 优惠码验证（前台） ====================
+
+// 验证优惠码（不使用，仅返回折扣信息）
+router.post('/validate-coupon', pickup, async (req, res) => {
+  try {
+    const { code, productId } = req.body;
+    if (!code || !code.trim()) {
+      return res.status(400).json({ error: '请输入优惠码' });
+    }
+    if (!productId) {
+      return res.status(400).json({ error: '缺少商品ID' });
+    }
+
+    // 查询商品价格
+    const productRepo = dataSource.getRepository(Product);
+    const product = await productRepo.findOne({ where: { id: productId } });
+    if (!product) {
+      return res.status(400).json({ error: '商品不存在' });
+    }
+
+    const result = await paymentService.validateCoupon(code.trim(), productId, product.price);
+    if (result.valid) {
+      res.json({
+        valid: true,
+        originalPrice: parseFloat(product.price),
+        finalAmount: result.finalAmount,
+        discount: result.coupon.discount ? parseFloat(result.coupon.discount) : null,
+        deduction: result.coupon.deduction ? parseFloat(result.coupon.deduction) : null,
+        description: result.coupon.deduction
+          ? `抵扣 ¥${result.coupon.deduction}`
+          : result.coupon.discount
+            ? `${result.coupon.discount}% OFF`
+            : '',
+      });
+    } else {
+      res.json({ valid: false, error: result.error });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

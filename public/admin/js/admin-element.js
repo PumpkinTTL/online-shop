@@ -74,6 +74,7 @@ const app = createApp({
         users: '用户管理',
         admins: '管理员管理',
         smsrecords: '接码记录',
+        coupons: '优惠码管理',
         ratelimits: '限速配置',
         logs: '日志查看',
       };
@@ -140,6 +141,7 @@ const app = createApp({
       else if (page === 'categories') loadCategories();
       else if (page === 'products') { loadCategories(); loadProducts(); }
       else if (page === 'cardkeys') { loadAllProducts(); loadCardKeys(); }
+      else if (page === 'coupons') { loadAllProducts(); loadCoupons(); }
       else if (page === 'orders') loadOrders();
       else if (page === 'users') loadUsers();
       else if (page === 'admins') loadAdmins();
@@ -990,6 +992,187 @@ const app = createApp({
       await queryLogs(false);
     };
 
+    // ===== 优惠码管理 =====
+    var coupons = ref([]);
+    var couponTotal = ref(0);
+    var couponLoading = ref(false);
+    var couponFilter = ref({ status: '', page: 1, pageSize: 20 });
+    var selectedCouponIds = ref([]);
+    var couponModalVisible = ref(false);
+    var couponForm = ref({
+      code: '',
+      productId: null,
+      discount: null,
+      deduction: null,
+      maxUses: null,
+      validFrom: '',
+      validTo: '',
+    });
+    var generateCouponModalVisible = ref(false);
+    var generateCouponForm = ref({
+      prefix: 'CPN',
+      count: 10,
+      productId: null,
+      discount: null,
+      deduction: null,
+      maxUses: null,
+      validFrom: '',
+      validTo: '',
+    });
+
+    var loadCoupons = async function() {
+      couponLoading.value = true;
+      selectedCouponIds.value = [];
+      try {
+        var result = await AdminAPI.getCoupons(couponFilter.value);
+        coupons.value = result.items;
+        couponTotal.value = result.total;
+      } catch (e) {
+        ElMsg.error('加载优惠码失败');
+      } finally {
+        couponLoading.value = false;
+      }
+    };
+
+    var openCouponModal = function() {
+      couponForm.value = {
+        code: '',
+        productId: null,
+        discount: null,
+        deduction: null,
+        maxUses: null,
+        validFrom: '',
+        validTo: '',
+      };
+      couponModalVisible.value = true;
+    };
+
+    var openGenerateCouponModal = function() {
+      generateCouponForm.value = {
+        prefix: 'CPN',
+        count: 10,
+        productId: null,
+        discount: null,
+        deduction: null,
+        maxUses: null,
+        validFrom: '',
+        validTo: '',
+      };
+      generateCouponModalVisible.value = true;
+    };
+
+    var handleSaveCoupon = async function() {
+      var f = couponForm.value;
+      if (!f.discount && !f.deduction) return ElMsg.warning('折扣和抵扣至少填写一项');
+
+      saving.value = true;
+      try {
+        await AdminAPI.createCoupon({
+          code: f.code || undefined,
+          productId: f.productId || undefined,
+          discount: f.discount || undefined,
+          deduction: f.deduction || undefined,
+          maxUses: f.maxUses || undefined,
+          validFrom: f.validFrom || undefined,
+          validTo: f.validTo || undefined,
+        });
+        ElMsg.success('创建成功');
+        couponModalVisible.value = false;
+        loadCoupons();
+        loadStats();
+      } catch (e) {
+        ElMsg.error(e.message);
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    var handleGenerateCoupons = async function() {
+      var f = generateCouponForm.value;
+      if (!f.count || f.count < 1 || f.count > 100) return ElMsg.warning('数量1-100');
+      if (!f.discount && !f.deduction) return ElMsg.warning('折扣和抵扣至少填写一项');
+
+      saving.value = true;
+      try {
+        var result = await AdminAPI.generateCoupons({
+          prefix: f.prefix || 'CPN',
+          count: f.count,
+          productId: f.productId || undefined,
+          discount: f.discount || undefined,
+          deduction: f.deduction || undefined,
+          maxUses: f.maxUses || undefined,
+          validFrom: f.validFrom || undefined,
+          validTo: f.validTo || undefined,
+        });
+        ElMsg.success('成功生成 ' + result.length + ' 个优惠码');
+        generateCouponModalVisible.value = false;
+        loadCoupons();
+        loadStats();
+      } catch (e) {
+        ElMsg.error(e.message);
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    var handleDeleteCoupon = async function(id) {
+      if (!await confirmAction('确定要删除该优惠码吗？')) return;
+      try {
+        await AdminAPI.deleteCoupon(id);
+        ElMsg.success('删除成功');
+        loadCoupons();
+      } catch (e) {
+        ElMsg.error(e.message);
+      }
+    };
+
+    var handleCouponSelectionChange = function(selection) {
+      selectedCouponIds.value = selection.map(function(item) { return item.id; });
+    };
+
+    var handleBatchDeleteCoupons = async function() {
+      if (selectedCouponIds.value.length === 0) return;
+      var msg = '确定要删除选中的 ' + selectedCouponIds.value.length + ' 个优惠码吗？此操作不可恢复！';
+      if (!await confirmAction(msg)) return;
+      try {
+        var res = await AdminAPI.batchDeleteCoupons(selectedCouponIds.value);
+        ElMsg.success(res.message || '删除成功');
+        selectedCouponIds.value = [];
+        loadCoupons();
+      } catch (e) {
+        ElMsg.error(e.message || '批量删除失败');
+      }
+    };
+
+    var handleCouponPageSizeChange = function() {
+      couponFilter.value.page = 1;
+      loadCoupons();
+    };
+
+    var couponStatusType = function(s) {
+      var map = { active: 'success', disabled: 'info', expired: 'danger' };
+      return map[s] || 'info';
+    };
+    var couponStatusLabel = function(s) {
+      var map = { active: '可用', disabled: '已禁用', expired: '已过期' };
+      return map[s] || s;
+    };
+    var couponDiscountLabel = function(row) {
+      if (row.deduction) return '抵扣 ¥' + row.deduction;
+      if (row.discount) return row.discount + '% OFF';
+      return '-';
+    };
+
+    var handleToggleCouponStatus = async function(row, newStatus) {
+      try {
+        await AdminAPI.updateCoupon(row.id, { status: newStatus });
+        ElMsg.success(newStatus === 'active' ? '已启用' : '已禁用');
+        loadCoupons();
+      } catch (e) {
+        ElMsg.error(e.message);
+      }
+    };
+
     // ===== 修改密码 =====
     var showPasswordModal = ref(false);
     var passwordForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -1028,6 +1211,7 @@ const app = createApp({
       else if (page === 'categories') await loadCategories();
       else if (page === 'products') { await loadCategories(); await loadProducts(); await loadAllProducts(); }
       else if (page === 'cardkeys') { await loadAllProducts(); await loadCardKeys(); await loadCardPrefixes(); }
+      else if (page === 'coupons') { await loadAllProducts(); await loadCoupons(); }
       else if (page === 'orders') await loadOrders();
       else if (page === 'users') await loadUsers();
       else if (page === 'admins') await loadAdmins();
@@ -1185,6 +1369,7 @@ const app = createApp({
       else if (page === 'categories') await loadCategories();
       else if (page === 'products') { await loadCategories(); await loadProducts(); await loadAllProducts(); }
       else if (page === 'cardkeys') { await loadAllProducts(); await loadCardKeys(); await loadCardPrefixes(); }
+      else if (page === 'coupons') { await loadAllProducts(); await loadCoupons(); }
       else if (page === 'orders') await loadOrders();
       else if (page === 'users') await loadUsers();
       else if (page === 'admins') await loadAdmins();
@@ -1378,6 +1563,29 @@ const app = createApp({
       toggleRateLimit: toggleRateLimit,
       resetRateLimits: resetRateLimits,
       formatWindowMs: formatWindowMs,
+      // 优惠码管理
+      coupons: coupons,
+      couponTotal: couponTotal,
+      couponLoading: couponLoading,
+      couponFilter: couponFilter,
+      selectedCouponIds: selectedCouponIds,
+      couponModalVisible: couponModalVisible,
+      couponForm: couponForm,
+      generateCouponModalVisible: generateCouponModalVisible,
+      generateCouponForm: generateCouponForm,
+      loadCoupons: loadCoupons,
+      openCouponModal: openCouponModal,
+      openGenerateCouponModal: openGenerateCouponModal,
+      handleSaveCoupon: handleSaveCoupon,
+      handleGenerateCoupons: handleGenerateCoupons,
+      handleDeleteCoupon: handleDeleteCoupon,
+      handleCouponSelectionChange: handleCouponSelectionChange,
+      handleBatchDeleteCoupons: handleBatchDeleteCoupons,
+      handleCouponPageSizeChange: handleCouponPageSizeChange,
+      couponStatusType: couponStatusType,
+      couponStatusLabel: couponStatusLabel,
+      couponDiscountLabel: couponDiscountLabel,
+      handleToggleCouponStatus: handleToggleCouponStatus,
       // 图标组件引用（供 :icon / :prefix-icon 属性使用）
       Search: ElementPlusIconsVue.Search,
       Refresh: ElementPlusIconsVue.Refresh,

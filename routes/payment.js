@@ -29,7 +29,7 @@ router.post('/create', paymentLimiter, [
     .withMessage('联系方式长度不能超过200字符'),
 ], handleValidationErrors, optionalAuth, async (req, res) => {
   try {
-    const { productId, contact, amount: frontendAmount } = req.body;
+    const { productId, contact, couponCode, amount: frontendAmount } = req.body;
 
     // 安全检测：前端如果传了金额参数，记录警告但不阻止（向后兼容）
     if (frontendAmount !== undefined) {
@@ -37,7 +37,12 @@ router.post('/create', paymentLimiter, [
       system.warn('前端传递金额参数', { productId, frontendAmount, ip: req.ip });
     }
 
-    const result = await paymentService.createPayment(parseInt(productId), contact, req.userId || null);
+    const result = await paymentService.createPayment(
+      parseInt(productId),
+      contact,
+      req.userId || null,
+      couponCode || null,
+    );
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });

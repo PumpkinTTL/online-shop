@@ -107,10 +107,15 @@ export const pickupApi = {
 
 // ===== 支付 API =====
 export const paymentApi = {
-  create: (productId, contact) => http.post('/payment/create', { productId, contact }),
+  create: (productId, contact, couponCode) => http.post('/payment/create', { productId, contact, couponCode }),
   createSms: (cardKeyId, productId, contact) => http.post('/payment/create-sms', { cardKeyId, productId, contact }),
   queryStatus: (orderNo) => http.get('/payment/status', { params: { orderNo } }),
   updateContact: (orderNo, contact) => http.post('/payment/update-contact', { orderNo, contact }),
+}
+
+// ===== 优惠码 API（前台） =====
+export const couponApi = {
+  validate: (code, productId) => http.post('/pickup/validate-coupon', { code, productId }),
 }
 
 // ===== 激活码 API（前台） =====
@@ -198,6 +203,14 @@ export const adminApi = {
   deleteActivationCode: (id) => http.delete(`/admin/activation-codes/${id}`),
   updateActivationCode: (id, data) => http.put(`/admin/activation-codes/${id}`, data),
   batchDeleteActivationCodes: (ids) => http.post('/admin/activation-codes/batch-delete', { ids }),
+
+  // 优惠码管理
+  getCoupons: (params) => http.get('/admin/coupons', { params }),
+  createCoupon: (data) => http.post('/admin/coupons', data),
+  generateCoupons: (data) => http.post('/admin/coupons/generate', data),
+  updateCoupon: (id, data) => http.put(`/admin/coupons/${id}`, data),
+  deleteCoupon: (id) => http.delete(`/admin/coupons/${id}`),
+  batchDeleteCoupons: (ids) => http.post('/admin/coupons/batch-delete', { ids }),
 }
 
 export default http

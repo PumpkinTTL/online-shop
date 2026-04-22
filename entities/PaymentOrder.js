@@ -19,6 +19,7 @@ module.exports = new EntitySchema({
     notifyData: { type: 'text', nullable: true },                   // 支付宝回调原始数据
     cardKeyId: { type: 'int', nullable: true },                     // 关联卡密ID（支付成功后分配）
     cdKey: { type: 'varchar', length: 200, nullable: true },       // 兑换码（支付成功后分配）
+    couponId: { type: 'int', nullable: true },                       // 使用的优惠码ID
     createdAt: { type: 'datetime', createDate: true },
     updatedAt: { type: 'datetime', updateDate: true },
   },

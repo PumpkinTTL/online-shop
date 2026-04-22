@@ -40,7 +40,7 @@ class PaymentService {
   }
 
   // 创建支付订单（调用支付宝预下单 alipay.trade.precreate）
-  async createPayment(productId, contact, userId = null) {
+  async createPayment(productId, contact, userId = null, couponCode = null) {
     const productRepo = this.getProductRepo();
     const paymentRepo = this.getPaymentOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
@@ -53,8 +53,35 @@ class PaymentService {
     if (!product) throw new Error('商品不存在');
 
     // 检查库存（可用卡密数量）
-    const stock = await cardKeyRepo.count({ where: { productId, status: 'unused' } });
+    const stock = await cardKeyRepo.count({ where: { productId, status: 'unused', type: 'cardkey' } });
     if (stock <= 0) throw new Error('商品已售罄，暂无库存');
+
+    // 计算优惠价格
+    let finalAmount = parseFloat(product.price);
+    let couponId = null;
+    let couponInfo = null;
+
+    if (couponCode) {
+      const couponResult = await this.validateCoupon(couponCode, productId, product.price);
+      if (couponResult.valid) {
+        finalAmount = couponResult.finalAmount;
+        couponId = couponResult.coupon.id;
+        couponInfo = {
+          code: couponResult.coupon.code,
+          originalPrice: parseFloat(product.price),
+          discount: couponResult.coupon.discount ? parseFloat(couponResult.coupon.discount) : null,
+          deduction: couponResult.coupon.deduction ? parseFloat(couponResult.coupon.deduction) : null,
+          finalAmount,
+        };
+      } else {
+        throw new Error(couponResult.error);
+      }
+    }
+
+    // 最低金额校验（支付宝要求 >= 0.01）
+    if (finalAmount < 0.01) {
+      finalAmount = 0.01;
+    }
 
     // 创建支付订单
     const orderNo = this.generateOrderNo();
@@ -66,10 +93,11 @@ class PaymentService {
       userId,
       productId,
       productName: displayName,
-      amount: product.price,
+      amount: finalAmount,
       contact: contact || '',
       status: 'pending',
       expiredAt,
+      couponId,
     });
     await paymentRepo.save(paymentOrder);
 
@@ -78,7 +106,7 @@ class PaymentService {
       const alipaySdk = getAlipaySdk();
       const bizContent = {
         out_trade_no: orderNo,
-        total_amount: String(product.price),
+        total_amount: String(finalAmount),
         subject: displayName,
         timeout_express: '30m',
       };
@@ -102,7 +130,9 @@ class PaymentService {
           orderNo,
           qrCode: result.qrCode,
           payUrl, // 新增：移动端支付链接
-          amount: product.price,
+          amount: finalAmount,
+          originalAmount: couponInfo ? couponInfo.originalPrice : null,
+          couponInfo,
           productName: displayName,
           expiredAt,
         };
@@ -128,6 +158,92 @@ class PaymentService {
         });
       }
       throw new Error('创建支付订单失败: ' + errMsg);
+    }
+  }
+
+  // 验证优惠码（不使用，仅验证+计算价格）
+  validateCoupon(code, productId, productPrice) {
+    const cardKeyRepo = this.getCardKeyRepo();
+
+    return (async () => {
+      const coupon = await cardKeyRepo.findOne({
+        where: { code, type: 'coupon' },
+      });
+
+      if (!coupon) return { valid: false, error: '优惠码不存在' };
+
+      // 状态检查
+      if (coupon.status === 'disabled') return { valid: false, error: '优惠码已禁用' };
+      if (coupon.status === 'expired') return { valid: false, error: '优惠码已过期' };
+
+      // 时间检查
+      const now = new Date();
+      if (coupon.validFrom && new Date(coupon.validFrom) > now) {
+        return { valid: false, error: '优惠码尚未生效' };
+      }
+      if (coupon.validTo && new Date(coupon.validTo) < now) {
+        // 自动标记过期
+        await cardKeyRepo.update(coupon.id, { status: 'expired' });
+        return { valid: false, error: '优惠码已过期' };
+      }
+
+      // 使用次数检查
+      if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+        return { valid: false, error: '优惠码已用完' };
+      }
+
+      // 商品匹配检查（productId 为 null 表示全场通用）
+      if (coupon.productId && coupon.productId !== productId) {
+        return { valid: false, error: '该优惠码不适用于此商品' };
+      }
+
+      // 计算折扣
+      const originalPrice = parseFloat(productPrice);
+      let finalAmount = originalPrice;
+
+      if (coupon.deduction) {
+        // 固定抵扣
+        finalAmount = originalPrice - parseFloat(coupon.deduction);
+      } else if (coupon.discount) {
+        // 百分比折扣（如 discount=10 表示打9折，即价格 * (1 - 10/100)）
+        finalAmount = originalPrice * (1 - parseFloat(coupon.discount) / 100);
+      }
+
+      // 最低 0.01
+      if (finalAmount < 0.01) finalAmount = 0.01;
+
+      // 保留两位小数
+      finalAmount = Math.round(finalAmount * 100) / 100;
+
+      return { valid: true, coupon, finalAmount };
+    })();
+  }
+
+  // 使用优惠码（支付成功后调用，递增 usedCount）
+  async useCoupon(couponId) {
+    if (!couponId) return;
+    try {
+      const cardKeyRepo = this.getCardKeyRepo();
+      const coupon = await cardKeyRepo.findOne({ where: { id: couponId, type: 'coupon' } });
+      if (!coupon) return;
+
+      const newUsedCount = coupon.usedCount + 1;
+      const updateData = { usedCount: newUsedCount };
+
+      // 如果达到最大使用次数，标记为 expired
+      if (coupon.maxUses && newUsedCount >= coupon.maxUses) {
+        updateData.status = 'expired';
+      }
+
+      await cardKeyRepo.update(couponId, updateData);
+      business.success('coupon.use', {
+        couponId,
+        code: coupon.code,
+        usedCount: newUsedCount,
+        maxUses: coupon.maxUses,
+      });
+    } catch (e) {
+      console.warn('[Payment] 使用优惠码计数失败:', e.message);
     }
   }
 
@@ -321,6 +437,11 @@ class PaymentService {
 
     await paymentRepo.update(order.id, updateData);
     console.log(`[Payment] 订单 ${order.orderNo} 支付成功（${isSmsPayment ? '接码服务' : '普通商品'}）`);
+
+    // 使用优惠码（如果有）
+    if (order.couponId) {
+      this.useCoupon(order.couponId);
+    }
     business.success('payment.alipay', {
       orderNo: order.orderNo,
       tradeNo,

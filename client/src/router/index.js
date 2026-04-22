@@ -117,6 +117,12 @@ const routes = [
         meta: { title: '速率限制' },
       },
       {
+        path: 'coupons',
+        name: 'AdminCoupons',
+        component: () => import('@/views/admin/CouponsView.vue'),
+        meta: { title: '优惠码管理' },
+      },
+      {
         path: 'activation-codes',
         name: 'AdminActivationCodes',
         component: () => import('@/views/admin/ActivationCodesView.vue'),

@@ -107,7 +107,7 @@ import {
   FlashOutline, GridOutline, KeyOutline,
   ReceiptOutline, PeopleOutline, ShieldOutline,
   PhonePortraitOutline, DocumentTextOutline, SpeedometerOutline,
-  TicketOutline,
+  TicketOutline, PricetagOutline,
   AppsOutline, MenuOutline, PersonOutline,
   SunnyOutline, MoonOutline, RefreshOutline,
   BusinessOutline, LockClosedOutline, SettingsOutline
@@ -149,6 +149,7 @@ const menuMap = {
   products: { label: '商品管理', icon: GridOutline },
   categories: { label: '类别管理', icon: AppsOutline },
   cardKeys: { label: '卡密管理', icon: KeyOutline },
+  coupons: { label: '优惠码管理', icon: PricetagOutline },
   orders: { label: '订单管理', icon: ReceiptOutline },
   users: { label: '用户管理', icon: PeopleOutline },
   admins: { label: '管理员管理', icon: ShieldOutline },
@@ -186,6 +187,7 @@ const menuOptions = computed(() => {
       makeItem('products'),
       makeItem('categories'),
       makeItem('cardKeys'),
+      makeItem('coupons'),
       makeItem('orders'),
       makeItem('smsRecords'),
     ]},
@@ -208,6 +210,7 @@ const activeKey = computed(() => {
   if (path.includes('/admin/products')) return 'products'
   if (path.includes('/admin/categories')) return 'categories'
   if (path.includes('/admin/card-keys')) return 'cardKeys'
+  if (path.includes('/admin/coupons')) return 'coupons'
   if (path.includes('/admin/orders')) return 'orders'
   if (path.includes('/admin/users')) return 'users'
   if (path.includes('/admin/admins')) return 'admins'
@@ -226,6 +229,7 @@ function handleMenuClick(key) {
     products: '/admin/products',
     categories: '/admin/categories',
     cardKeys: '/admin/card-keys',
+    coupons: '/admin/coupons',
     orders: '/admin/orders',
     users: '/admin/users',
     admins: '/admin/admins',
