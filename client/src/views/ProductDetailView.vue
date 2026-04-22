@@ -357,101 +357,122 @@
     </template>
 
     <!-- 支付宝二维码弹窗 -->
-    <n-modal v-model:show="showQrModal" :mask-closable="true" preset="card" title="支付宝扫码支付" class="pay-modal" :style="{ maxWidth: '400px', width: '90vw' }" @after-leave="onQrModalClosed">
-      <!-- 错误 -->
-      <div v-if="qrError" class="modal-state modal-error">
-        <n-icon :size="56" color="#EF4444"><close-circle-outline></close-circle-outline></n-icon>
-        <p>{{ qrError }}</p>
-        <n-button type="primary" @click="closeQrModal">关闭</n-button>
-      </div>
-
-      <!-- 二维码 -->
-      <div v-else-if="payStatus !== 'paid'" class="qr-content">
-        <div class="pay-info">
-          <span class="pay-name">{{ product.name }}</span>
-          <span class="pay-amount">¥{{ payAmount }}</span>
+    <n-modal v-model:show="showQrModal" :mask-closable="false" class="pay-modal" :style="{ maxWidth: '420px', width: '90vw' }" @after-leave="onQrModalClosed">
+      <div class="cashier">
+        <!-- 顶栏 -->
+        <div class="cashier-bar">
+          <div class="cashier-bar-left">
+            <n-icon :size="20" color="#1677FF"><logo-alipay></logo-alipay></n-icon>
+            <span>扫码支付</span>
+          </div>
+          <button class="cashier-close" @click="closeQrModal">
+            <n-icon :size="18" color="#999"><close-circle-outline></close-circle-outline></n-icon>
+          </button>
         </div>
 
-        <!-- 移动端：打开支付宝 -->
-        <n-button
-          v-if="isMobile && payUrl"
-          type="primary"
-          size="large"
-          block
-          style="margin-bottom: 16px;"
-          @click="openAlipay"
-        >
-          <template #icon><n-icon><logo-alipay></logo-alipay></n-icon></template>
-          打开支付宝支付
-        </n-button>
-
-        <div class="qr-wrap">
-          <img v-if="qrImageUrl" :src="qrImageUrl" alt="支付宝二维码" />
+        <!-- 错误 -->
+        <div v-if="qrError" class="cashier-body">
+          <div class="cashier-err">
+            <n-icon :size="40" color="#FF4D4F"><close-circle-outline></close-circle-outline></n-icon>
+            <p>{{ qrError }}</p>
+          </div>
         </div>
-        <p class="qr-tip">二维码30分钟内有效，请尽快支付</p>
-        <div class="countdown" :class="{ expired: countdown <= 0 }">
-          <template v-if="countdown > 0">
-            <n-icon :size="14"><time-outline></time-outline></n-icon>
-            剩余 {{ countdownText }}
-          </template>
-          <template v-else>
-            <n-icon :size="14"><time-outline></time-outline></n-icon>
-            二维码已过期
-          </template>
-        </div>
-      </div>
 
-      <!-- 支付成功 -->
-      <div v-else class="modal-state modal-success">
-        <n-icon :size="56" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
-        <p class="success-title">支付成功</p>
-        <p v-if="isSmsProduct">
-          <n-spin size="small" /> 正在加载接码流程...
-        </p>
-        <p v-else>{{ product.name }}</p>
+        <!-- 二维码 -->
+        <div v-else-if="payStatus !== 'paid'" class="cashier-body">
+          <div class="cashier-amount">
+            <span class="cashier-currency">¥</span>
+            <span class="cashier-num">{{ payAmount }}</span>
+          </div>
+          <div class="cashier-qr">
+            <img v-if="qrImageUrl" :src="qrImageUrl" alt="支付宝二维码" />
+          </div>
+          <p class="cashier-hint">请使用支付宝扫描二维码完成支付</p>
+          <n-button
+            v-if="isMobile && payUrl"
+            type="primary"
+            size="large"
+            block
+            @click="openAlipay"
+          >
+            <template #icon><n-icon><logo-alipay></logo-alipay></n-icon></template>
+            打开支付宝支付
+          </n-button>
+          <div class="cashier-footer">
+            <div class="countdown" :class="{ expired: countdown <= 0 }">
+              <template v-if="countdown > 0">
+                <n-icon :size="13"><time-outline></time-outline></n-icon>
+                {{ countdownText }}
+              </template>
+              <template v-else>
+                <n-icon :size="13"><time-outline></time-outline></n-icon>
+                已过期
+              </template>
+            </div>
+            <span class="cashier-dot">|</span>
+            <span class="cashier-tip">{{ product.name }}</span>
+          </div>
+        </div>
+
+        <!-- 支付成功 -->
+        <div v-else class="cashier-body cashier-ok">
+          <n-icon :size="52" color="#52C41A"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
+          <p class="ok-title">支付成功</p>
+          <p v-if="isSmsProduct" class="ok-desc"><n-spin size="small" /> 正在加载接码流程...</p>
+          <p v-else class="ok-desc">{{ product.name }}</p>
+        </div>
       </div>
     </n-modal>
 
     <!-- 接码服务支付弹窗 -->
-    <n-modal v-model:show="showSmsPayModal" :mask-closable="true" preset="card" title="支付接码服务费" class="pay-modal" :style="{ maxWidth: '400px', width: '90vw' }" @after-leave="onSmsPayModalClosed">
-      <!-- 错误 -->
-      <div v-if="smsQrError" class="modal-state modal-error">
-        <n-icon :size="56" color="#EF4444"><close-circle-outline></close-circle-outline></n-icon>
-        <p>{{ smsQrError }}</p>
-        <n-button type="primary" @click="closeSmsPayModal">关闭</n-button>
-      </div>
-
-      <!-- 二维码 -->
-      <div v-else-if="smsPayStatus !== 'paid'" class="qr-content">
-        <div class="pay-info">
-          <span class="pay-name">接码服务费</span>
-          <span class="pay-amount">¥{{ smsPayAmount }}</span>
+    <n-modal v-model:show="showSmsPayModal" :mask-closable="false" class="pay-modal" :style="{ maxWidth: '420px', width: '90vw' }" @after-leave="onSmsPayModalClosed">
+      <div class="cashier">
+        <div class="cashier-bar">
+          <div class="cashier-bar-left">
+            <n-icon :size="20" color="#1677FF"><logo-alipay></logo-alipay></n-icon>
+            <span>扫码支付</span>
+          </div>
+          <button class="cashier-close" @click="closeSmsPayModal">
+            <n-icon :size="18" color="#999"><close-circle-outline></close-circle-outline></n-icon>
+          </button>
         </div>
 
-        <!-- 移动端：打开支付宝 -->
-        <n-button
-          v-if="isMobile && smsPayUrl"
-          type="primary"
-          size="large"
-          block
-          style="margin-bottom: 16px;"
-          @click="openSmsAlipay"
-        >
-          <template #icon><n-icon><logo-alipay></logo-alipay></n-icon></template>
-          打开支付宝支付
-        </n-button>
-
-        <div class="qr-wrap">
-          <img v-if="smsQrImageUrl" :src="smsQrImageUrl" alt="支付宝二维码" />
+        <div v-if="smsQrError" class="cashier-body">
+          <div class="cashier-err">
+            <n-icon :size="40" color="#FF4D4F"><close-circle-outline></close-circle-outline></n-icon>
+            <p>{{ smsQrError }}</p>
+          </div>
         </div>
-        <p class="qr-tip">扫码支付后即可接码</p>
-      </div>
 
-      <!-- 支付成功 -->
-      <div v-else class="modal-state modal-success">
-        <n-icon :size="56" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
-        <p class="success-title">支付成功</p>
-        <p>正在获取验证码...</p>
+        <div v-else-if="smsPayStatus !== 'paid'" class="cashier-body">
+          <div class="cashier-amount">
+            <span class="cashier-currency">¥</span>
+            <span class="cashier-num">{{ smsPayAmount }}</span>
+          </div>
+          <div class="cashier-qr">
+            <img v-if="smsQrImageUrl" :src="smsQrImageUrl" alt="支付宝二维码" />
+          </div>
+          <p class="cashier-hint">请使用支付宝扫描二维码完成支付</p>
+          <n-button
+            v-if="isMobile && smsPayUrl"
+            type="primary"
+            size="large"
+            block
+            @click="openSmsAlipay"
+          >
+            <template #icon><n-icon><logo-alipay></logo-alipay></n-icon></template>
+            打开支付宝支付
+          </n-button>
+          <div class="cashier-footer">
+            <span class="cashier-tip">接码服务费 · 支付后即可接码</span>
+          </div>
+        </div>
+
+        <div v-else class="cashier-body cashier-ok">
+          <n-icon :size="52" color="#52C41A"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
+          <p class="ok-title">支付成功</p>
+          <p class="ok-desc">正在获取验证码...</p>
+        </div>
       </div>
     </n-modal>
   </div>
@@ -471,7 +492,8 @@ import {
   LogoAlipay, KeyOutline, CartOutline, CopyOutline, OpenOutline,
   CheckmarkCircleOutline, ChatbubblesOutline, PaperPlaneOutline,
   TimeOutline, CloseCircleOutline, InformationCircleOutline,
-  ChatbubbleEllipsesOutline, LogInOutline, DiamondOutline, RocketOutline
+  ChatbubbleEllipsesOutline, LogInOutline, DiamondOutline, RocketOutline,
+  ScanOutline
 } from '@vicons/ionicons5'
 import { productApi, pickupApi, paymentApi } from '@/api'
 import { useUserStore } from '@/stores/user'
@@ -1454,87 +1476,164 @@ onUnmounted(() => {
   color: #92400E;
 }
 
-/* ===== 弹窗 ===== */
-.modal-state {
+/* ===== 支付弹窗（支付宝收银台风格） ===== */
+.pay-modal :deep(.n-card) {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.pay-modal :deep(.n-card__content) {
+  padding: 0 !important;
+}
+
+.cashier {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+}
+
+.cashier-bar {
+  background: #fff;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.cashier-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cashier-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.cashier-close:hover {
+  background: #F5F5F5;
+}
+
+.cashier-body {
+  padding: 24px 20px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 32px 20px;
 }
 
-.modal-error {
-  color: #EF4444;
+.cashier-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
 }
 
-.modal-success {
-  color: #22C55E;
-}
-
-.success-title {
+.cashier-currency {
+  font-size: 18px;
   font-weight: 600;
   color: #1E293B;
+}
+
+.cashier-num {
+  font-family: 'Poppins', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #1E293B;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.cashier-qr {
+  padding: 16px;
+  border: 1px solid #F0F0F0;
+  border-radius: 12px;
+  background: #FAFAFA;
+}
+
+.cashier-qr img {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+
+.cashier-hint {
+  font-size: 13px;
+  color: #999;
   margin: 0;
 }
 
-.qr-content {
+.cashier-footer {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  gap: 6px;
 }
 
-.pay-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 12px 0;
-  border-bottom: 1px solid #F1F5F9;
-  margin-bottom: 16px;
+.cashier-dot {
+  color: #E5E5E5;
+  font-size: 11px;
 }
 
-.pay-name {
-  font-size: 14px;
-  color: #475569;
-}
-
-.pay-amount {
-  font-family: 'Poppins', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: #EF4444;
-}
-
-.qr-wrap {
-  padding: 12px;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #E2E8F0;
-}
-
-.qr-wrap img {
-  display: block;
-  width: 180px;
-  height: 180px;
-}
-
-.qr-tip {
-  font-size: 13px;
-  color: #94A3B8;
-  margin: 12px 0 0 0;
+.cashier-tip {
+  font-size: 11px;
+  color: #BFBFBF;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .countdown {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #22C55E;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #52C41A;
 }
 
 .countdown.expired {
-  color: #EF4444;
+  color: #FF4D4F;
+}
+
+.cashier-err {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 0;
+  color: #FF4D4F;
+  font-size: 13px;
+}
+
+.cashier-ok {
+  padding: 36px 20px 28px;
+}
+
+.ok-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+}
+
+.ok-desc {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
 }
 
 /* ===== 底部安全区 ===== */
