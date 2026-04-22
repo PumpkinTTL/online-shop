@@ -261,7 +261,7 @@ const columns = [
   { title: 'ID', key: 'id', width: 60, sorter: (a, b) => a.id - b.id },
   {
     title: '优惠码', key: 'code', minWidth: 160,
-    render: (row) => h('code', { style: 'color:#3B82F6;font-weight:500' }, row.code),
+    render: (row) => h('code', { style: 'color:#3B82F6;font-weight:500;white-space:nowrap' }, row.code),
   },
   {
     title: '折扣', key: 'discount', width: 120,
