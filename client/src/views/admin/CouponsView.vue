@@ -269,7 +269,7 @@ const columns = [
       if (row.deduction) {
         return h(NTag, { type: 'warning', size: 'small', round: true }, {
           icon: () => h(NIcon, { size: 13 }, () => h(WalletOutline)),
-          default: () => `-¥${parseFloat(row.deduction).toFixed(2)}`,
+          default: () => `减¥${parseFloat(row.deduction).toFixed(2)}`,
         })
       }
       if (row.discount) {
