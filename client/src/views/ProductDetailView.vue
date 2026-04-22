@@ -23,19 +23,19 @@
     <!-- 商品详情 -->
     <template v-else-if="product">
       <div class="detail-container">
-        <!-- 封面 Hero 区 -->
-        <div class="product-hero">
-          <div class="hero-cover" :style="coverStyle">
-            <div v-if="!product.image && !product.coverImage" class="cover-placeholder">
-              <n-icon :size="80" color="#E2E8F0"><cube-outline></cube-outline></n-icon>
+        <!-- 左侧/上方 封面区 -->
+        <div class="product-cover-card">
+          <div class="cover-wrap">
+            <img v-if="product.image || product.coverImage" :src="coverSrc" alt="封面" class="cover-img" />
+            <div v-else class="cover-placeholder">
+              <n-icon :size="64" color="#CBD5E1"><cube-outline></cube-outline></n-icon>
             </div>
           </div>
-
-          <!-- 标签 -->
-          <div class="hero-badges">
+          <!-- 标签在封面下方 -->
+          <div class="cover-badges">
             <n-tag v-if="isSmsProduct" size="small" :bordered="false" round class="badge-sms">
-              <template #icon><n-icon><phone-portrait-outline></phone-portrait-outline></n-icon></template>
-              接码登录
+              <template #icon><n-icon color="#fff"><log-in-outline></log-in-outline></n-icon></template>
+              验证登录
             </n-tag>
             <n-tag v-if="product.warranty" size="small" :bordered="false" round type="info">
               <template #icon><n-icon><shield-checkmark-outline></shield-checkmark-outline></n-icon></template>
@@ -46,28 +46,28 @@
               {{ product.credit }}积分
             </n-tag>
           </div>
+          <!-- 商品注意事项无缝衔接封面下方 -->
+          <div v-if="product.tips" class="cover-tips">
+            <n-icon :size="14" color="#DC2626"><warning-outline></warning-outline></n-icon>
+            <span>{{ product.tips }}</span>
+          </div>
+        </div>
 
-          <!-- 名称 + 价格（叠在封面上） -->
-          <div class="hero-overlay">
-            <h1 class="hero-name">{{ product.name }}</h1>
-            <div class="hero-price">
+        <!-- 右侧/下方 信息区 -->
+        <div class="product-info-card">
+          <!-- 名称 + 价格 -->
+          <div class="info-header">
+            <h1 class="product-name">{{ product.name }}</h1>
+            <div class="product-price">
               <span class="price-symbol">¥</span>
               <span class="price-amount">{{ product.price }}</span>
             </div>
           </div>
-        </div>
 
-        <!-- Bento Grid 布局 -->
-        <div class="bento-grid">
-          <!-- 商品描述卡片 -->
-          <div class="bento-card bento-span-2">
-            <div class="card-title">
-              <n-icon :size="18" color="#3B82F6"><document-text-outline></document-text-outline></n-icon>
-              <span>商品描述</span>
-            </div>
-            <p class="card-text">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
-            <!-- 特点标签 -->
-            <div class="features-inline">
+          <!-- 商品描述 + 特点标签 -->
+          <div class="info-section">
+            <p class="product-desc">{{ product.description || '特惠渠道，无质保，且用且珍惜' }}</p>
+            <div class="feature-tags">
               <div class="feature-tag">
                 <n-icon :size="12" color="#3B82F6"><PricetagOutline></PricetagOutline></n-icon>
                 <span>特惠价格</span>
@@ -93,47 +93,20 @@
                 <span>首登</span>
               </div>
             </div>
-
-            <!-- 商品特有注意事项 -->
-            <div v-if="product.tips" class="inline-tips">
-              <n-icon :size="14" color="#DC2626"><warning-outline></warning-outline></n-icon>
-              <span>{{ product.tips }}</span>
-            </div>
-
-            <!-- 温馨提示（PC端显示，移动端隐藏） -->
-            <div class="notice-section notice-section-inline">
-              <div class="notice-title-inline">
-                <n-icon :size="16" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
-                <span>温馨提示</span>
-              </div>
-              <p class="notice-text-inline">
-                <template v-if="isSmsProduct">
-                  本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
-                </template>
-                <template v-else-if="product.warranty">
-                  本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。
-                </template>
-                <template v-else>
-                  本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。
-                </template>
-              </p>
-              <div class="notice-contact-inline">
-                <n-icon :size="16" color="#D97706"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
-                <span>客服联系：bitlesu</span>
-              </div>
-            </div>
           </div>
 
-          <!-- 购买操作卡片 -->
-          <div class="bento-card bento-span-2 purchase-section">
+          <div class="info-divider"></div>
+
+          <!-- 购买操作区 -->
+          <div class="info-section">
             <!-- 未完成购买 -->
             <div v-if="!actionResult">
               <!-- 联系方式 -->
-              <div class="contact-section">
-                <div class="contact-header">
-                  <n-icon :size="16" color="#3B82F6"><call-outline></call-outline></n-icon>
-                  <span class="contact-title">联系方式</span>
-                  <span class="contact-desc">用于订单查询</span>
+              <div class="contact-row">
+                <div class="contact-label">
+                  <n-icon :size="15" color="#3B82F6"><call-outline></call-outline></n-icon>
+                  <span>联系方式</span>
+                  <span class="contact-hint">用于订单查询</span>
                 </div>
                 <n-input
                   v-model:value="contact"
@@ -150,21 +123,17 @@
                   :class="{ active: payMethod === 'alipay' }"
                   @click="payMethod = 'alipay'"
                 >
-                  <div class="tab-icon-wrap">
-                    <n-icon :size="20"><logo-alipay></logo-alipay></n-icon>
-                    <span>支付宝购买</span>
-                    <span class="recommend-badge">推荐</span>
-                  </div>
+                  <n-icon :size="18"><logo-alipay></logo-alipay></n-icon>
+                  <span>支付宝购买</span>
+                  <span class="recommend-badge">推荐</span>
                 </div>
                 <div
                   class="method-tab"
                   :class="{ active: payMethod === 'card' }"
                   @click="payMethod = 'card'"
                 >
-                  <div class="tab-icon-wrap">
-                    <n-icon :size="20"><key-outline></key-outline></n-icon>
-                    <span>卡密兑换</span>
-                  </div>
+                  <n-icon :size="18"><key-outline></key-outline></n-icon>
+                  <span>卡密兑换</span>
                 </div>
               </div>
 
@@ -220,11 +189,10 @@
             <!-- 非接码产品：成功 -->
             <div v-else-if="actionResult && !isSmsProduct" class="success-content">
               <div class="success-icon">
-                <n-icon :size="56" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
+                <n-icon :size="48" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
               </div>
               <h3 class="success-title">{{ actionResult.type === 'alipay' ? '支付成功' : '兑换成功' }}</h3>
               <p class="success-desc">请复制兑换码前往网站完成兑换</p>
-
               <div class="result-box">
                 <div class="result-label">兑换码 (CDK)</div>
                 <n-space>
@@ -235,7 +203,6 @@
                   </n-button>
                 </n-space>
               </div>
-
               <n-space vertical>
                 <n-button type="primary" size="large" block @click="goToRedeem">
                   <template #icon><n-icon><open-outline></open-outline></n-icon></template>
@@ -251,10 +218,9 @@
             <!-- 接码产品：成功 + 获取验证码 -->
             <div v-else-if="actionResult && isSmsProduct" class="success-content">
               <div class="success-icon">
-                <n-icon :size="56" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
+                <n-icon :size="48" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
               </div>
               <h3 class="success-title">{{ actionResult.type === 'alipay' ? '支付成功' : '兑换成功' }}</h3>
-
               <div class="result-box">
                 <div class="result-label">登录号码</div>
                 <n-space>
@@ -265,15 +231,12 @@
                   </n-button>
                 </n-space>
               </div>
-
               <!-- 接码区域 -->
               <div class="sms-area">
                 <div class="sms-area-title">
                   <n-icon :size="16"><chatbubbles-outline></chatbubbles-outline></n-icon>
                   接码登录
                 </div>
-
-                <!-- 未获取验证码 -->
                 <div v-if="!smsCode" class="sms-pending">
                   <n-button
                     type="primary"
@@ -283,9 +246,7 @@
                     :disabled="needSmsPayment"
                     @click="getSmsCode"
                   >
-                    <template #icon>
-                      <n-icon><paper-plane-outline></paper-plane-outline></n-icon>
-                    </template>
+                    <template #icon><n-icon><paper-plane-outline></paper-plane-outline></n-icon></template>
                     {{ smsLoading ? '获取中...' : '获取验证码' }}
                   </n-button>
                   <p v-if="smsError" class="sms-error">
@@ -304,8 +265,6 @@
                     支付接码服务费 ¥{{ smsPriceText }}
                   </n-button>
                 </div>
-
-                <!-- 已获取验证码 -->
                 <div v-else class="sms-success">
                   <div class="result-box">
                     <div class="result-label">验证码</div>
@@ -325,28 +284,28 @@
             </div>
           </div>
 
-          <!-- 温馨提示（移动端独立卡片，PC端隐藏） -->
-          <div class="bento-card bento-span-2 notice-card-mobile">
-            <div class="notice-title">
-              <n-icon :size="18" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
+          <div class="info-divider"></div>
+
+          <!-- 温馨提示 -->
+          <div class="info-section info-notice">
+            <div class="notice-header">
+              <n-icon :size="16" color="#F59E0B"><information-circle-outline></information-circle-outline></n-icon>
               <span>温馨提示</span>
             </div>
-            <div class="notice-content">
-              <p class="notice-text">
-                <template v-if="isSmsProduct">
-                  本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
-                </template>
-                <template v-else-if="product.warranty">
-                  本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。
-                </template>
-                <template v-else>
-                  本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。
-                </template>
-              </p>
-              <div class="notice-contact">
-                <n-icon :size="18" color="#D97706"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
-                <span>客服联系：bitlesu</span>
-              </div>
+            <p class="notice-text">
+              <template v-if="isSmsProduct">
+                本商品需要接码登录，购买成功后会分配登录号码，请通过接码获取验证码完成登录。请妥善保管号码和验证码信息。
+              </template>
+              <template v-else-if="product.warranty">
+                本产品提供质保服务，质保时间：{{ product.warranty }}。质保期内如遇问题可联系客服处理。
+              </template>
+              <template v-else>
+                本产品为特惠渠道商品，不提供质保服务。购买前请仔细了解产品特性，确认符合您的需求。
+              </template>
+            </p>
+            <div class="notice-contact">
+              <n-icon :size="14" color="#D97706"><chatbubble-ellipses-outline></chatbubble-ellipses-outline></n-icon>
+              <span>客服联系：bitlesu</span>
             </div>
           </div>
         </div>
@@ -565,13 +524,10 @@ const countdownText = computed(() => {
   return `${m}分${String(s).padStart(2, '0')}秒`
 })
 
-// 封面样式
-const coverStyle = computed(() => {
-  const src = product.value?.image ? `/images/${product.value.image}` : (product.value?.coverImage || '')
-  if (src) {
-    return { background: `url('${src}') center/cover no-repeat` }
-  }
-  return { background: 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)' }
+// 封面图片地址
+const coverSrc = computed(() => {
+  if (product.value?.image) return `/images/${product.value.image}`
+  return product.value?.coverImage || ''
 })
 
 // 定时器
@@ -972,19 +928,30 @@ onUnmounted(() => {
   padding: 16px 16px 0;
 }
 
-/* ===== Hero 封面区 ===== */
-.product-hero {
-  position: relative;
-  margin-bottom: 16px;
-  border-radius: 20px;
+/* ===== 封面卡片 ===== */
+.product-cover-card {
+  background: white;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
 }
 
-.hero-cover {
+.cover-wrap {
   position: relative;
+  background: linear-gradient(135deg, #F1F5F9, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.cover-img {
   width: 100%;
-  height: 280px;
+  height: auto;
+  max-height: 320px;
+  object-fit: contain;
+  display: block;
 }
 
 .cover-placeholder {
@@ -992,16 +959,16 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
+  min-height: 200px;
 }
 
-.hero-badges {
-  position: absolute;
-  top: 16px;
-  left: 16px;
+.cover-badges {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #F1F5F9;
 }
 
 .badge-sms {
@@ -1010,26 +977,47 @@ onUnmounted(() => {
   border: none !important;
 }
 
-/* ===== 名称价格叠加 ===== */
-.hero-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 24px 20px 20px;
-  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+/* 注意事项无缝衔接封面 */
+.cover-tips {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #FEF2F2;
+  font-size: 13px;
+  color: #991B1B;
+  line-height: 1.5;
 }
 
-.hero-name {
+.cover-tips span {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* ===== 信息区大卡片 ===== */
+.product-info-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+/* ===== 名称 + 价格 ===== */
+.info-header {
+  margin-bottom: 20px;
+}
+
+.product-name {
   font-family: 'Poppins', sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: white;
-  margin: 0 0 8px 0;
-  line-height: 1.3;
+  color: #1E293B;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
 }
 
-.hero-price {
+.product-price {
   display: flex;
   align-items: baseline;
   gap: 2px;
@@ -1043,62 +1031,57 @@ onUnmounted(() => {
 
 .price-amount {
   font-family: 'Poppins', sans-serif;
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   color: #F59E0B;
+  line-height: 1;
 }
 
-/* ===== Bento Grid 布局 ===== */
-.bento-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+/* ===== 信息分区 ===== */
+.info-section {
+  margin-bottom: 0;
 }
 
-.bento-span-2 {
-  grid-column: span 2;
+.info-divider {
+  height: 1px;
+  background: #F1F5F9;
+  margin: 20px 0;
 }
 
-/* ===== Bento 卡片 ===== */
-.bento-card {
-  background: white;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-}
-
-.bento-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-/* 卡片标题 */
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #1E293B;
-  margin-bottom: 12px;
-}
-
-.card-text {
+/* ===== 商品描述 ===== */
+.product-desc {
   font-size: 14px;
   line-height: 1.7;
   color: #64748B;
-  margin: 0;
+  margin: 0 0 14px 0;
 }
 
-/* 内联提示 */
+.feature-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.feature-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #F1F5F9;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+}
+
 .inline-tips {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-top: 14px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   background: #FEE2E2;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 13px;
   color: #991B1B;
   line-height: 1.6;
@@ -1109,85 +1092,42 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-/* ===== 特点小卡片 ===== */
-.feature-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  margin-bottom: 10px;
-  color: white;
+/* ===== 联系方式 ===== */
+.contact-row {
+  margin-bottom: 18px;
 }
 
-.feature-blue { background: linear-gradient(135deg, #3B82F6, #2563EB); }
-.feature-orange { background: linear-gradient(135deg, #F59E0B, #D97706); }
-.feature-green { background: linear-gradient(135deg, #22C55E, #16A34A); }
-.feature-gray { background: linear-gradient(135deg, #94A3B8, #64748B); }
-
-.feature-title {
+.contact-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
   font-weight: 600;
   color: #1E293B;
-  margin-bottom: 2px;
+  margin-bottom: 10px;
 }
 
-.feature-desc {
+.contact-hint {
+  font-weight: 400;
   font-size: 12px;
   color: #94A3B8;
-}
-
-.card-green {
-  background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
-}
-
-.card-gray {
-  background: linear-gradient(135deg, #F8FAFC, #F1F5F9);
-}
-
-/* ===== 购买区域 ===== */
-.purchase-section {
-  padding: 20px;
-}
-
-.contact-section {
-  margin-bottom: 20px;
-}
-
-.contact-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.contact-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1E293B;
-}
-
-.contact-desc {
-  margin-left: auto;
-  font-size: 12px;
-  color: #94A3B8;
+  margin-left: 4px;
 }
 
 /* ===== 方式切换 ===== */
 .method-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .method-tab {
-  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 16px;
+  gap: 6px;
+  padding: 12px 16px;
   border: 1.5px solid #E2E8F0;
   border-radius: 8px;
   background: white;
@@ -1195,7 +1135,7 @@ onUnmounted(() => {
   transition: all 0.2s ease;
   color: #64748B;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .method-tab:hover {
@@ -1208,15 +1148,6 @@ onUnmounted(() => {
   color: white;
 }
 
-.tab-icon-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
 .recommend-badge {
   display: inline-flex;
   align-items: center;
@@ -1225,8 +1156,7 @@ onUnmounted(() => {
   color: white;
   font-size: 10px;
   font-weight: 600;
-  border-radius: 8px;
-  margin-left: 2px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
@@ -1234,102 +1164,21 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* ===== 移动端优化 ===== */
-@media (max-width: 767px) {
-  .tab-icon-wrap {
-    font-size: 13px;
-    gap: 4px;
-  }
-
-  .recommend-badge {
-    font-size: 9px;
-    padding: 1px 4px;
-  }
-
-  .method-tab {
-    padding: 12px 8px;
-  }
-}
-
-/* ===== 特点标签（集成到商品描述卡片） ===== */
-.features-inline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.feature-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  background: #F1F5F9;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #475569;
-}
-
-/* ===== 温馨提示（集成版 - PC端显示） ===== */
-.notice-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #E5E7EB;
-  display: none;
-}
-
-.notice-title-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #92400E;
-  margin-bottom: 8px;
-}
-
-.notice-text-inline {
-  font-size: 13px;
-  line-height: 1.6;
-  color: #78350F;
-  margin: 0 0 10px 0;
-}
-
-.notice-contact-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(254, 243, 199, 0.6);
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #92400E;
-}
-
-/* ===== 温馨提示（移动端独立卡片） ===== */
-.notice-card-mobile {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  display: block;
-}
-
 /* ===== 方式内容 ===== */
 .method-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .method-hint {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: #F8FAFC;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13px;
   color: #475569;
   margin: 0;
 }
@@ -1339,12 +1188,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 12px;
+  padding: 10px;
   width: 100%;
   font-size: 14px;
   color: #3B82F6;
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: 8px;
   transition: background 0.2s ease;
 }
 
@@ -1358,26 +1207,26 @@ onUnmounted(() => {
 }
 
 .success-icon {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .success-title {
   font-family: 'Poppins', sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #1E293B;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .success-desc {
   font-size: 14px;
   color: #64748B;
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
 }
 
 .result-box {
   text-align: left;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .result-label {
@@ -1389,7 +1238,7 @@ onUnmounted(() => {
 
 /* ===== 接码区域 ===== */
 .sms-area {
-  margin-top: 20px;
+  margin-top: 16px;
   text-align: left;
 }
 
@@ -1412,66 +1261,35 @@ onUnmounted(() => {
   margin: 8px 0 0 0;
 }
 
-/* ===== 商品特有注意事项 ===== */
-.tips-card {
-  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+/* ===== 温馨提示 ===== */
+.info-notice {
+  background: #FFFBEB;
+  border-radius: 10px;
+  padding: 14px 16px !important;
 }
 
-.tips-title {
+.notice-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 14px;
   font-weight: 600;
   color: #92400E;
-  margin-bottom: 10px;
-}
-
-.tips-text {
-  font-size: 13px;
-  line-height: 1.6;
-  color: #78350F;
-  margin: 0;
-}
-
-/* ===== 温馨提示 ===== */
-.notice-card {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-}
-
-.notice-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #92400E;
-  margin-bottom: 12px;
-}
-
-.notice-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .notice-text {
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.6;
   color: #78350F;
-  margin: 0;
+  margin: 0 0 8px 0;
 }
 
 .notice-contact {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  align-self: flex-start;
-  padding: 10px 14px;
-  background: rgba(254, 243, 199, 0.8);
-  border-radius: 8px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: 13px;
   font-weight: 500;
   color: #92400E;
 }
@@ -1641,41 +1459,72 @@ onUnmounted(() => {
   height: 24px;
 }
 
+/* ===== 移动端优化 ===== */
+@media (max-width: 767px) {
+  .product-name {
+    font-size: 20px;
+  }
+
+  .price-amount {
+    font-size: 28px;
+  }
+
+  .method-tab {
+    padding: 10px 8px;
+    font-size: 13px;
+    gap: 4px;
+  }
+
+  .recommend-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+
+  .product-info-card {
+    padding: 18px;
+  }
+
+  .info-divider {
+    margin: 16px 0;
+  }
+}
+
 /* ===== PC 端响应式 ===== */
 @media (min-width: 768px) {
   .detail-container {
     max-width: 1000px;
-    padding: 0 24px;
+    padding: 24px 24px 0;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
   }
 
-  .bento-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+  /* 左侧封面 */
+  .product-cover-card {
+    flex-shrink: 0;
+    width: 300px;
+    margin-bottom: 0;
+    position: sticky;
+    top: 80px;
   }
 
-  .bento-span-2 {
-    grid-column: span 1;
+  .cover-img {
+    max-height: 400px;
   }
 
-  .hero-cover {
-    height: 360px;
+  /* 右侧信息大卡片 */
+  .product-info-card {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
   }
 
-  .hero-name {
-    font-size: 28px;
+  .product-name {
+    font-size: 24px;
   }
 
   .price-amount {
-    font-size: 42px;
-  }
-
-  /* PC端：显示集成版温馨提示，隐藏移动端独立卡片 */
-  .notice-section {
-    display: block;
-  }
-
-  .notice-card-mobile {
-    display: none;
+    font-size: 34px;
   }
 
   .bottom-safe {
@@ -1686,6 +1535,14 @@ onUnmounted(() => {
 @media (min-width: 1024px) {
   .detail-container {
     max-width: 1200px;
+  }
+
+  .product-cover-card {
+    width: 340px;
+  }
+
+  .cover-img {
+    max-height: 460px;
   }
 }
 </style>
