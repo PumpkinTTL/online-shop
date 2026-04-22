@@ -24,11 +24,12 @@ function extractToken(req) {
 }
 
 /**
- * 验证 JWT 并解析用户信息
+ * 验证 JWT 并解析用户信息，同时检查用户是否被禁用
  * 成功: req.userId = decoded.userId, next()
- * 失败: 返回 401
+ * 未登录: 返回 401
+ * 账号禁用: 返回 403 { error, accountBanned: true }
  */
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const token = extractToken(req);
   if (!token) {
     return res.status(401).json({ error: '未登录' });
@@ -36,6 +37,21 @@ function requireAuth(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.userId = decoded.userId;
+
+    // 查库检查用户是否被禁用
+    try {
+      const dataSource = require('../config/database');
+      const User = require('../entities/User');
+      const userRepo = dataSource.getRepository(User);
+      const user = await userRepo.findOne({ where: { id: decoded.userId } });
+      if (!user || !user.isActive) {
+        return res.status(403).json({ error: '账号已被禁用', accountBanned: true });
+      }
+    } catch (dbErr) {
+      // 数据库查询失败不阻断请求，只记录警告
+      console.warn('[Auth] 用户状态检查失败:', dbErr.message);
+    }
+
     next();
   } catch {
     return res.status(401).json({ error: '登录已过期，请重新登录' });

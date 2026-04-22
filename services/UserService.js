@@ -55,6 +55,11 @@ class UserService {
     if (!user) {
       throw new Error('用户名或密码错误');
     }
+
+    // 检查账号是否被禁用
+    if (!user.isActive) {
+      throw new Error('账号已被禁用，请联系客服');
+    }
     
     const isValid = await this.comparePassword(password, user.password);
     if (!isValid) {

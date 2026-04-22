@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useCaptchaStore } from '@/stores/captcha'
+import { useUserStore } from '@/stores/user'
 
 // ===== HTTP 实例 =====
 const http = axios.create({
@@ -29,6 +30,16 @@ http.interceptors.response.use(
       localStorage.removeItem('admin_info')
       if (window.location.hash.startsWith('#/admin')) {
         window.location.hash = '#/admin/login'
+      }
+    }
+
+    // 用户账号被封禁 → 强制登出
+    if (error.response?.status === 403 && error.response.data?.accountBanned) {
+      const userStore = useUserStore()
+      userStore.logout()
+      // 避免循环：如果已经在首页就不跳
+      if (window.location.pathname !== '/') {
+        window.location.href = '/'
       }
     }
 

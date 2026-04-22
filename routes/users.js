@@ -171,7 +171,7 @@ router.get('/me', requireAuth, async (req, res) => {
 });
 
 // 修改密码（需要登录）
-router.post('/change-password', [
+router.post('/change-password', requireAuth, [
   body('oldPassword')
     .trim()
     .notEmpty()
