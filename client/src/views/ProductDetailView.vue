@@ -150,11 +150,12 @@
                     placeholder="优惠码（选填）"
                     size="large"
                     :input-props="{ autocomplete: 'off' }"
-                    :disabled="couponValidating"
+                    :disabled="couponValidating || hasValidCoupon"
+                    :status="couponError ? 'error' : hasValidCoupon ? 'success' : undefined"
                     @keyup.enter="validateCoupon"
                   >
                     <template #prefix>
-                      <n-icon :size="16" color="#94A3B8"><pricetag-outline></pricetag-outline></n-icon>
+                      <n-icon :size="16" :color="hasValidCoupon ? '#22C55E' : '#94A3B8'"><pricetag-outline></pricetag-outline></n-icon>
                     </template>
                   </n-input>
                   <n-button
@@ -182,7 +183,8 @@
                 </div>
                 <div v-if="hasValidCoupon" class="coupon-success">
                   <n-icon :size="14" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
-                  优惠码可用！{{ couponResult.description }}
+                  <span>{{ couponResult.description }}</span>
+                  <span class="coupon-saved">省 ¥{{ savedAmount }}</span>
                 </div>
                 <!-- 价格展示 -->
                 <div class="price-display">
@@ -590,6 +592,14 @@ const finalPrice = computed(() => {
 
 // 是否有有效优惠码
 const hasValidCoupon = computed(() => couponResult.value?.valid === true)
+
+// 优惠码省了多少
+const savedAmount = computed(() => {
+  if (!hasValidCoupon.value || !product.value) return 0
+  const original = parseFloat(product.value.price) || 0
+  const final = parseFloat(finalPrice.value) || 0
+  return (original - final).toFixed(2)
+})
 
 // 验证优惠码
 const validateCoupon = async () => {
@@ -1278,6 +1288,7 @@ onUnmounted(() => {
   gap: 6px;
   font-size: 13px;
   color: #EF4444;
+  padding: 2px 0;
 }
 
 .coupon-success {
@@ -1287,8 +1298,18 @@ onUnmounted(() => {
   font-size: 13px;
   color: #22C55E;
   font-weight: 500;
+  padding: 2px 0;
 }
 
+.coupon-saved {
+  margin-left: auto;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  color: #EF4444;
+  font-size: 13px;
+}
+
+/* ===== 价格展示 ===== */
 .price-display {
   display: flex;
   align-items: baseline;
