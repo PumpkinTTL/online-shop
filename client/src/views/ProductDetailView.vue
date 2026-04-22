@@ -177,15 +177,23 @@
                   </n-button>
                 </div>
                 <!-- 优惠码验证结果 -->
-                <div v-if="couponError" class="coupon-error">
-                  <n-icon :size="14" color="#EF4444"><alert-circle-outline></alert-circle-outline></n-icon>
-                  {{ couponError }}
-                </div>
-                <div v-if="hasValidCoupon" class="coupon-success">
-                  <n-icon :size="14" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
-                  <span>{{ couponResult.description }}</span>
-                  <span class="coupon-saved">省 ¥{{ savedAmount }}</span>
-                </div>
+                <transition name="coupon-msg">
+                  <div v-if="couponError" class="coupon-error">
+                    <n-icon :size="14" color="#EF4444"><alert-circle-outline></alert-circle-outline></n-icon>
+                    {{ couponError }}
+                  </div>
+                </transition>
+                <transition name="coupon-msg">
+                  <div v-if="hasValidCoupon" class="coupon-success-card">
+                    <div class="coupon-success-card__left">
+                      <n-icon :size="14" color="#16A34A"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
+                      <span>{{ couponResult.description }}</span>
+                    </div>
+                    <div class="coupon-success-card__right">
+                      省 ¥{{ savedAmount }}
+                    </div>
+                  </div>
+                </transition>
                 <!-- 价格展示 -->
                 <div class="price-display">
                   <span v-if="hasValidCoupon" class="price-original">¥{{ product.price }}</span>
@@ -1291,22 +1299,49 @@ onUnmounted(() => {
   padding: 2px 0;
 }
 
-.coupon-success {
+.coupon-success-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.coupon-success-card__left {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
-  color: #22C55E;
+  color: #166534;
   font-weight: 500;
-  padding: 2px 0;
 }
 
-.coupon-saved {
-  margin-left: auto;
+.coupon-success-card__right {
   font-family: 'Poppins', sans-serif;
   font-weight: 700;
   color: #EF4444;
-  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* 优惠码消息过渡 */
+.coupon-msg-enter-active {
+  transition: all 0.25s ease-out;
+}
+
+.coupon-msg-leave-active {
+  transition: all 0.15s ease-in;
+}
+
+.coupon-msg-enter-from {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.coupon-msg-leave-to {
+  opacity: 0;
 }
 
 /* ===== 价格展示 ===== */
