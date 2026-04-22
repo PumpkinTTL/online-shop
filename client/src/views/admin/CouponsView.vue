@@ -48,12 +48,12 @@
           <n-input v-model:value="createForm.code" placeholder="留空则自动生成" />
         </n-form-item>
         <n-form-item label="适用商品">
-          <n-select v-model:value="createForm.productId" :options="productOptions" placeholder="不限（全场通用）" clearable />
+          <n-select v-model:value="createForm.productId" :options="productOptions" placeholder="全部商品" clearable />
         </n-form-item>
-        <n-form-item label="绑定用户">
+        <n-form-item label="使用者">
           <n-select v-model:value="createForm.userId" :options="userOptions" placeholder="不限" clearable filterable />
         </n-form-item>
-        <n-form-item label="绑定IP">
+        <n-form-item label="IP">
           <n-input v-model:value="createForm.bindIp" placeholder="不限" clearable />
         </n-form-item>
         <n-form-item label="折扣类型">
@@ -63,9 +63,9 @@
           </n-radio-group>
         </n-form-item>
         <n-form-item v-if="createForm.discountType === 'percent'" label="折扣比例">
-          <n-input-number v-model:value="createForm.discount" :min="1" :max="99" :precision="1" style="width:100%" placeholder="如 10 表示打9折" />
+          <n-input-number v-model:value="createForm.discount" :min="1" :max="99" :precision="1" style="width:100%" placeholder="如 10 表示9折" />
           <template #feedback>
-            <span style="color:var(--text-light);font-size:12px">填10表示减10%（打9折），填20表示打8折</span>
+            <span style="color:var(--text-light);font-size:12px">填10表示减10%（9折），填20表示8折</span>
           </template>
         </n-form-item>
         <n-form-item v-if="createForm.discountType === 'fixed'" label="抵扣金额">
@@ -99,12 +99,12 @@
           <n-input-number v-model:value="batchForm.count" :min="1" :max="100" style="width:100%" />
         </n-form-item>
         <n-form-item label="适用商品">
-          <n-select v-model:value="batchForm.productId" :options="productOptions" placeholder="不限（全场通用）" clearable />
+          <n-select v-model:value="batchForm.productId" :options="productOptions" placeholder="全部商品" clearable />
         </n-form-item>
-        <n-form-item label="绑定用户">
+        <n-form-item label="使用者">
           <n-select v-model:value="batchForm.userId" :options="userOptions" placeholder="不限" clearable filterable />
         </n-form-item>
-        <n-form-item label="绑定IP">
+        <n-form-item label="IP">
           <n-input v-model:value="batchForm.bindIp" placeholder="不限" clearable />
         </n-form-item>
         <n-form-item label="折扣类型">
@@ -114,7 +114,7 @@
           </n-radio-group>
         </n-form-item>
         <n-form-item v-if="batchForm.discountType === 'percent'" label="折扣比例">
-          <n-input-number v-model:value="batchForm.discount" :min="1" :max="99" :precision="1" style="width:100%" placeholder="如 10 表示打9折" />
+          <n-input-number v-model:value="batchForm.discount" :min="1" :max="99" :precision="1" style="width:100%" placeholder="如 10 表示9折" />
         </n-form-item>
         <n-form-item v-if="batchForm.discountType === 'fixed'" label="抵扣金额">
           <n-input-number v-model:value="batchForm.deduction" :min="0.01" :precision="2" style="width:100%" placeholder="如 5.00" />
@@ -136,6 +136,54 @@
         </n-space>
       </template>
     </n-modal>
+
+    <!-- 编辑优惠码弹窗 -->
+    <n-modal v-model:show="showEditModal" preset="card" title="编辑优惠码" style="max-width:520px;">
+      <n-form :model="editForm" label-placement="left" label-width="100">
+        <n-form-item label="优惠码">
+          <n-input :value="editForm.code" disabled />
+        </n-form-item>
+        <n-form-item label="状态">
+          <n-select v-model:value="editForm.status" :options="editStatusOptions" />
+        </n-form-item>
+        <n-form-item label="适用商品">
+          <n-select v-model:value="editForm.productId" :options="productOptions" placeholder="全部商品" clearable />
+        </n-form-item>
+        <n-form-item label="使用者">
+          <n-select v-model:value="editForm.userId" :options="userOptions" placeholder="不限" clearable filterable />
+        </n-form-item>
+        <n-form-item label="IP">
+          <n-input v-model:value="editForm.bindIp" placeholder="不限" clearable />
+        </n-form-item>
+        <n-form-item label="折扣类型">
+          <n-radio-group v-model:value="editForm.discountType">
+            <n-radio-button value="percent">百分比折扣</n-radio-button>
+            <n-radio-button value="fixed">固定抵扣</n-radio-button>
+          </n-radio-group>
+        </n-form-item>
+        <n-form-item v-if="editForm.discountType === 'percent'" label="折扣比例">
+          <n-input-number v-model:value="editForm.discount" :min="1" :max="99" :precision="1" style="width:100%" />
+        </n-form-item>
+        <n-form-item v-if="editForm.discountType === 'fixed'" label="抵扣金额">
+          <n-input-number v-model:value="editForm.deduction" :min="0.01" :precision="2" style="width:100%" />
+        </n-form-item>
+        <n-form-item label="最大使用次数">
+          <n-input-number v-model:value="editForm.maxUses" :min="1" style="width:100%" placeholder="留空=不限次数" clearable />
+        </n-form-item>
+        <n-form-item label="生效时间">
+          <n-date-picker v-model:value="editForm.validFrom" type="datetime" style="width:100%" clearable placeholder="留空=立即生效" />
+        </n-form-item>
+        <n-form-item label="过期时间">
+          <n-date-picker v-model:value="editForm.validTo" type="datetime" style="width:100%" clearable placeholder="留空=永不过期" />
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="showEditModal = false">取消</n-button>
+          <n-button type="primary" :loading="saving" @click="handleEdit">保存</n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </div>
 </template>
 
@@ -147,7 +195,7 @@ import {
   NSpace, NTag, NRadioButton, NRadioGroup, NDatePicker,
   useMessage, useDialog
 } from 'naive-ui'
-import { AddOutline, TrashOutline } from '@vicons/ionicons5'
+import { AddOutline, TrashOutline, CreateOutline } from '@vicons/ionicons5'
 import { adminApi } from '@/api'
 
 const message = useMessage()
@@ -172,12 +220,19 @@ const statusFilterOptions = [
   { label: '已过期', value: 'expired' },
 ]
 
+const editStatusOptions = [
+  { label: '可用', value: 'active' },
+  { label: '已禁用', value: 'disabled' },
+  { label: '已过期', value: 'expired' },
+]
+
 const couponStatusMap = { active: 'success', disabled: 'warning', expired: 'error' }
 const couponStatusLabel = { active: '可用', disabled: '已禁用', expired: '已过期' }
 
 // ===== 弹窗 =====
 const showCreateModal = ref(false)
 const showBatchModal = ref(false)
+const showEditModal = ref(false)
 const saving = ref(false)
 
 const emptyForm = () => ({
@@ -194,6 +249,7 @@ const emptyForm = () => ({
 })
 const createForm = ref(emptyForm())
 const batchForm = ref({ ...emptyForm(), prefix: 'CPN', count: 10 })
+const editForm = ref(emptyForm())
 
 // ===== 表格列 =====
 const columns = [
@@ -204,27 +260,23 @@ const columns = [
     render: (row) => h('code', { style: 'color:#3B82F6;font-weight:500' }, row.code),
   },
   {
-    title: '折扣', key: 'discount', width: 120,
+    title: '折扣', key: 'discount', width: 100,
     render: (row) => {
       if (row.deduction) return h(NTag, { type: 'warning', size: 'small' }, () => `抵扣 ¥${row.deduction}`)
-      if (row.discount) {
-        const off = row.discount
-        const fold = ((100 - off) / 10).toFixed(1).replace(/\.0$/, '')
-        return h(NTag, { type: 'success', size: 'small' }, () => `打${fold}折`)
-      }
+      if (row.discount) return h(NTag, { type: 'success', size: 'small' }, () => `${row.discount}%`)
       return h('span', { style: 'color:#94A3B8' }, '-')
     },
   },
   {
     title: '适用商品', key: 'productId', width: 140,
     render: (row) => {
-      if (!row.productId) return h('span', { style: 'color:#94A3B8' }, '-')
+      if (!row.productId) return h('span', { style: 'color:#F59E0B;font-weight:500' }, '全部商品')
       const p = allProducts.value.find(p => p.id === row.productId)
       return h('span', { style: 'color:#64748B' }, p?.name || `商品#${row.productId}`)
     },
   },
   {
-    title: '绑定用户', key: 'userId', width: 110,
+    title: '使用者', key: 'userId', width: 110,
     render: (row) => {
       if (!row.userId) return h('span', { style: 'color:#94A3B8' }, '-')
       const u = allUsers.value.find(u => u.id === row.userId)
@@ -232,7 +284,7 @@ const columns = [
     },
   },
   {
-    title: '绑定IP', key: 'bindIp', width: 130,
+    title: 'IP', key: 'bindIp', width: 130,
     render: (row) => {
       if (!row.bindIp) return h('span', { style: 'color:#94A3B8' }, '-')
       return h('code', { style: 'font-size:12px;color:#64748B' }, row.bindIp)
@@ -271,13 +323,9 @@ const columns = [
   {
     title: '操作', key: 'actions', width: 160, fixed: 'right',
     render: (row) => h(NSpace, { size: 4, wrap: false }, () => [
-      row.status === 'active'
-        ? h(NButton, { size: 'small', tertiary: true, type: 'warning', onClick: () => handleToggleStatus(row, 'disabled') }, { default: () => '禁用' })
-        : row.status === 'disabled'
-          ? h(NButton, { size: 'small', tertiary: true, type: 'success', onClick: () => handleToggleStatus(row, 'active') }, { default: () => '启用' })
-          : null,
+      h(NButton, { size: 'small', tertiary: true, type: 'primary', onClick: () => openEditModal(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(CreateOutline)), default: () => '编辑' }),
       h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row.id) }, { icon: () => h(NIcon, { size: 14 }, () => h(TrashOutline)), default: () => '删除' }),
-    ].filter(Boolean)),
+    ]),
   },
 ]
 
@@ -318,7 +366,6 @@ function openCreateModal() {
 
 async function handleCreate() {
   const f = createForm.value
-  // 校验：至少填一种折扣
   if (f.discountType === 'percent' && !f.discount) { message.warning('请填写折扣比例'); return }
   if (f.discountType === 'fixed' && !f.deduction) { message.warning('请填写抵扣金额'); return }
 
@@ -382,14 +429,48 @@ async function handleBatchGenerate() {
   }
 }
 
-// ===== 启用/禁用 =====
-async function handleToggleStatus(row, newStatus) {
+// ===== 编辑 =====
+function openEditModal(row) {
+  editForm.value = {
+    id: row.id,
+    code: row.code,
+    status: row.status,
+    productId: row.productId || null,
+    userId: row.userId || null,
+    bindIp: row.bindIp || '',
+    discountType: row.deduction ? 'fixed' : 'percent',
+    discount: row.discount ? parseFloat(row.discount) : null,
+    deduction: row.deduction ? parseFloat(row.deduction) : null,
+    maxUses: row.maxUses || null,
+    validFrom: row.validFrom ? new Date(row.validFrom).getTime() : null,
+    validTo: row.validTo ? new Date(row.validTo).getTime() : null,
+  }
+  showEditModal.value = true
+}
+
+async function handleEdit() {
+  const f = editForm.value
+  saving.value = true
   try {
-    await adminApi.updateCoupon(row.id, { status: newStatus })
-    message.success(newStatus === 'active' ? '已启用' : '已禁用')
+    const data = {
+      status: f.status,
+      productId: f.productId || undefined,
+      userId: f.userId || undefined,
+      bindIp: f.bindIp || undefined,
+      discount: f.discountType === 'percent' ? f.discount : undefined,
+      deduction: f.discountType === 'fixed' ? f.deduction : undefined,
+      maxUses: f.maxUses || undefined,
+      validFrom: f.validFrom ? new Date(f.validFrom).toISOString() : undefined,
+      validTo: f.validTo ? new Date(f.validTo).toISOString() : undefined,
+    }
+    await adminApi.updateCoupon(f.id, data)
+    message.success('保存成功')
+    showEditModal.value = false
     loadData()
   } catch (e) {
-    message.error(e.response?.data?.error || '操作失败')
+    message.error(e.response?.data?.error || '保存失败')
+  } finally {
+    saving.value = false
   }
 }
 
