@@ -16,6 +16,10 @@
           <template #icon><n-icon><TrashOutline /></n-icon></template>
           批量删除 ({{ selectedIds.length }})
         </n-button>
+        <n-button size="small" :disabled="!selectedIds.length" @click="handleExport">
+          <template #icon><n-icon><DownloadOutline /></n-icon></template>
+          导出选中 ({{ selectedIds.length }})
+        </n-button>
       </div>
     </div>
 
@@ -195,7 +199,7 @@ import {
   NSpace, NTag, NRadioButton, NRadioGroup, NDatePicker,
   useMessage, useDialog
 } from 'naive-ui'
-import { AddOutline, TrashOutline, CreateOutline } from '@vicons/ionicons5'
+import { AddOutline, TrashOutline, CreateOutline, DownloadOutline } from '@vicons/ionicons5'
 import { adminApi } from '@/api'
 
 const message = useMessage()
@@ -510,6 +514,37 @@ function handleBatchDelete() {
       }
     },
   })
+}
+
+// ===== 导出 =====
+function handleExport() {
+  const selected = coupons.value.filter(c => selectedIds.value.includes(c.id))
+  if (!selected.length) { message.warning('请先选择要导出的优惠码'); return }
+
+  const headers = ['优惠码', '折扣', '适用商品ID', '使用者ID', 'IP', '最大使用次数', '已使用次数', '状态', '生效时间', '过期时间', '创建时间']
+  const rows = selected.map(c => [
+    c.code,
+    c.deduction ? `抵扣¥${c.deduction}` : (c.discount ? `${c.discount}%` : ''),
+    c.productId || '',
+    c.userId || '',
+    c.bindIp || '',
+    c.maxUses || '',
+    c.usedCount || 0,
+    couponStatusLabel[c.status] || c.status,
+    c.validFrom ? formatDate(c.validFrom) : '',
+    c.validTo ? formatDate(c.validTo) : '',
+    c.createdAt ? formatDate(c.createdAt) : '',
+  ])
+
+  const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `优惠码_${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+  message.success(`已导出 ${selected.length} 个优惠码`)
 }
 
 // ===== 筛选/分页 =====
