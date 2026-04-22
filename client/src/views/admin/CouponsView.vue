@@ -199,7 +199,7 @@ import {
   NSpace, NTag, NRadioButton, NRadioGroup, NDatePicker,
   useMessage, useDialog
 } from 'naive-ui'
-import { AddOutline, TrashOutline, CreateOutline, DownloadOutline } from '@vicons/ionicons5'
+import { AddOutline, TrashOutline, CreateOutline, DownloadOutline, PricetagsOutline, WalletOutline } from '@vicons/ionicons5'
 import { adminApi } from '@/api'
 
 const message = useMessage()
@@ -264,10 +264,22 @@ const columns = [
     render: (row) => h('code', { style: 'color:#3B82F6;font-weight:500' }, row.code),
   },
   {
-    title: '折扣', key: 'discount', width: 100,
+    title: '折扣', key: 'discount', width: 120,
     render: (row) => {
-      if (row.deduction) return h(NTag, { type: 'warning', size: 'small' }, () => `抵扣 ¥${row.deduction}`)
-      if (row.discount) return h(NTag, { type: 'success', size: 'small' }, () => `${row.discount}%`)
+      if (row.deduction) {
+        return h('div', { class: 'discount-badge discount-badge--fixed' }, [
+          h(NIcon, { size: 13, color: '#F59E0B' }, () => h(WalletOutline)),
+          h('span', { class: 'discount-badge__text' }, `-¥${parseFloat(row.deduction).toFixed(2)}`),
+        ])
+      }
+      if (row.discount) {
+        const d = parseFloat(row.discount)
+        const fold = (10 - d / 10).toFixed(1).replace(/\.0$/, '')
+        return h('div', { class: 'discount-badge discount-badge--percent' }, [
+          h(NIcon, { size: 13, color: '#22C55E' }, () => h(PricetagsOutline)),
+          h('span', { class: 'discount-badge__text' }, `${fold}折`),
+        ])
+      }
       return h('span', { style: 'color:#94A3B8' }, '-')
     },
   },
@@ -564,3 +576,31 @@ onMounted(async () => {
   loadData()
 })
 </script>
+
+<style scoped>
+.discount-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.discount-badge--percent {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16A34A;
+}
+
+.discount-badge--fixed {
+  background: rgba(245, 158, 11, 0.1);
+  color: #D97706;
+}
+
+.discount-badge__text {
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.3px;
+}
+</style>
