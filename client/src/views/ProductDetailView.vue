@@ -1155,7 +1155,7 @@ onUnmounted(() => {
 /* ===== 方式切换 ===== */
 .method-tabs {
   display: flex;
-  gap: 0;
+  gap: 8px;
   margin-bottom: 20px;
 }
 
@@ -1165,19 +1165,15 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 14px 16px;
   border: 1.5px solid #E2E8F0;
+  border-radius: 8px;
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
   color: #64748B;
-}
-
-.method-tab:first-child {
-  border-radius: 12px 0 0 12px;
-}
-
-.method-tab:last-child {
-  border-radius: 0 12px 12px 0;
+  font-weight: 500;
+  font-size: 15px;
 }
 
 .method-tab:hover {

@@ -37,7 +37,9 @@ const themeOverrides = computed(() => {
       fontFamily: 'Open Sans, Poppins, sans-serif',
     },
     Button: {
+      borderRadiusSmall: '8px',
       borderRadiusMedium: '8px',
+      borderRadiusLarge: '10px',
     },
     Card: {
       borderRadius: '12px',
