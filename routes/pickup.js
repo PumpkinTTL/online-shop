@@ -3,7 +3,7 @@ const pickupService = require('../services/pickupService');
 const couponService = require('../services/couponService');
 const dataSource = require('../config/database');
 const Product = require('../entities/Product');
-const { optionalAuth } = require('../middleware/auth');
+const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { pickupVerify, pickupRedeem, pickup } = require('../middleware/rateLimiter');
 const { action, system } = require('../logger');
 
@@ -74,8 +74,8 @@ router.post('/redeem', pickupRedeem, optionalAuth, async (req, res) => {
   }
 });
 
-// 获取手机号（MAAPI）
-router.post('/get-phone', pickup, async (req, res) => {
+// 获取手机号（MAAPI）— 需登录，防止接口被滥用
+router.post('/get-phone', requireAuth, pickup, async (req, res) => {
   try {
     const { cardCode, keyword, phone, cardType } = req.body;
 
@@ -105,8 +105,8 @@ router.post('/get-phone', pickup, async (req, res) => {
   }
 });
 
-// 获取验证码（MAAPI，单次查询，前端轮询调用）
-router.post('/get-verify-code', pickup, async (req, res) => {
+// 获取验证码（MAAPI，单次查询，前端轮询调用）— 需登录
+router.post('/get-verify-code', requireAuth, pickup, async (req, res) => {
   try {
     const { phone, keyword } = req.body;
     if (!phone) {
@@ -120,8 +120,8 @@ router.post('/get-verify-code', pickup, async (req, res) => {
   }
 });
 
-// 检查号码是否已有接码记录（非首次登录检测）
-router.get('/check-phone-record', async (req, res) => {
+// 检查号码是否已有接码记录（非首次登录检测）— 需登录
+router.get('/check-phone-record', requireAuth, async (req, res) => {
   try {
     const { phone } = req.query;
     if (!phone) {
@@ -187,8 +187,8 @@ router.post('/confirm', pickup, optionalAuth, async (req, res) => {
   }
 });
 
-// 释放号码（MAAPI）
-router.post('/release-phone', pickup, async (req, res) => {
+// 释放号码（MAAPI）— 需登录
+router.post('/release-phone', requireAuth, pickup, async (req, res) => {
   try {
     const { phone } = req.body;
     if (!phone) {
@@ -201,8 +201,8 @@ router.post('/release-phone', pickup, async (req, res) => {
   }
 });
 
-// 拉黑号码（MAAPI）
-router.post('/block-phone', pickup, async (req, res) => {
+// 拉黑号码（MAAPI）— 需登录
+router.post('/block-phone', requireAuth, pickup, async (req, res) => {
   try {
     const { phone } = req.body;
     if (!phone) {
@@ -215,8 +215,8 @@ router.post('/block-phone', pickup, async (req, res) => {
   }
 });
 
-// 查询余额（MAAPI）
-router.get('/balance', async (req, res) => {
+// 查询余额（MAAPI）— 需登录，防止余额信息泄露
+router.get('/balance', requireAuth, async (req, res) => {
   try {
     const balance = await pickupService.getBalance();
     res.json({ balance });
