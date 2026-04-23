@@ -100,21 +100,7 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-// 初始化默认管理员（不需要鉴权，仅首次使用）
-router.post('/init', async (req, res) => {
-  try {
-    const result = await adminService.initDefaultAdmin();
-    if (!result) {
-      return res.status(400).json({ error: '管理员已存在' });
-    }
-    res.json({ message: '初始化成功' });
-
-    // 记录初始化日志
-    system.info('admin.init', { ip: req.ip });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// 初始化默认管理员接口已移除 — 启动时自动初始化，无需 HTTP 暴露
 
 // 验证 Token 是否有效
 router.get('/check', auth, async (req, res) => {

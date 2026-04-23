@@ -25,13 +25,6 @@
           </div>
           <span>首页</span>
         </router-link>
-        <!-- 接码暂时隐藏 -->
-        <!-- <router-link to="/sms" class="nav-item" :class="{ active: isNavActive('sms') }">
-          <div class="nav-icon-wrap">
-            <n-icon :size="17"><phone-portrait-outline></phone-portrait-outline></n-icon>
-          </div>
-          <span>接码</span>
-        </router-link> -->
         <router-link to="/orders" class="nav-item" :class="{ active: isNavActive('orders') }">
           <div class="nav-icon-wrap">
             <n-icon :size="17"><receipt-outline></receipt-outline></n-icon>
@@ -170,7 +163,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { NButton, NIcon, NModal, NCard, NForm, NFormItem, NInput, useMessage } from 'naive-ui'
 import {
-  HomeOutline, PhonePortraitOutline, ReceiptOutline,
+  HomeOutline, ReceiptOutline,
   PersonOutline, LogOutOutline, ChevronDownOutline,
   LockClosedOutline, KeyOutline, ShieldCheckmarkOutline
 } from '@vicons/ionicons5'
@@ -197,7 +190,6 @@ const adminContact = {
 function isNavActive(key) {
   if (key === 'home') return route.path === '/'
   if (key === 'orders') return route.path === '/orders'
-  if (key === 'sms') return route.path === '/sms'
   return false
 }
 

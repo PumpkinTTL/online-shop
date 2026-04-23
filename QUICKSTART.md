@@ -59,4 +59,4 @@ npm start
 - **开发环境**下 `NODE_ENV=development`，TypeORM 会自动 `synchronize` 同步表结构，无需手动建表
 - **生产环境**下 `NODE_ENV=production`，TypeORM 不会自动同步表结构，需要手动迁移
 - `.env` 文件已被 `.gitignore` 排除，**不会被提交到仓库**，敏感信息是安全的
-- 管理后台地址：http://localhost:5100/admin/element ，默认账号 `admin` / `admin123`
+- 管理后台地址：http://localhost:5100/admin ，默认账号 `admin`，密码在首次启动时随机生成并打印在控制台（仅显示一次，请及时修改）

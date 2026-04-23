@@ -157,15 +157,15 @@ router.post('/notify', async (req, res) => {
   }
 });
 
-// 关闭超时订单（内部调用，需要 ADMIN_INTERNAL_KEY）
+// 关闭超时订单（内部调用，需要 ADMIN_INTERNAL_KEY 且长度≥16位）
 router.post('/close-expired', async (req, res) => {
   try {
     const { internalKey } = req.body;
     const validKey = process.env.ADMIN_INTERNAL_KEY;
 
-    // 环境变量未配置时，拒绝所有请求
-    if (!validKey || validKey.trim() === '') {
-      return res.status(500).json({ error: '内部密钥未配置' });
+    // 环境变量未配置或密钥过短时，拒绝所有请求
+    if (!validKey || validKey.trim().length < 16) {
+      return res.status(403).json({ error: '内部密钥未配置或不安全（需≥16位）' });
     }
 
     // 验证请求中的密钥

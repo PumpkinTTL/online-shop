@@ -59,14 +59,18 @@ class AdminService {
     const existing = await this.getAdminRepo().count();
     if (existing > 0) return null;
 
-    const hash = await this.hashPassword('admin123');
+    // 随机生成安全密码，避免硬编码弱密码
+    const crypto = require('crypto');
+    const defaultPassword = crypto.randomBytes(8).toString('hex'); // 16位随机密码
+    const hash = await this.hashPassword(defaultPassword);
     const admin = this.getAdminRepo().create({
       username: 'admin',
       password: hash,
       nickname: '超级管理员',
       role: 'super',
     });
-    return this.getAdminRepo().save(admin);
+    const saved = await this.getAdminRepo().save(admin);
+    return { admin: saved, defaultPassword }; // 返回明文密码供启动日志打印一次
   }
 
   // 创建管理员

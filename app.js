@@ -37,10 +37,10 @@ app.use(helmet({
   } : false,
 }));
 
-// CORS 配置：只允许同源访问（生产环境可配置允许的域名）
+// CORS 配置：生产环境必须显式配置 ALLOWED_ORIGINS，否则只允许同源
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? (process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:5100')
+    ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : false)
     : true, // 开发环境允许所有来源
   credentials: true,
 }));
@@ -140,7 +140,8 @@ async function bootstrap() {
     // 初始化默认管理员
     const initResult = await adminService.initDefaultAdmin();
     if (initResult) {
-      console.log('🔑 默认管理员已创建 — 用户名: admin, 密码: admin123');
+      console.log('🔑 默认管理员已创建 — 用户名: admin, 密码: ' + initResult.defaultPassword);
+      console.log('⚠️  请立即登录后台修改默认密码！此密码仅显示一次。');
     }
 
     // 初始化默认速率限制配置

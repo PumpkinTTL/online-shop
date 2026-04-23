@@ -46,7 +46,7 @@ async function runTests() {
   console.log('\n📝 步骤1: 登录获取 Token');
   const loginRes = await request('POST', '/login', {
     username: 'admin',
-    password: 'admin123',
+    password: process.env.TEST_ADMIN_PASSWORD || '请先在环境变量中设置密码',
   });
   const validToken = loginRes.data?.token;
   assert(loginRes.status === 200 && validToken, '管理员登录成功获取 Token');

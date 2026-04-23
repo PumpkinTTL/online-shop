@@ -1,32 +1,13 @@
 <template>
-  <div class="sms-view">
-    <div class="container">
-      <n-h2>接码平台</n-h2>
-      <n-card>
-        <n-empty description="接码功能迁移中..." />
-      </n-card>
-    </div>
-  </div>
+  <div></div>
 </template>
 
 <script setup>
-import { NH2, NCard, NEmpty } from 'naive-ui'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+onMounted(() => {
+  router.replace({ name: 'Home' })
+})
 </script>
-
-<style scoped>
-.sms-view {
-  padding: 24px 0;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px 72px 24px;
-}
-
-@media (min-width: 768px) {
-  .container {
-    padding-bottom: 24px;
-  }
-}
-</style>

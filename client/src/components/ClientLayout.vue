@@ -19,13 +19,6 @@
         </div>
         <span class="tabbar-label">首页</span>
       </router-link>
-      <!-- 接码暂时隐藏 -->
-      <!-- <router-link to="/sms" class="tabbar-item" :class="{ active: isActive('sms') }">
-        <div class="tabbar-icon-wrap">
-          <n-icon :size="22"><phone-portrait-outline></phone-portrait-outline></n-icon>
-        </div>
-        <span class="tabbar-label">接码</span>
-      </router-link> -->
       <router-link
         to="/orders"
         class="tabbar-item"
@@ -130,7 +123,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NModal, NCard, NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
 import {
-  HomeOutline, PhonePortraitOutline, ReceiptOutline,
+  HomeOutline, ReceiptOutline,
   PersonOutline, LockClosedOutline, KeyOutline, ShieldCheckmarkOutline
 } from '@vicons/ionicons5'
 import AppHeader from '@/components/AppHeader.vue'
@@ -204,7 +197,6 @@ async function handleAuth() {
 function isActive(key) {
   if (key === 'home') return route.path === '/'
   if (key === 'orders') return route.path === '/orders'
-  if (key === 'sms') return route.path === '/sms'
   if (key === 'mine') return route.path === '/profile'
   return false
 }
