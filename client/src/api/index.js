@@ -1,6 +1,11 @@
 import axios from 'axios'
 import { useCaptchaStore } from '@/stores/captcha'
 import { useUserStore } from '@/stores/user'
+import { createDiscreteApi } from 'naive-ui'
+import router from '@/router'
+
+// 在 setup 外部使用 message（无刷新提示）
+const { message: discreteMsg } = createDiscreteApi(['message'])
 
 // ===== HTTP 实例 =====
 const http = axios.create({
@@ -33,14 +38,15 @@ http.interceptors.response.use(
       }
     }
 
-    // 用户账号被封禁 → 强制登出
+    // 用户账号被封禁 → 无刷新登出 + 提示（以后端错误文本为准，阻止重复提示）
     if (error.response?.status === 403 && error.response.data?.accountBanned) {
       const userStore = useUserStore()
       userStore.logout()
-      // 避免循环：如果已经在首页就不跳
-      if (window.location.pathname !== '/') {
-        window.location.href = '/'
+      discreteMsg.warning(error.response.data.error || '账号已被禁用', { duration: 5000 })
+      if (router.currentRoute.value.name !== 'Home') {
+        router.push({ name: 'Home' })
       }
+      return new Promise(() => {}) // 拦截后不再传播，组件不会二次弹提示
     }
 
     // 429 → 等待验证码通过后重新发起请求
