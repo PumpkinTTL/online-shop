@@ -271,6 +271,16 @@ class AdminService {
     return repo.save(user);
   }
 
+  // 重置用户密码
+  async resetUserPassword(id, newPassword) {
+    const repo = dataSource.getRepository(User);
+    const user = await repo.findOne({ where: { id } });
+    if (!user) throw new Error('用户不存在');
+    const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    user.password = hash;
+    return repo.save(user);
+  }
+
   async deleteUser(id) {
     const repo = dataSource.getRepository(User);
     const user = await repo.findOne({ where: { id } });

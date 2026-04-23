@@ -173,6 +173,10 @@ export const useAdminStore = defineStore('admin', () => {
     return await adminApi.toggleUserActive(id)
   }
 
+  async function resetUserPassword(id, newPassword) {
+    return await adminApi.resetUserPassword(id, newPassword)
+  }
+
   async function deleteUser(id) {
     return await adminApi.deleteUser(id)
   }
@@ -269,7 +273,7 @@ export const useAdminStore = defineStore('admin', () => {
     // 订单
     orders, ordersTotal, fetchOrders, deleteOrder, batchDeleteOrders,
     // 用户
-    users, usersTotal, fetchUsers, toggleUserActive, deleteUser, batchDeleteUsers,
+    users, usersTotal, fetchUsers, toggleUserActive, resetUserPassword, deleteUser, batchDeleteUsers,
     // 管理员
     admins, fetchAdmins, createAdmin, deleteAdmin,
     // 接码记录

@@ -190,6 +190,7 @@ export const adminApi = {
   getUsers: (params) => http.get('/admin/users', { params }),
   getUser: (id) => http.get(`/admin/users/${id}`),
   toggleUserActive: (id) => http.put(`/admin/users/${id}/toggle-active`),
+  resetUserPassword: (id, newPassword) => http.put(`/admin/users/${id}/reset-password`, { newPassword }),
   deleteUser: (id) => http.delete(`/admin/users/${id}`),
   batchDeleteUsers: (ids) => http.post('/admin/users/batch-delete', { ids }),
 

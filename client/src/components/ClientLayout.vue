@@ -89,9 +89,36 @@
         </n-button>
 
         <div class="auth-switch">
-          <span class="auth-switch-text">{{ isLogin ? '还没有账号？' : '已有账号？' }}</span>
+          <n-button v-if="isLogin" text size="small" class="auth-forgot" @click="showForgotTip = true">忘记密码？</n-button>
+          <span v-else class="auth-switch-text">已有账号？</span>
           <n-button text type="primary" size="small" @click="isLogin = !isLogin">{{ isLogin ? '立即注册' : '去登录' }}</n-button>
         </div>
+      </n-card>
+    </n-modal>
+
+    <!-- 忘记密码提示弹窗 -->
+    <n-modal v-model:show="showForgotTip" :mask-closable="true" :style="{ maxWidth: '360px', width: '90vw' }">
+      <n-card :bordered="false" class="auth-card" :closable="true" @close="showForgotTip = false">
+        <div class="auth-brand">
+          <div class="auth-brand-icon" style="background: #F59E0B">
+            <n-icon :size="20" color="#fff"><key-outline></key-outline></n-icon>
+          </div>
+          <div>
+            <div class="auth-brand-title">忘记密码</div>
+            <div class="auth-brand-desc">请联系管理员重置密码</div>
+          </div>
+        </div>
+        <div class="forgot-contact">
+          <div class="forgot-contact-item">
+            <span class="forgot-label">QQ</span>
+            <span class="forgot-value">{{ adminContact.qq }}</span>
+          </div>
+          <div class="forgot-contact-item" v-if="adminContact.wechat">
+            <span class="forgot-label">微信</span>
+            <span class="forgot-value">{{ adminContact.wechat }}</span>
+          </div>
+        </div>
+        <n-button block size="large" class="auth-submit" @click="showForgotTip = false">我知道了</n-button>
       </n-card>
     </n-modal>
     <CaptchaModal></CaptchaModal>
@@ -120,6 +147,13 @@ const isLogin = ref(true)
 const authLoading = ref(false)
 const authFormRef = ref(null)
 const authForm = ref({ username: '', password: '', confirmPassword: '', inviteCode: '' })
+const showForgotTip = ref(false)
+
+// 管理员联系方式
+const adminContact = {
+  qq: import.meta.env.VITE_ADMIN_QQ || '请联系站长获取',
+  wechat: import.meta.env.VITE_ADMIN_WECHAT || '',
+}
 
 const authRules = computed(() => ({
   username: [
@@ -324,5 +358,46 @@ const isProductDetail = computed(() => /^\/product\/\w+/.test(route.path))
 
 .auth-switch-text {
   color: #94A3B8;
+}
+
+.auth-forgot {
+  color: #94A3B8;
+  margin-right: auto;
+}
+
+.auth-forgot:hover {
+  color: #F59E0B;
+}
+
+/* ===== 忘记密码弹窗 ===== */
+.forgot-contact {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.forgot-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #F8FAFC;
+  border-radius: 10px;
+  border: 1px solid #F1F5F9;
+}
+
+.forgot-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94A3B8;
+  min-width: 32px;
+}
+
+.forgot-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E293B;
+  font-family: 'Poppins', sans-serif;
 }
 </style>

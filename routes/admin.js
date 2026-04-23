@@ -341,6 +341,26 @@ router.get('/users/:id', auth, async (req, res) => {
   }
 });
 
+// 重置用户密码
+router.put('/users/:id/reset-password', auth, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: '密码长度至少6位' });
+    }
+    await adminService.resetUserPassword(userId, newPassword);
+    res.json({ message: '密码重置成功' });
+
+    action.success('admin.resetUserPassword', {
+      targetUserId: userId,
+      adminId: req.adminId,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 router.put('/users/:id/toggle-active', auth, async (req, res) => {
   try {
     const user = await adminService.toggleUserActive(parseInt(req.params.id));
