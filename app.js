@@ -45,6 +45,9 @@ app.use(cors({
   credentials: true,
 }));
 
+// 信任反向代理（Nginx 等），确保 req.ip 获取真实客户端 IP
+app.set('trust proxy', 1);
+
 // 中间件
 app.use(express.json({ limit: '1mb' })); // 限制请求体大小
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));

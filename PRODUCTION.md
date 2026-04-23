@@ -224,5 +224,21 @@ A: 确认 ALIPAY_PUBLIC_KEY 配置正确，使用支付宝提供的公钥
 
 ---
 
-*最后更新：2026-04-16*
+### 已实现的安全措施
+- ✅ JWT 认证（用户/管理员分离密钥）
+- ✅ bcrypt 密码哈希（10轮）
+- ✅ helmet 安全头（HSTS / X-Frame-Options / X-Content-Type-Options）
+- ✅ CORS 跨域控制（生产未配 ALLOWED_ORIGINS 时默认同源）
+- ✅ 请求体大小限制（1MB）
+- ✅ 速率限制（9 个限流器 + 算术验证码）
+- ✅ 参数篡改防护（金额、关键词）
+- ✅ 日志审计系统（access/business/action/system 4 模块）
+- ✅ 默认管理员密码随机生成（不再硬编码）
+- ✅ 管理员初始化接口已移除（启动时自动初始化）
+- ✅ 支付取消竞态保护（cancel 前查支付宝真实状态）
+- ✅ ADMIN_INTERNAL_KEY 强度校验（必须≥16位）
+- ✅ trust proxy 配置（Nginx 反代时获取真实 IP）
+- ✅ 封号机制（登录拦截 + requireAuth 检查 + 前端无刷新登出）
+
+*最后更新：2026-04-24*
 *维护者：PumpkinTTL*
