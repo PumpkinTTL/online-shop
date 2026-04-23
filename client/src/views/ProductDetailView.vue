@@ -812,7 +812,12 @@ const closeQrModal = () => {
   }
   // 通知后端取消订单（pending 状态才需要）
   if (orderNo.value && payStatus.value !== 'paid') {
-    paymentApi.cancel(orderNo.value).catch(() => {})
+    paymentApi.cancel(orderNo.value).then(res => {
+      // 竞态：关弹窗时刚好已付款，刷新页面查看结果
+      if (res?.alreadyPaid) {
+        message.info('订单已支付成功，请查看订单记录')
+      }
+    }).catch(() => {})
   }
 }
 
@@ -938,7 +943,11 @@ const closeSmsPayModal = () => {
   stopSmsPolling()
   // 通知后端取消订单（pending 状态才需要）
   if (smsOrderNo.value && smsPayStatus.value !== 'paid') {
-    paymentApi.cancel(smsOrderNo.value).catch(() => {})
+    paymentApi.cancel(smsOrderNo.value).then(res => {
+      if (res?.alreadyPaid) {
+        message.info('订单已支付成功，请查看订单记录')
+      }
+    }).catch(() => {})
   }
 }
 

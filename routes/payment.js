@@ -103,7 +103,7 @@ router.get('/status', [
 });
 
 // 用户主动取消支付（关闭支付宝交易 + 标记订单 closed）
-router.post('/cancel', [
+router.post('/cancel', optionalAuth, [
   body('orderNo')
     .trim()
     .notEmpty()
@@ -111,8 +111,13 @@ router.post('/cancel', [
 ], handleValidationErrors, async (req, res) => {
   try {
     const { orderNo } = req.body;
-    await paymentService.cancelPayment(orderNo.trim());
-    res.json({ message: '订单已取消' });
+    const userId = req.userId || null;
+    const result = await paymentService.cancelPayment(orderNo.trim(), userId);
+    if (result?.alreadyPaid) {
+      res.json({ message: '订单已支付', alreadyPaid: true });
+    } else {
+      res.json({ message: '订单已取消' });
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

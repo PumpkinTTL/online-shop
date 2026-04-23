@@ -496,11 +496,24 @@ class PaymentService {
   }
 
   // 用户主动取消支付（关闭支付宝交易 + 标记订单 closed）
-  async cancelPayment(orderNo) {
+  async cancelPayment(orderNo, userId = null) {
     const paymentRepo = this.getPaymentOrderRepo();
     const order = await paymentRepo.findOne({ where: { orderNo } });
     if (!order) throw new Error('订单不存在');
     if (order.status !== 'pending') throw new Error('当前订单状态不可取消');
+
+    // 权限检查：如果订单关联了用户，必须是本人
+    if (order.userId && userId !== order.userId) {
+      throw new Error('无权操作此订单');
+    }
+
+    // 先主动查一次支付宝交易状态，防止竞态（用户关弹窗时刚好已付款）
+    const tradeInfo = await this.queryAlipayTrade(orderNo);
+    if (tradeInfo && (tradeInfo.trade_status === 'TRADE_SUCCESS' || tradeInfo.trade_status === 'TRADE_FINISHED')) {
+      // 已经付款了，走正常成功流程
+      await this.processPaymentSuccess(order, tradeInfo.trade_no || '', tradeInfo);
+      return { alreadyPaid: true };
+    }
 
     // 通知支付宝关闭交易
     try {
