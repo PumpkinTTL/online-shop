@@ -588,7 +588,9 @@ const countdownText = computed(() => {
 
 // 封面图片地址
 const coverSrc = computed(() => {
-  if (product.value?.image) return `/images/${product.value.image}`
+  if (product.value?.image) {
+    return product.value.image.startsWith('http') ? product.value.image : `/images/${product.value.image}`
+  }
   return product.value?.coverImage || ''
 })
 

@@ -104,7 +104,7 @@
           <n-input v-model:value="form.tips" type="textarea" :rows="2" placeholder="可选，购买页以红色警告展示" />
         </n-form-item>
         <n-form-item label="封面图">
-          <n-input v-model:value="form.image" placeholder="图片URL（可选）" />
+          <n-input v-model:value="form.image" placeholder="图片URL，支持远程地址或本地文件名" />
         </n-form-item>
       </n-form>
       <template #footer>

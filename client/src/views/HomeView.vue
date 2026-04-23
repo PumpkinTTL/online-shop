@@ -181,7 +181,12 @@ function goToProduct(id) {
 }
 
 function coverStyle(product) {
-  const src = product.image ? `/images/${product.image}` : (product.coverImage || '')
+  let src = ''
+  if (product.image) {
+    src = product.image.startsWith('http') ? product.image : `/images/${product.image}`
+  } else {
+    src = product.coverImage || ''
+  }
   if (src) {
     return { background: `url('${src}') center/cover no-repeat` }
   }
