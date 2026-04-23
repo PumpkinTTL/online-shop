@@ -124,7 +124,7 @@ router.post('/cancel', optionalAuth, [
 });
 
 // 更新联系方式（需要订单号匹配，如果订单有userId则需要登录认证）
-router.post('/update-contact', [
+router.post('/update-contact', optionalAuth, [
   body('orderNo')
     .trim()
     .notEmpty()
