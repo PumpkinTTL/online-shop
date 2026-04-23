@@ -60,6 +60,10 @@
         <n-form-item label="IP">
           <n-input v-model:value="createForm.bindIp" placeholder="不限" clearable />
         </n-form-item>
+        <n-form-item label="需要登录">
+          <n-switch v-model:value="createForm.requireLogin" />
+          <span style="margin-left:8px;color:var(--text-light);font-size:12px">开启后游客无法使用此优惠码</span>
+        </n-form-item>
         <n-form-item label="折扣类型">
           <n-radio-group v-model:value="createForm.discountType">
             <n-radio-button value="percent">百分比折扣</n-radio-button>
@@ -111,6 +115,10 @@
         <n-form-item label="IP">
           <n-input v-model:value="batchForm.bindIp" placeholder="不限" clearable />
         </n-form-item>
+        <n-form-item label="需要登录">
+          <n-switch v-model:value="batchForm.requireLogin" />
+          <span style="margin-left:8px;color:var(--text-light);font-size:12px">开启后游客无法使用此优惠码</span>
+        </n-form-item>
         <n-form-item label="折扣类型">
           <n-radio-group v-model:value="batchForm.discountType">
             <n-radio-button value="percent">百分比折扣</n-radio-button>
@@ -159,6 +167,10 @@
         <n-form-item label="IP">
           <n-input v-model:value="editForm.bindIp" placeholder="不限" clearable />
         </n-form-item>
+        <n-form-item label="需要登录">
+          <n-switch v-model:value="editForm.requireLogin" />
+          <span style="margin-left:8px;color:var(--text-light);font-size:12px">开启后游客无法使用此优惠码</span>
+        </n-form-item>
         <n-form-item label="折扣类型">
           <n-radio-group v-model:value="editForm.discountType">
             <n-radio-button value="percent">百分比折扣</n-radio-button>
@@ -196,7 +208,7 @@ import { ref, h, onMounted, computed } from 'vue'
 import {
   NButton, NIcon, NDataTable, NPagination,
   NModal, NForm, NFormItem, NInput, NInputNumber, NSelect,
-  NSpace, NTag, NRadioButton, NRadioGroup, NDatePicker,
+  NSpace, NTag, NRadioButton, NRadioGroup, NDatePicker, NSwitch,
   useMessage, useDialog
 } from 'naive-ui'
 import { AddOutline, TrashOutline, CreateOutline, DownloadOutline, PricetagsOutline, WalletOutline } from '@vicons/ionicons5'
@@ -244,6 +256,7 @@ const emptyForm = () => ({
   productId: null,
   userId: null,
   bindIp: '',
+  requireLogin: false,
   discountType: 'percent',
   discount: null,
   deduction: null,
@@ -305,6 +318,12 @@ const columns = [
       if (!row.bindIp) return h('span', { style: 'color:#94A3B8' }, '-')
       return h('code', { style: 'font-size:12px;color:#64748B' }, row.bindIp)
     },
+  },
+  {
+    title: '需登录', key: 'requireLogin', width: 80, align: 'center',
+    render: (row) => row.requireLogin
+      ? h(NTag, { type: 'info', size: 'small', round: true }, () => '是')
+      : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
     title: '使用情况', key: 'usage', width: 110,
@@ -392,6 +411,7 @@ async function handleCreate() {
       productId: f.productId || undefined,
       userId: f.userId || undefined,
       bindIp: f.bindIp || undefined,
+      requireLogin: f.requireLogin || undefined,
       discount: f.discountType === 'percent' ? f.discount : undefined,
       deduction: f.discountType === 'fixed' ? f.deduction : undefined,
       maxUses: f.maxUses || undefined,
@@ -428,6 +448,7 @@ async function handleBatchGenerate() {
       productId: f.productId || undefined,
       userId: f.userId || undefined,
       bindIp: f.bindIp || undefined,
+      requireLogin: f.requireLogin || undefined,
       discount: f.discountType === 'percent' ? f.discount : undefined,
       deduction: f.discountType === 'fixed' ? f.deduction : undefined,
       maxUses: f.maxUses || undefined,
@@ -454,6 +475,7 @@ function openEditModal(row) {
     productId: row.productId || null,
     userId: row.userId || null,
     bindIp: row.bindIp || '',
+    requireLogin: row.requireLogin || false,
     discountType: row.deduction ? 'fixed' : 'percent',
     discount: row.discount ? parseFloat(row.discount) : null,
     deduction: row.deduction ? parseFloat(row.deduction) : null,
@@ -473,6 +495,7 @@ async function handleEdit() {
       productId: f.productId || undefined,
       userId: f.userId || undefined,
       bindIp: f.bindIp || undefined,
+      requireLogin: f.requireLogin || undefined,
       discount: f.discountType === 'percent' ? f.discount : undefined,
       deduction: f.discountType === 'fixed' ? f.deduction : undefined,
       maxUses: f.maxUses || undefined,

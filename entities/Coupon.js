@@ -15,6 +15,7 @@ module.exports = new EntitySchema({
     validTo: { type: 'datetime', nullable: true },
     userId: { type: 'int', nullable: true }, // 限定使用者（null=不限）
     bindIp: { type: 'varchar', length: 45, nullable: true }, // 限定IP（null=不限）
+    requireLogin: { type: 'boolean', default: false }, // 需要登录才能使用
     status: { type: 'varchar', length: 20, default: 'active' }, // active / disabled / expired
     createdAt: { type: 'datetime', createDate: true },
   },

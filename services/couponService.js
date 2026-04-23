@@ -79,6 +79,7 @@ class CouponService {
       validTo: data.validTo || null,
       userId: data.userId || null,
       bindIp: data.bindIp || null,
+      requireLogin: data.requireLogin || false,
       status: 'active',
     });
 
@@ -127,6 +128,7 @@ class CouponService {
         validTo: data.validTo || null,
         userId: data.userId || null,
         bindIp: data.bindIp || null,
+        requireLogin: data.requireLogin || false,
         status: 'active',
       }));
     }
@@ -198,6 +200,11 @@ class CouponService {
     // 商品匹配检查
     if (coupon.productId && coupon.productId !== productId) {
       return { valid: false, error: '该优惠码不适用于此商品' };
+    }
+
+    // 需要登录检查
+    if (coupon.requireLogin && !userId) {
+      return { valid: false, error: '该优惠码需要登录后使用' };
     }
 
     // 使用者检查

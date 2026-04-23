@@ -255,7 +255,7 @@ router.get('/orders', async (req, res) => {
 // ==================== 优惠码验证（前台） ====================
 
 // 验证优惠码（不使用，仅返回折扣信息）
-router.post('/validate-coupon', pickup, async (req, res) => {
+router.post('/validate-coupon', pickup, optionalAuth, async (req, res) => {
   try {
     const { code, productId } = req.body;
     if (!code || !code.trim()) {
