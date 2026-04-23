@@ -495,6 +495,30 @@ class PaymentService {
     }
   }
 
+  // 用户主动取消支付（关闭支付宝交易 + 标记订单 closed）
+  async cancelPayment(orderNo) {
+    const paymentRepo = this.getPaymentOrderRepo();
+    const order = await paymentRepo.findOne({ where: { orderNo } });
+    if (!order) throw new Error('订单不存在');
+    if (order.status !== 'pending') throw new Error('当前订单状态不可取消');
+
+    // 通知支付宝关闭交易
+    try {
+      const alipaySdk = getAlipaySdk();
+      await alipaySdk.exec('alipay.trade.close', {
+        bizContent: { out_trade_no: orderNo },
+      });
+      console.log(`[Payment] 已通知支付宝关闭交易: ${orderNo}`);
+    } catch (e) {
+      // 支付宝关闭失败不影响本地标记（交易可能还没创建或已过期）
+      console.warn('[Payment] 通知支付宝关闭交易失败:', e.message);
+    }
+
+    // 本地标记为 closed
+    await paymentRepo.update(order.id, { status: 'closed' });
+    return true;
+  }
+
   // 关闭超时订单
   async closeExpiredOrders() {
     const paymentRepo = this.getPaymentOrderRepo();

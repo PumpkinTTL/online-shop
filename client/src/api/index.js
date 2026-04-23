@@ -127,6 +127,7 @@ export const paymentApi = {
   create: (productId, contact, couponCode) => http.post('/payment/create', { productId, contact, couponCode }),
   createSms: (cardKeyId, productId, contact) => http.post('/payment/create-sms', { cardKeyId, productId, contact }),
   queryStatus: (orderNo) => http.get('/payment/status', { params: { orderNo } }),
+  cancel: (orderNo) => http.post('/payment/cancel', { orderNo }),
   updateContact: (orderNo, contact) => http.post('/payment/update-contact', { orderNo, contact }),
 }
 

@@ -810,6 +810,10 @@ const closeQrModal = () => {
     clearInterval(countdownTimer)
     countdownTimer = null
   }
+  // 通知后端取消订单（pending 状态才需要）
+  if (orderNo.value && payStatus.value !== 'paid') {
+    paymentApi.cancel(orderNo.value).catch(() => {})
+  }
 }
 
 /** 弹窗关闭后（不管怎么关的）清理轮询和状态 */
@@ -932,6 +936,10 @@ const stopSmsPolling = () => {
 const closeSmsPayModal = () => {
   showSmsPayModal.value = false
   stopSmsPolling()
+  // 通知后端取消订单（pending 状态才需要）
+  if (smsOrderNo.value && smsPayStatus.value !== 'paid') {
+    paymentApi.cancel(smsOrderNo.value).catch(() => {})
+  }
 }
 
 /** 接码支付弹窗关闭后清理 */

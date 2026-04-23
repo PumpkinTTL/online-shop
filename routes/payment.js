@@ -102,6 +102,22 @@ router.get('/status', [
   }
 });
 
+// 用户主动取消支付（关闭支付宝交易 + 标记订单 closed）
+router.post('/cancel', [
+  body('orderNo')
+    .trim()
+    .notEmpty()
+    .withMessage('订单号不能为空'),
+], handleValidationErrors, async (req, res) => {
+  try {
+    const { orderNo } = req.body;
+    await paymentService.cancelPayment(orderNo.trim());
+    res.json({ message: '订单已取消' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // 更新联系方式（需要订单号匹配，如果订单有userId则需要登录认证）
 router.post('/update-contact', [
   body('orderNo')
