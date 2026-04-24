@@ -22,7 +22,7 @@
         :bordered="false"
         :loading="loading"
         :row-key="row => row.id"
-        :scroll-x="1600"
+        :scroll-x="1760"
         v-model:checked-row-keys="selectedKeys"
         @update:checked-row-keys="keys => selectedKeys = keys"
       />
@@ -221,9 +221,9 @@ const columns = [
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
-    title: '兑换地址', key: 'addr', minWidth: 140,
+    title: '兑换地址', key: 'addr', minWidth: 180,
     render: (row) => row.addr
-      ? h(NTooltip, {}, { trigger: () => h('span', { style: 'cursor:pointer;color:#3B82F6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;display:inline-block' }, row.addr), default: () => row.addr })
+      ? h(NTooltip, {}, { trigger: () => h('a', { href: row.addr, target: '_blank', style: 'cursor:pointer;color:#3B82F6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;display:inline-block' }, row.addr), default: () => row.addr })
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
