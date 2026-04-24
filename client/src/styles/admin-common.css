@@ -40,6 +40,7 @@
   border-radius: 12px;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
 }
 
 /* 分页容器 */
