@@ -22,7 +22,7 @@
         :bordered="false"
         :loading="loading"
         :row-key="row => row.id"
-        :scroll-x="1760"
+        :scroll-x="2000"
         v-model:checked-row-keys="selectedKeys"
         @update:checked-row-keys="keys => selectedKeys = keys"
       />
