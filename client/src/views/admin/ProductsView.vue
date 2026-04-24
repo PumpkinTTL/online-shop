@@ -22,7 +22,7 @@
         :bordered="false"
         :loading="loading"
         :row-key="row => row.id"
-        :scroll-x="1460"
+        :scroll-x="1600"
         v-model:checked-row-keys="selectedKeys"
         @update:checked-row-keys="keys => selectedKeys = keys"
       />
@@ -103,6 +103,9 @@
         <n-form-item label="注意事项">
           <n-input v-model:value="form.tips" type="textarea" :rows="2" placeholder="可选，购买页以红色警告展示" />
         </n-form-item>
+        <n-form-item label="兑换地址">
+          <n-input v-model:value="form.addr" placeholder="CDK兑换网址，留空则不显示兑换按钮" />
+        </n-form-item>
         <n-form-item label="封面图">
           <n-input v-model:value="form.image" placeholder="图片URL，支持远程地址或本地文件名" />
         </n-form-item>
@@ -145,7 +148,7 @@ const formRef = ref(null)
 const defaultForm = {
   name: '', code: '', price: 0, categoryId: null, description: '',
   stock: 0, sales: 0, warranty: '', credit: null, tips: '',
-  image: '', sort: 0, show: true,
+  addr: '', image: '', sort: 0, show: true,
 }
 const form = ref({ ...defaultForm })
 
@@ -218,6 +221,12 @@ const columns = [
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
+    title: '兑换地址', key: 'addr', minWidth: 140,
+    render: (row) => row.addr
+      ? h(NTooltip, {}, { trigger: () => h('span', { style: 'cursor:pointer;color:#3B82F6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;display:inline-block' }, row.addr), default: () => row.addr })
+      : h('span', { style: 'color:#94A3B8' }, '-'),
+  },
+  {
     title: '上架', key: 'show', minWidth: 70,
     render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '是' : '否'),
   },
@@ -255,6 +264,7 @@ function openForm(row) {
       warranty: row.warranty || '',
       credit: row.credit != null ? Number(row.credit) : null,
       tips: row.tips || '',
+      addr: row.addr || '',
       image: row.image || '',
       sort: Number(row.sort) || 0,
       show: row.show !== 0 && row.show !== false,

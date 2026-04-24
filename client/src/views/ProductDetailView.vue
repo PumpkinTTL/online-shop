@@ -248,7 +248,7 @@
                 <n-icon :size="48" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
               </div>
               <h3 class="success-title">{{ actionResult.type === 'alipay' ? '支付成功' : '兑换成功' }}</h3>
-              <p class="success-desc">请复制兑换码前往网站完成兑换</p>
+              <p class="success-desc">{{ redeemUrl ? '请复制兑换码前往网站完成兑换' : '兑换码已生成，请妥善保存' }}</p>
               <div class="result-box">
                 <div class="result-label">兑换码 (CDK)</div>
                 <n-space>
@@ -259,7 +259,18 @@
                   </n-button>
                 </n-space>
               </div>
-              <n-space vertical>
+              <n-space v-if="redeemUrl" vertical>
+                <div class="result-box">
+                  <div class="result-label">兑换网址</div>
+                  <n-input :value="redeemUrl" readonly style="flex:1">
+                    <template #suffix>
+                      <n-button text size="tiny" @click="copyText(redeemUrl, '网址已复制')">
+                        <template #icon><n-icon size="14"><copy-outline></copy-outline></n-icon></template>
+                        复制
+                      </n-button>
+                    </template>
+                  </n-input>
+                </div>
                 <n-button type="primary" size="large" block @click="goToRedeem">
                   <template #icon><n-icon><open-outline></open-outline></n-icon></template>
                   前往兑换
@@ -531,7 +542,7 @@ const actionResult = ref(null)
 
 // 计算属性
 const isSmsProduct = computed(() => product.value?.category?.smsEnabled === 1)
-const redeemUrl = computed(() => product.value?.addr || 'https://aisub.vip/')
+const redeemUrl = computed(() => product.value?.addr || '')
 const smsPriceText = computed(() => {
   const value = product.value?.category?.smsPrice
   return value || product.value?.smsPrice || '0.01'
