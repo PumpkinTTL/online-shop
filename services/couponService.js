@@ -232,22 +232,32 @@ class CouponService {
     return { valid: true, coupon, finalAmount };
   }
 
-  // 使用优惠码（支付成功后调用，递增计数）
+  // 使用优惠码（支付成功后调用，原子扣减计数防竞态超用）
   async useCoupon(couponId) {
     if (!couponId) return;
     const repo = this.getCouponRepo();
     try {
-      const coupon = await repo.findOne({ where: { id: couponId } });
-      if (!coupon) return;
+      // 原子更新：只在使用次数未达上限时才扣减，防止并发超用
+      const result = await repo
+        .createQueryBuilder()
+        .update(Coupon)
+        .set({
+          usedCount: () => 'usedCount + 1',
+        })
+        .where('id = :id', { id: couponId })
+        .andWhere('(maxUses IS NULL OR usedCount < maxUses)')
+        .execute();
 
-      const newUsedCount = coupon.usedCount + 1;
-      const updateData = { usedCount: newUsedCount };
-
-      if (coupon.maxUses && newUsedCount >= coupon.maxUses) {
-        updateData.status = 'expired';
+      if (result.affected === 0) {
+        console.warn('[CouponService] 优惠码使用失败（已用完或不存在）, couponId:', couponId);
+        return;
       }
 
-      await repo.update(couponId, updateData);
+      // 检查是否达到上限，自动过期
+      const coupon = await repo.findOne({ where: { id: couponId } });
+      if (coupon && coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+        await repo.update(couponId, { status: 'expired' });
+      }
     } catch (e) {
       console.warn('[CouponService] useCoupon error:', e.message);
     }

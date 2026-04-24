@@ -33,31 +33,37 @@ class PickupService {
     return cardKey;
   }
 
-  // 兑换卡密 — 验证卡密，返回CDK；已使用的卡密也返回CDK（第三方无法验证是否已兑换）
+  // 兑换卡密 — 使用事务+悲观锁防并发重复兑换
   async redeemCardKey(code, productId) {
-    const repo = this.getCardKeyRepo();
-    const cardKey = await repo.findOne({ where: { code } });
-    if (!cardKey) throw new Error('卡密不存在');
-    if (cardKey.status === 'expired') throw new Error('卡密已过期');
-    if (!cardKey.CDK) throw new Error('该卡密暂无关联的兑换码，请联系客服');
-    // 如果卡密绑定了商品ID，验证是否匹配
-    if (cardKey.productId && productId && cardKey.productId !== parseInt(productId)) {
-      throw new Error('该卡密不适用于此商品');
-    }
-
-    // 首次兑换，标记为已使用
-    if (cardKey.status !== 'used') {
-      await repo.update(cardKey.id, {
-        status: 'used',
-        usedAt: new Date(),
+    return await dataSource.transaction(async (manager) => {
+      // 加行锁查询卡密，防止并发兑换
+      const cardKey = await manager.findOne(CardKey, {
+        where: { code },
+        lock: { mode: 'pessimistic_write' },
       });
-    }
 
-    return {
-      id: cardKey.id,
-      productId: cardKey.productId,
-      CDK: cardKey.CDK,
-    };
+      if (!cardKey) throw new Error('卡密不存在');
+      if (cardKey.status === 'expired') throw new Error('卡密已过期');
+      if (!cardKey.CDK) throw new Error('该卡密暂无关联的兑换码，请联系客服');
+      // 如果卡密绑定了商品ID，验证是否匹配
+      if (cardKey.productId && productId && cardKey.productId !== parseInt(productId)) {
+        throw new Error('该卡密不适用于此商品');
+      }
+
+      // 首次兑换，原子标记为已使用
+      if (cardKey.status !== 'used') {
+        await manager.update(CardKey, cardKey.id, {
+          status: 'used',
+          usedAt: new Date(),
+        });
+      }
+
+      return {
+        id: cardKey.id,
+        productId: cardKey.productId,
+        CDK: cardKey.CDK,
+      };
+    });
   }
 
   // 获取手机号（调用 MAAPI）并写入接码记录

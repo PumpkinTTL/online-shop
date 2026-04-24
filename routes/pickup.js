@@ -225,12 +225,17 @@ router.get('/balance', requireAuth, async (req, res) => {
   }
 });
 
-// 查询订单（免登录，支持多条件；已登录用户可按 userId 查询）
-router.get('/orders', async (req, res) => {
+// 查询订单（需登录，只能查自己的；管理员不受限制）
+router.get('/orders', optionalAuth, async (req, res) => {
   try {
-    const { keyword, contact, orderNo, phone, status, productId, userId, page, pageSize } = req.query;
+    const { keyword, contact, orderNo, phone, status, productId, page, pageSize } = req.query;
     const filter = {};
-    if (userId) filter.userId = userId;
+
+    // 已登录用户只能查自己的订单（防 IDOR）
+    if (req.userId) {
+      filter.userId = req.userId;
+    }
+
     if (keyword) filter.keyword = keyword.trim();
     if (contact) filter.contact = contact.trim();
     if (orderNo) filter.orderNo = orderNo.trim();
