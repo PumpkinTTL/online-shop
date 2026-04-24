@@ -275,10 +275,6 @@
                   <template #icon><n-icon><open-outline></open-outline></n-icon></template>
                   前往兑换
                 </n-button>
-                <n-button size="large" block @click="copyText(redeemUrl, '网址已复制')">
-                  <template #icon><n-icon><copy-outline></copy-outline></n-icon></template>
-                  复制兑换网址
-                </n-button>
               </n-space>
             </div>
 
