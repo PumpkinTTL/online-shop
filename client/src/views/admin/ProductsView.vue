@@ -22,6 +22,7 @@
         :bordered="false"
         :loading="loading"
         :row-key="row => row.id"
+        :scroll-x="1568"
         v-model:checked-row-keys="selectedKeys"
         @update:checked-row-keys="keys => selectedKeys = keys"
       />
@@ -165,12 +166,12 @@ const columns = [
   { type: 'selection' },
   { title: 'ID', key: 'id', width: 60, sorter: (a, b) => a.id - b.id },
   {
-    title: '名称', key: 'name', minWidth: 140,
+    title: '名称', key: 'name', width: 160,
     render: (row) => h('span', { style: 'font-weight:600' }, row.name),
     ellipsis: { tooltip: true },
   },
   {
-    title: '分类', key: 'categoryName', minWidth: 80,
+    title: '分类', key: 'categoryName', width: 90,
     render: (row) => {
       const cat = adminStore.categories.find(c => c.id === row.categoryId)
       if (!cat) return '-'
@@ -180,53 +181,53 @@ const columns = [
     }
   },
   {
-    title: '价格', key: 'price', minWidth: 80, sorter: (a, b) => a.price - b.price,
+    title: '价格', key: 'price', width: 90, sorter: (a, b) => a.price - b.price,
     render: (row) => h('span', { style: 'color:#EF4444;font-weight:600' }, `¥${row.price}`),
   },
   {
-    title: '库存', key: 'stock', minWidth: 60, sorter: (a, b) => (a.stock || 0) - (b.stock || 0),
+    title: '库存', key: 'stock', width: 70, sorter: (a, b) => (a.stock || 0) - (b.stock || 0),
     render: (row) => h(NTag, {
       type: row.stock > 0 ? 'success' : 'error', size: 'small'
     }, () => row.stock || 0),
   },
   {
-    title: '销量', key: 'sales', minWidth: 60, sorter: (a, b) => (a.sales || 0) - (b.sales || 0),
+    title: '销量', key: 'sales', width: 70, sorter: (a, b) => (a.sales || 0) - (b.sales || 0),
     render: (row) => h('span', { style: 'font-weight:600;color:#6366F1' }, row.sales || 0),
   },
   {
-    title: '质保', key: 'warranty', minWidth: 70,
+    title: '质保', key: 'warranty', width: 80,
     render: (row) => row.warranty || '-',
   },
   {
-    title: '接码', key: 'isCode', minWidth: 70,
+    title: '接码', key: 'isCode', width: 70,
     render: (row) => h(NTag, {
       type: row.isCode ? 'success' : 'default', size: 'small'
     }, () => row.isCode ? '需要' : '否'),
   },
   {
-    title: '关键词', key: 'smKeyWord', minWidth: 70,
+    title: '关键词', key: 'smKeyWord', width: 90,
     render: (row) => row.smKeyWord || '-',
   },
   {
-    title: '注意事项', key: 'tips', minWidth: 90,
+    title: '注意事项', key: 'tips', width: 120,
     render: (row) => row.tips
       ? h(NTooltip, {}, { trigger: () => h('span', { style: 'cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;display:inline-block' }, row.tips), default: () => row.tips })
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
-    title: '积分', key: 'credit', minWidth: 60, align: 'center',
+    title: '积分', key: 'credit', width: 70, align: 'center',
     render: (row) => row.credit
       ? h(NTag, { type: 'warning', size: 'small' }, () => row.credit)
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
-    title: '兑换地址', key: 'addr', minWidth: 180,
+    title: '兑换地址', key: 'addr', width: 180,
     render: (row) => row.addr
       ? h(NTooltip, {}, { trigger: () => h('a', { href: row.addr, target: '_blank', style: 'cursor:pointer;color:#3B82F6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;display:inline-block' }, row.addr), default: () => row.addr })
       : h('span', { style: 'color:#94A3B8' }, '-'),
   },
   {
-    title: '上架', key: 'show', minWidth: 70,
+    title: '上架', key: 'show', width: 70,
     render: (row) => h(NTag, { type: row.show ? 'success' : 'default', size: 'small' }, () => row.show ? '是' : '否'),
   },
   {
@@ -234,7 +235,7 @@ const columns = [
     render: (row) => formatDate(row.createdAt),
   },
   {
-    title: '操作', key: 'actions', width: 160, fixed: 'right',
+    title: '操作', key: 'actions', width: 140, fixed: 'right',
     render: (row) => h(NSpace, { size: 4, wrap: false }, () => [
       h(NButton, { size: 'small', tertiary: true, onClick: () => openForm(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(CreateOutline)), default: () => '编辑' }),
       h(NButton, { size: 'small', type: 'error', tertiary: true, onClick: () => handleDelete(row) }, { icon: () => h(NIcon, { size: 14 }, () => h(TrashOutline)), default: () => '删除' }),
