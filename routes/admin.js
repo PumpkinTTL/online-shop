@@ -4,61 +4,32 @@ const adminService = require('../services/adminService');
 const couponService = require('../services/couponService');
 const pickupService = require('../services/pickupService');
 const { login: loginLimiter } = require('../middleware/rateLimiter');
+const { requireAdminAuth } = require('../middleware/auth');
 const { action, system } = require('../logger');
+const dataSource = require('../config/database');
+const Admin = require('../entities/Admin');
 
 const router = express.Router();
 
-// JWT 配置（后台独立密钥，与前台用户区分）
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
 if (!ADMIN_JWT_SECRET) {
   throw new Error('ADMIN_JWT_SECRET 环境变量未配置，请设置后重启服务');
 }
 const ADMIN_JWT_EXPIRES = '24h';
+const ADMIN_COOKIE_NAME = 'admin_token';
+const ADMIN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: 24 * 60 * 60 * 1000,
+  path: '/api/admin',
+};
 
-// 生成 Token
 const generateAdminToken = (adminId) => {
   return jwt.sign({ adminId, type: 'admin' }, ADMIN_JWT_SECRET, { expiresIn: ADMIN_JWT_EXPIRES });
 };
 
-const dataSource = require('../config/database');
-const Admin = require('../entities/Admin');
-
-// ==================== 鉴权中间件 ====================
-
-const auth = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: '未登录，请先登录' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
-
-    // 确认是 admin 类型的 token（防止前台用户 token 越权）
-    if (decoded.type !== 'admin') {
-      return res.status(403).json({ error: '无权限访问' });
-    }
-
-    // 检查管理员是否存在且未被禁用
-    const adminRepo = dataSource.getRepository(Admin);
-    const admin = await adminRepo.findOne({ where: { id: decoded.adminId } });
-    if (!admin) {
-      return res.status(401).json({ error: '管理员不存在' });
-    }
-    if (!admin.isActive) {
-      return res.status(403).json({ error: '账号已被禁用' });
-    }
-
-    req.admin = { id: decoded.adminId, role: admin.role };
-    next();
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: '登录已过期，请重新登录' });
-    }
-    return res.status(401).json({ error: '无效的认证信息' });
-  }
-};
+const auth = requireAdminAuth;
 
 // ==================== 登录（不需要鉴权） ====================
 
@@ -72,8 +43,9 @@ router.post('/login', loginLimiter, async (req, res) => {
     const admin = await adminService.login(username, password);
     const token = generateAdminToken(admin.id);
 
+    res.cookie(ADMIN_COOKIE_NAME, token, ADMIN_COOKIE_OPTIONS);
+
     res.json({
-      token,
       admin: {
         id: admin.id,
         username: admin.username,
@@ -108,13 +80,31 @@ router.get('/check', auth, async (req, res) => {
     const adminRepo = dataSource.getRepository(Admin);
     const admin = await adminRepo.findOne({ where: { id: req.admin.id } });
     if (!admin || !admin.isActive) {
-      return res.status(401).json({ error: '账号已禁用' });
+      return res.status(401).json({ error: '账号已被禁用' });
     }
-    const { password, ...info } = admin;
-    res.json(info);
+    res.json({
+      id: admin.id,
+      username: admin.username,
+      nickname: admin.nickname,
+      role: admin.role,
+    });
   } catch (error) {
-    res.status(401).json({ error: '无效' });
+    res.status(401).json({ error: '验证失败' });
   }
+});
+
+// 退出登录（清除 cookie）
+router.post('/logout', (req, res) => {
+  res.cookie(ADMIN_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/api/admin',
+    maxAge: 0,
+    expires: new Date(0),
+  });
+  res.json({ success: true });
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 });
 
 // ==================== 以下接口全部需要鉴权 ====================
@@ -691,3 +681,6 @@ router.delete('/admins/:id', auth, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.auth = auth;
+module.exports.ADMIN_COOKIE_NAME = ADMIN_COOKIE_NAME;
+module.exports.ADMIN_COOKIE_OPTIONS = ADMIN_COOKIE_OPTIONS;

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAdminStore } from '@/stores/admin'
 
 // 前台布局
 const ClientLayout = () => import('@/components/ClientLayout.vue')
@@ -145,7 +146,7 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   // 更新页面标题
   document.title = `${to.meta.title || '工具商店'} - 工具商店`
 
@@ -158,19 +159,29 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // Admin 后台需要管理员登录
-  if (to.meta.requiresAdmin) {
-    const adminToken = localStorage.getItem('admin_token')
-    if (!adminToken) {
-      next({ name: 'AdminLogin', query: { redirect: to.fullPath } })
-      return
+  // Admin 后台需要管理员登录（检查整条路由链）
+  const requiresAdmin = to.matched.some(r => r.meta.requiresAdmin)
+  if (requiresAdmin) {
+    const adminStore = useAdminStore()
+    if (!adminStore.isLoggedIn) {
+      const valid = await adminStore.checkAuth()
+      if (!valid) {
+        next({ name: 'AdminLogin', query: { redirect: to.fullPath } })
+        return
+      }
     }
   }
 
   // Admin 登录页已登录则跳转后台
   if (to.name === 'AdminLogin') {
-    const adminToken = localStorage.getItem('admin_token')
-    if (adminToken) {
+    const adminStore = useAdminStore()
+    if (!adminStore.isLoggedIn) {
+      const valid = await adminStore.checkAuth()
+      if (valid) {
+        next({ name: 'AdminDashboard' })
+        return
+      }
+    } else {
       next({ name: 'AdminDashboard' })
       return
     }

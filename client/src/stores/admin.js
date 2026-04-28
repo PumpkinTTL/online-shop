@@ -3,18 +3,14 @@ import { ref } from 'vue'
 import { adminApi } from '@/api'
 
 export const useAdminStore = defineStore('admin', () => {
-  const token = ref(localStorage.getItem('admin_token') || '')
-  const adminInfo = ref(JSON.parse(localStorage.getItem('admin_info') || 'null'))
-  const isLoggedIn = ref(!!token.value)
+  const adminInfo = ref(null)
+  const isLoggedIn = ref(false)
 
   // ===== 认证 =====
   async function login(username, password) {
     const res = await adminApi.login(username, password)
-    token.value = res.token
     adminInfo.value = res.admin
     isLoggedIn.value = true
-    localStorage.setItem('admin_token', res.token)
-    localStorage.setItem('admin_info', JSON.stringify(res.admin))
     return res
   }
 
@@ -22,7 +18,7 @@ export const useAdminStore = defineStore('admin', () => {
     try {
       const res = await adminApi.check()
       adminInfo.value = res
-      localStorage.setItem('admin_info', JSON.stringify(res))
+      isLoggedIn.value = true
       return true
     } catch {
       logout()
@@ -30,12 +26,12 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  function logout() {
-    token.value = ''
+  async function logout() {
+    try {
+      await adminApi.logout()
+    } catch {}
     adminInfo.value = null
     isLoggedIn.value = false
-    localStorage.removeItem('admin_token')
-    localStorage.removeItem('admin_info')
   }
 
   // ===== 仪表盘 =====
@@ -260,7 +256,7 @@ export const useAdminStore = defineStore('admin', () => {
 
   return {
     // 认证
-    token, adminInfo, isLoggedIn,
+    adminInfo, isLoggedIn,
     login, checkAuth, logout,
     // 仪表盘
     stats, fetchStats,

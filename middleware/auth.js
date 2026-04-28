@@ -78,4 +78,55 @@ function optionalAuth(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, optionalAuth, extractToken, JWT_SECRET };
+// ── 管理员鉴权 ──
+
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
+if (!ADMIN_JWT_SECRET) {
+  throw new Error('ADMIN_JWT_SECRET 环境变量未配置，请设置后重启服务');
+}
+
+/**
+ * 管理员鉴权中间件
+ * 优先从 httpOnly Cookie (admin_token) 获取，兼容 Authorization Header
+ */
+async function requireAdminAuth(req, res, next) {
+  // 优先 Cookie，其次 Header
+  let token = req.cookies?.admin_token;
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  if (!token) {
+    return res.status(401).json({ error: '未登录，请先登录' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
+    if (decoded.type !== 'admin') {
+      return res.status(403).json({ error: '无权限访问' });
+    }
+
+    const dataSource = require('../config/database');
+    const Admin = require('../entities/Admin');
+    const adminRepo = dataSource.getRepository(Admin);
+    const admin = await adminRepo.findOne({ where: { id: decoded.adminId } });
+    if (!admin) {
+      return res.status(401).json({ error: '管理员不存在' });
+    }
+    if (!admin.isActive) {
+      return res.status(403).json({ error: '账号已被禁用' });
+    }
+
+    req.admin = { id: admin.id, role: admin.role };
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: '登录已过期，请重新登录' });
+    }
+    return res.status(401).json({ error: '无效的认证信息' });
+  }
+}
+
+module.exports = { requireAuth, optionalAuth, extractToken, JWT_SECRET, requireAdminAuth };

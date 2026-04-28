@@ -14,12 +14,8 @@ const http = axios.create({
   withCredentials: true,
 })
 
-// 请求拦截器：Admin Token 注入
+// 请求拦截器
 http.interceptors.request.use((config) => {
-  const adminToken = localStorage.getItem('admin_token')
-  if (adminToken) {
-    config.headers.Authorization = `Bearer ${adminToken}`
-  }
   return config
 })
 
@@ -29,10 +25,8 @@ http.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    // Admin 接口 401 → 清除 token
+    // Admin 接口 401 → 跳转登录（cookie 由浏览器自动管理）
     if (error.response?.status === 401 && originalRequest?.url?.startsWith('/admin')) {
-      localStorage.removeItem('admin_token')
-      localStorage.removeItem('admin_info')
       if (window.location.hash.startsWith('#/admin')) {
         window.location.hash = '#/admin/login'
       }
@@ -148,6 +142,7 @@ export const adminApi = {
   // 认证
   login: (username, password) => http.post('/admin/login', { username, password }),
   check: () => http.get('/admin/check'),
+  logout: () => http.post('/admin/logout'),
   changePassword: (oldPassword, newPassword) => http.post('/admin/change-password', { oldPassword, newPassword }),
 
   // 仪表盘

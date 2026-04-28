@@ -255,8 +255,8 @@ function handleUserAction(key) {
       content: '确定要退出登录吗？',
       positiveText: '退出',
       negativeText: '取消',
-      onPositiveClick: () => {
-        adminStore.logout()
+      onPositiveClick: async () => {
+        await adminStore.logout()
         router.push('/admin/login')
         message.success('已退出登录')
       },
@@ -306,7 +306,7 @@ async function handleChangePassword() {
     message.success('密码修改成功，请重新登录')
     showPasswordModal.value = false
     passwordForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
-    adminStore.logout()
+    await adminStore.logout()
     router.push('/admin/login')
   } catch (err) {
     message.error(err.response?.data?.error || '修改失败')

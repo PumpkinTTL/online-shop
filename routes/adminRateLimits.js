@@ -1,50 +1,10 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const { body, param, validationResult } = require('express-validator');
 const rateLimitService = require('../services/rateLimitService');
-const dataSource = require('../config/database');
-const Admin = require('../entities/Admin');
+const { requireAdminAuth } = require('../middleware/auth');
 const { refreshConfigs } = require('../middleware/rateLimiter');
 
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
-if (!ADMIN_JWT_SECRET) {
-  throw new Error('ADMIN_JWT_SECRET 环境变量未配置，请设置后重启服务');
-}
-
-// 管理员认证中间件（与 admin.js 保持一致）
-const auth = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: '未登录，请先登录' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
-
-    if (decoded.type !== 'admin') {
-      return res.status(403).json({ error: '无权限访问' });
-    }
-
-    const adminRepo = dataSource.getRepository(Admin);
-    const admin = await adminRepo.findOne({ where: { id: decoded.adminId } });
-    if (!admin) {
-      return res.status(401).json({ error: '管理员不存在' });
-    }
-    if (!admin.isActive) {
-      return res.status(403).json({ error: '账号已被禁用' });
-    }
-
-    req.admin = { id: admin.id, role: admin.role };
-    next();
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: '登录已过期，请重新登录' });
-    }
-    return res.status(401).json({ error: '无效的认证信息' });
-  }
-};
-
+const auth = requireAdminAuth;
 const router = express.Router();
 
 // 验证中间件：统一处理验证错误
