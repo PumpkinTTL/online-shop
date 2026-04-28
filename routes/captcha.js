@@ -32,9 +32,7 @@ router.post('/verify', (req, res) => {
       return res.status(400).json({ error: '验证码错误或已过期' });
     }
 
-    // 验证通过：重置该 IP 在所有限流器上的计数器
-    // 不设 cookie/豁免期，计数器从 0 开始重新计算
-    // 继续频繁操作会再次触发限流
+    // 验证通过：豁免该 IP 10 秒 + 清除所有计数器
     const clientIp = req.ip || req.connection?.remoteAddress;
     limiters.resetAllKeys(clientIp);
 

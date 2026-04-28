@@ -60,18 +60,15 @@ http.interceptors.response.use(
       try {
         const captchaStore = useCaptchaStore()
 
-        // 等待验证码通过（返回一个 Promise）
-        // cooldown 期间会等 cooldown 结束后自动弹窗
-        // 刚通过验证码的重试又 429 会 reject → 放弃重试
         try {
           await captchaStore.waitForCaptcha()
         } catch {
-          // justResolved / 用户关闭弹窗 → 不再弹窗，返回原始错误
+          // 用户关闭弹窗 → 返回原始错误
           return Promise.reject(error)
         }
 
-        // 验证码通过，重新发起原始请求（全新请求）
-        // 此时后端已 resetAllKeys，新请求从 0 开始计数
+        // 验证码通过，重新发起原始请求
+        // 后端已标记该 IP 豁免，重试请求必定通过限流
         return http.request({
           method: originalRequest.method,
           url: originalRequest.url,
@@ -80,7 +77,6 @@ http.interceptors.response.use(
           headers: originalRequest.headers,
         })
       } catch {
-        // store 未初始化等异常，静默处理
         return Promise.reject(error)
       }
     }
