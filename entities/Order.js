@@ -19,5 +19,6 @@ module.exports = new EntitySchema({
     remark: { type: 'varchar', length: 500, nullable: true },
     createdAt: { type: 'datetime', createDate: true },
     completedAt: { type: 'datetime', nullable: true },
+    couponId: { type: 'int', nullable: true },
   },
 });

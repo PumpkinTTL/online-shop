@@ -178,6 +178,22 @@ const columns = [
     }
   },
   {
+    title: '优惠码', key: 'coupon', width: 130, align: 'center',
+    render: (row) => {
+      if (!row.couponCode) return h('span', { style: 'color:#94A3B8' }, '-')
+      const children = [
+        h('code', { style: 'font-size:11px;color:#8B5CF6' }, row.couponCode),
+      ]
+      if (row.couponDeduction) {
+        children.push(h('div', { style: 'font-size:11px;color:#F59E0B' }, `-¥${row.couponDeduction}`))
+      } else if (row.couponDiscount) {
+        const fold = (10 - row.couponDiscount / 10).toFixed(1).replace(/\.0$/, '')
+        children.push(h('div', { style: 'font-size:11px;color:#10B981' }, `${fold}折`))
+      }
+      return h('div', { style: 'line-height:1.7' }, children)
+    }
+  },
+  {
     title: '联系方式/用户', key: 'contact', minWidth: 140,
     render: (row) => {
       const children = [h('div', {}, row.contact || '-')]

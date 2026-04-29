@@ -260,7 +260,7 @@ class PickupService {
 
   // 创建订单
   async createOrder(data, ctx = {}) {
-    const { userId, cardKeyId, productId, contact, phone, verifyCode, amount, payMethod, tradeNo } = data;
+    const { userId, cardKeyId, productId, contact, phone, verifyCode, amount, payMethod, tradeNo, couponId } = data;
     const { ip } = ctx;
     const orderRepo = this.getOrderRepo();
     const cardKeyRepo = this.getCardKeyRepo();
@@ -291,6 +291,7 @@ class PickupService {
       verifyCode,
       status: 'completed',
       completedAt: new Date(),
+      couponId: couponId || null,
     });
 
     const savedOrder = await orderRepo.save(order);
@@ -392,9 +393,26 @@ class PickupService {
       cardKeys.forEach(ck => { cardKeyMap[ck.id] = { code: ck.code, CDK: ck.CDK, keyword: ck.keyword }; });
     }
 
+    // 关联查询优惠码信息
+    const Coupon = require('../entities/Coupon');
+    const couponRepo = dataSource.getRepository(Coupon);
+    const couponIds = [...new Set(items.map(o => o.couponId).filter(Boolean))];
+    let couponMap = {};
+    if (couponIds.length > 0) {
+      const coupons = await couponRepo.findByIds(couponIds);
+      coupons.forEach(c => {
+        couponMap[c.id] = {
+          code: c.code,
+          discount: c.discount ? parseFloat(c.discount) : null,
+          deduction: c.deduction ? parseFloat(c.deduction) : null,
+        };
+      });
+    }
+
     const enrichedItems = items.map(order => {
       const product = productMap[order.productId] || {};
       const cardKey = cardKeyMap[order.cardKeyId] || {};
+      const coupon = couponMap[order.couponId] || {};
       return {
         ...order,
         productName: product.name || '未知商品',
@@ -403,6 +421,9 @@ class PickupService {
         cardCode: cardKey.code || null,
         cardCDK: cardKey.CDK || null,
         cardKeyword: cardKey.keyword || null,
+        couponCode: coupon.code || null,
+        couponDiscount: coupon.discount || null,
+        couponDeduction: coupon.deduction || null,
       };
     });
 

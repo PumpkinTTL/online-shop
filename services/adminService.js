@@ -476,6 +476,21 @@ class AdminService {
       (await userRepo.findByIds(uIds)).forEach(u => { uMap[u.id] = u.nickname || u.username; });
     }
 
+    // 关联优惠码信息
+    const Coupon = require('../entities/Coupon');
+    const couponRepo = dataSource.getRepository(Coupon);
+    const cpIds = [...new Set(items.map(o => o.couponId).filter(Boolean))];
+    let cpMap = {};
+    if (cpIds.length > 0) {
+      (await couponRepo.findByIds(cpIds)).forEach(c => {
+        cpMap[c.id] = {
+          code: c.code,
+          discount: c.discount ? parseFloat(c.discount) : null,
+          deduction: c.deduction ? parseFloat(c.deduction) : null,
+        };
+      });
+    }
+
     const enrichedItems = items.map(order => ({
       ...order,
       productName: (pMap[order.productId] || {}).name || '未知',
@@ -484,6 +499,9 @@ class AdminService {
       cardCDK: (ckMap[order.cardKeyId] || {}).CDK || null,
       cardCode: (ckMap[order.cardKeyId] || {}).code || null,
       username: uMap[order.userId] || null,
+      couponCode: (cpMap[order.couponId] || {}).code || null,
+      couponDiscount: (cpMap[order.couponId] || {}).discount || null,
+      couponDeduction: (cpMap[order.couponId] || {}).deduction || null,
     }));
 
     return { items: enrichedItems, total, page, pageSize };

@@ -461,6 +461,7 @@ class PaymentService {
               contact: order.contact || '',
               status: 'completed',
               completedAt: new Date(),
+              couponId: order.couponId || null,
             }));
             console.log(`[Payment] 已同步创建 Order 记录，关联支付单 ${order.orderNo}`);
             business.success('order.create', {
