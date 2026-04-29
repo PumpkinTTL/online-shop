@@ -36,7 +36,9 @@ class PaymentService {
       now.getHours().toString().padStart(2, '0') +
       now.getMinutes().toString().padStart(2, '0') +
       now.getSeconds().toString().padStart(2, '0');
-    const rand = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let rand = '';
+    for (let i = 0; i < 6; i++) rand += chars[Math.floor(Math.random() * chars.length)];
     return `PAY${ts}${rand}`;
   }
 
@@ -448,7 +450,9 @@ class PaymentService {
               now.getHours().toString().padStart(2, '0') +
               now.getMinutes().toString().padStart(2, '0') +
               now.getSeconds().toString().padStart(2, '0');
-            const rand = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let rand = '';
+            for (let i = 0; i < 6; i++) rand += chars[Math.floor(Math.random() * chars.length)];
 
             await orderRepo.save(orderRepo.create({
               orderNo: `ORD${ts}${rand}`,
