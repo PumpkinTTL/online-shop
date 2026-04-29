@@ -244,22 +244,40 @@
 
             <!-- 非接码产品：成功 -->
             <div v-else-if="actionResult && !isSmsProduct" class="success-content">
-              <div class="success-icon">
-                <n-icon :size="48" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
+              <div class="success-badge">
+                <div class="success-badge-ring">
+                  <n-icon :size="32" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
+                </div>
               </div>
               <h3 class="success-title">{{ actionResult.type === 'alipay' ? '支付成功' : '兑换成功' }}</h3>
-              <p class="success-desc">{{ redeemUrl ? '请复制兑换码前往网站完成兑换' : '兑换码已生成，请妥善保存' }}</p>
-              <div class="result-box">
-                <div class="result-label">兑换码 (CDK)</div>
-                <n-space>
-                  <n-input :value="actionResult.CDK" readonly style="flex: 1" />
-                  <n-button @click="copyText(actionResult.CDK, '兑换码已复制')">
-                    <template #icon><n-icon><copy-outline></copy-outline></n-icon></template>
-                    复制
-                  </n-button>
-                </n-space>
+              <p class="success-desc">请妥善保存以下信息</p>
+              <div class="info-card">
+                <div v-if="actionResult.orderNo" class="info-row">
+                  <span class="info-dot"></span>
+                  <span class="info-key">订单号</span>
+                  <span class="info-val mono">{{ actionResult.orderNo }}</span>
+                  <button class="info-copy" title="复制" @click="copyText(actionResult.orderNo, '已复制')"><n-icon :size="13"><copy-outline></copy-outline></n-icon></button>
+                </div>
+                <div v-if="actionResult.cardCode" class="info-row">
+                  <span class="info-ddot"></span>
+                  <span class="info-key">卡密</span>
+                  <span class="info-val mono">{{ actionResult.cardCode }}</span>
+                  <button class="info-copy" title="复制" @click="copyText(actionResult.cardCode, '已复制')"><n-icon :size="13"><copy-outline></copy-outline></n-icon></button>
+                </div>
+                <div v-if="actionResult.CDK" class="info-row">
+                  <span class="info-dddot"></span>
+                  <span class="info-key">CDK</span>
+                  <span class="info-val mono">{{ actionResult.CDK }}</span>
+                  <button class="info-copy" title="复制" @click="copyText(actionResult.CDK, '已复制')"><n-icon :size="13"><copy-outline></copy-outline></n-icon></button>
+                </div>
+                <div v-if="actionResult.deliveryInfo" class="info-row info-row-block">
+                  <span class="info-ddddot"></span>
+                  <span class="info-key">凭证</span>
+                  <button class="info-copy" title="复制" @click="copyText(actionResult.deliveryInfo, '已复制')"><n-icon :size="13"><copy-outline></copy-outline></n-icon></button>
+                  <div class="info-block-text">{{ actionResult.deliveryInfo }}</div>
+                </div>
               </div>
-              <n-space v-if="redeemUrl" vertical>
+              <n-space v-if="actionResult.CDK && redeemUrl" vertical>
                 <div class="result-box">
                   <div class="result-label">兑换网址</div>
                   <n-input :value="redeemUrl" readonly style="flex:1">
@@ -705,7 +723,7 @@ const handleRedeem = async () => {
   try {
     const response = await pickupApi.redeem(redeemCode.value.trim(), product.value.id, contact.value.trim())
     localStorage.setItem('lastContact', contact.value.trim())
-    actionResult.value = { type: 'redeem', CDK: response.CDK, cardKeyId: response.id }
+    actionResult.value = { type: 'redeem', CDK: response.CDK, deliveryInfo: response.deliveryInfo, orderNo: response.orderNo, cardCode: response.cardCode, cardKeyId: response.id }
     message.success('兑换成功！')
   } catch (err) {
     message.error(err.response?.data?.error || '兑换失败')
@@ -774,7 +792,7 @@ const startPolling = () => {
         stopPolling()
         message.success('支付成功！')
 
-        actionResult.value = { type: 'alipay', CDK: res.cdKey, cardKeyId: res.cardKeyId || null }
+        actionResult.value = { type: 'alipay', CDK: res.cdKey, deliveryInfo: res.deliveryInfo, orderNo: res.orderNo, cardCode: res.cardCode, cardKeyId: res.cardKeyId || null }
 
         setTimeout(() => {
           showQrModal.value = false
@@ -1429,22 +1447,36 @@ onUnmounted(() => {
   text-align: center;
 }
 
-.success-icon {
-  margin-bottom: 12px;
+.success-badge {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.success-badge-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.08);
 }
 
 .success-title {
   font-family: 'Poppins', sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  color: #1E293B;
-  margin: 0 0 6px 0;
+  color: #0F172A;
+  margin: 0 0 4px 0;
 }
 
 .success-desc {
-  font-size: 14px;
-  color: #64748B;
-  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #94A3B8;
+  margin: 0 0 20px 0;
+  font-weight: 500;
 }
 
 .result-box {
@@ -1457,6 +1489,107 @@ onUnmounted(() => {
   font-weight: 600;
   color: #475569;
   margin-bottom: 8px;
+}
+
+.info-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 6px 0;
+  text-align: left;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row-block {
+  flex-wrap: wrap;
+}
+
+.info-dot,
+.info-ddot,
+.info-dddot,
+.info-ddddot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.info-dot { background: #3B82F6; }
+.info-ddot { background: #22C55E; }
+.info-dddot { background: #8B5CF6; }
+.info-ddddot { background: #F59E0B; }
+
+.info-key {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94A3B8;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  min-width: 40px;
+  text-transform: uppercase;
+  font-family: 'Poppins', sans-serif;
+}
+
+.info-val {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E293B;
+  word-break: break-all;
+}
+
+.info-val.mono {
+  font-family: 'Poppins', monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+}
+
+.info-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #CBD5E1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease-out;
+}
+
+.info-copy:hover {
+  background: #F0F9FF;
+  color: #3B82F6;
+}
+
+.info-block-text {
+  width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-all;
+  padding: 8px 0 2px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border: 1px solid #F1F5F9;
 }
 
 /* ===== 接码区域 ===== */

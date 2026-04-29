@@ -38,6 +38,7 @@ router.post('/redeem', pickupRedeem, optionalAuth, async (req, res) => {
     const result = await pickupService.redeemCardKey(code.trim(), productId);
 
     // 写入订单
+    let orderNo = null;
     try {
       // 查询商品价格
       let productPrice = null;
@@ -47,7 +48,7 @@ router.post('/redeem', pickupRedeem, optionalAuth, async (req, res) => {
         if (product) productPrice = product.price;
       } catch (e) {}
 
-      await pickupService.createOrder({
+      const order = await pickupService.createOrder({
         userId: req.userId || null,
         cardKeyId: result.id,
         productId: result.productId || productId,
@@ -57,6 +58,7 @@ router.post('/redeem', pickupRedeem, optionalAuth, async (req, res) => {
         phone: '',
         verifyCode: '',
       }, { ip: req.ip });
+      orderNo = order?.orderNo || null;
     } catch (orderErr) {
       console.warn('[Redeem] 写入订单失败:', orderErr.message);
       system.warn('兑换写入订单失败', { error: orderErr.message, code: code.trim() });
@@ -65,6 +67,9 @@ router.post('/redeem', pickupRedeem, optionalAuth, async (req, res) => {
     res.json({
       success: true,
       CDK: result.CDK,
+      deliveryInfo: result.deliveryInfo || null,
+      orderNo,
+      cardCode: code.trim(),
       productId: result.productId,
       id: result.id,
       message: '兑换成功',

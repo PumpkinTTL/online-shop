@@ -136,6 +136,18 @@
                 </div>
               </div>
 
+              <!-- 发货凭证 -->
+              <div v-if="order.deliveryInfo" class="card-row-creds">
+                <div class="cred-line custom">
+                  <span class="cred-key custom-key"><n-icon :size="9"><DocumentTextOutline /></n-icon></span>
+                  <span class="cred-key-label">发货凭证</span>
+                  <code class="cred-val" style="white-space:pre-wrap">{{ order.deliveryInfo }}</code>
+                  <button class="copy-btn" :class="{ copied: copiedId === 'd-' + order.id }" @click="copyText(order.deliveryInfo, 'd-' + order.id)">
+                    <n-icon :size="11"><checkmark-outline v-if="copiedId === 'd-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
+                  </button>
+                </div>
+              </div>
+
               <!-- 底部：订单号 + 时间 -->
               <div class="card-row-bottom">
                 <span class="card-order-no">{{ order.orderNo }}</span>
@@ -189,7 +201,7 @@ import {
   CopyOutline, TimeOutline, CallOutline,
   PhonePortraitOutline, KeyOutline, WalletOutline,
   ShieldCheckmarkOutline, PricetagOutline,
-  ChevronBackOutline, ChevronForwardOutline
+  ChevronBackOutline, ChevronForwardOutline, DocumentTextOutline
 } from '@vicons/ionicons5'
 import { useOrderStore } from '@/stores/order'
 import { useUserStore } from '@/stores/user'
@@ -726,6 +738,8 @@ onMounted(async () => {
 
 .cdk .cred-key { background: #DBEAFE; color: #2563EB; }
 .card .cred-key { background: #DCFCE7; color: #16A34A; }
+.custom .cred-key { background: #FEF3C7; color: #D97706; }
+.custom .cred-key-label { font-size: 9px; font-weight: 800; letter-spacing: 0.5px; color: #D97706; flex-shrink: 0; }
 
 .cred-val {
   flex: 1;

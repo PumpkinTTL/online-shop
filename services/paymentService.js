@@ -201,6 +201,17 @@ class PaymentService {
           await this.processPaymentSuccess(order, tradeInfo.trade_no || '', tradeInfo);
           // 重新查询更新后的订单
           const updatedOrder = await paymentRepo.findOne({ where: { orderNo } });
+          let deliveryInfo = null;
+          let cardCode = null;
+          if (updatedOrder.cardKeyId) {
+            const CardKey = require('../entities/CardKey');
+            const ckRepo = dataSource.getRepository(CardKey);
+            const ck = await ckRepo.findOne({ where: { id: updatedOrder.cardKeyId } });
+            if (ck) {
+              deliveryInfo = ck.deliveryInfo;
+              cardCode = ck.code;
+            }
+          }
           return {
             orderNo: updatedOrder.orderNo,
             status: updatedOrder.status,
@@ -208,9 +219,24 @@ class PaymentService {
             productName: updatedOrder.productName,
             cdKey: updatedOrder.cdKey,
             cardKeyId: updatedOrder.cardKeyId || null,
+            cardCode,
+            deliveryInfo,
             paidAt: updatedOrder.paidAt,
           };
         }
+      }
+    }
+
+    // 关联查询卡密的发货凭证
+    let deliveryInfo = null;
+    let cardCode = null;
+    if (order.cardKeyId && order.status === 'paid') {
+      const CardKey = require('../entities/CardKey');
+      const cardKeyRepo = dataSource.getRepository(CardKey);
+      const cardKey = await cardKeyRepo.findOne({ where: { id: order.cardKeyId } });
+      if (cardKey) {
+        deliveryInfo = cardKey.deliveryInfo;
+        cardCode = cardKey.code;
       }
     }
 
@@ -221,6 +247,8 @@ class PaymentService {
       productName: order.productName,
       cdKey: order.status === 'paid' ? order.cdKey : null,
       cardKeyId: order.status === 'paid' ? (order.cardKeyId || null) : null,
+      cardCode,
+      deliveryInfo,
       paidAt: order.paidAt,
     };
   }

@@ -11,6 +11,7 @@ module.exports = new EntitySchema({
     keyword: { type: 'varchar', length: 100, nullable: true },
     CDK: { type: 'varchar', length: 32, nullable: true },
     status: { type: 'varchar', length: 20, default: 'unused' }, // unused / used / expired
+    deliveryInfo: { type: 'varchar', length: 1000, nullable: true, comment: '发货凭证（邮箱/密码/2FA等）' },
     createdAt: { type: 'datetime', createDate: true },
     usedAt: { type: 'datetime', nullable: true },
   },

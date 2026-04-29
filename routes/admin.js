@@ -395,11 +395,11 @@ router.get('/card-keys', auth, async (req, res) => {
 // 批量生成卡密
 router.post('/card-keys/generate', auth, async (req, res) => {
   try {
-    const { productId, prefix, count, cdkList } = req.body;
+    const { productId, prefix, count, cdkList, deliveryInfoList } = req.body;
     if (!productId) return res.status(400).json({ error: '请选择商品' });
     if (!count || count < 1 || count > 100) return res.status(400).json({ error: '生成数量1-100' });
 
-    const result = await adminService.generateCardKeys(productId, prefix || '', count, cdkList || []);
+    const result = await adminService.generateCardKeys(productId, prefix || '', count, cdkList || [], deliveryInfoList || []);
     res.status(201).json(result);
 
     action.success('admin.cardkey.generate', {
@@ -417,12 +417,12 @@ router.post('/card-keys/generate', auth, async (req, res) => {
 // 手动录入卡密
 router.post('/card-keys/manual', auth, async (req, res) => {
   try {
-    const { productId, keys, cdkList } = req.body;
+    const { productId, keys, cdkList, deliveryInfoList } = req.body;
     if (!productId) return res.status(400).json({ error: '请选择商品' });
     if (!keys || !Array.isArray(keys) || keys.length === 0) return res.status(400).json({ error: '请输入至少一个卡密' });
     if (keys.length > 200) return res.status(400).json({ error: '单次最多录入200个' });
 
-    const result = await adminService.manualAddCardKeys(productId, keys, cdkList || []);
+    const result = await adminService.manualAddCardKeys(productId, keys, cdkList || [], deliveryInfoList || []);
     res.status(201).json(result);
 
     action.success('admin.cardkey.manualAdd', {

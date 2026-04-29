@@ -44,7 +44,7 @@ class PickupService {
 
       if (!cardKey) throw new Error('卡密不存在');
       if (cardKey.status === 'expired') throw new Error('卡密已过期');
-      if (!cardKey.CDK) throw new Error('该卡密暂无关联的兑换码，请联系客服');
+      if (!cardKey.CDK && !cardKey.deliveryInfo) throw new Error('该卡密暂无可用的兑换信息，请联系客服');
       // 如果卡密绑定了商品ID，验证是否匹配
       if (cardKey.productId && productId && cardKey.productId !== parseInt(productId)) {
         throw new Error('该卡密不适用于此商品');
@@ -62,6 +62,7 @@ class PickupService {
         id: cardKey.id,
         productId: cardKey.productId,
         CDK: cardKey.CDK,
+        deliveryInfo: cardKey.deliveryInfo,
       };
     });
   }
@@ -392,7 +393,7 @@ class PickupService {
     let cardKeyMap = {};
     if (cardKeyIds.length > 0) {
       const cardKeys = await cardKeyRepo.findByIds(cardKeyIds);
-      cardKeys.forEach(ck => { cardKeyMap[ck.id] = { code: ck.code, CDK: ck.CDK, keyword: ck.keyword }; });
+      cardKeys.forEach(ck => { cardKeyMap[ck.id] = { code: ck.code, CDK: ck.CDK, keyword: ck.keyword, deliveryInfo: ck.deliveryInfo || null }; });
     }
 
     // 关联查询优惠码信息
@@ -423,6 +424,7 @@ class PickupService {
         cardCode: cardKey.code || null,
         cardCDK: cardKey.CDK || null,
         cardKeyword: cardKey.keyword || null,
+        deliveryInfo: cardKey.deliveryInfo || null,
         couponCode: coupon.code || null,
         couponDiscount: coupon.discount || null,
         couponDeduction: coupon.deduction || null,

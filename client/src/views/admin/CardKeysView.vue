@@ -76,6 +76,10 @@
           <n-input v-model:value="cardKeyForm.cdkText" type="textarea" :rows="3" placeholder="每行输入一个CDK（可选）" />
           <span style="color:var(--text-light);font-size:12px;">留空则不关联CDK，行数应与卡密数量一致</span>
         </n-form-item>
+        <n-form-item label="发货凭证">
+          <n-input v-model:value="cardKeyForm.deliveryInfo" type="textarea" :rows="3" placeholder="如：邮箱、密码、2FA密钥等（可选，每行对应一个卡密）" />
+          <span style="color:var(--text-light);font-size:12px;">留空则无凭证，行数应与卡密数量一致</span>
+        </n-form-item>
       </n-form>
       <template #footer>
         <n-space justify="end">
@@ -96,6 +100,9 @@
         </n-form-item>
         <n-form-item label="状态">
           <n-select v-model:value="editingCDK.status" :options="editStatusOptions" />
+        </n-form-item>
+        <n-form-item label="发货凭证">
+          <n-input v-model:value="editingCDK.deliveryInfo" type="textarea" :rows="3" placeholder="邮箱/密码/2FA等发货信息" />
         </n-form-item>
       </n-form>
       <template #footer>
@@ -136,8 +143,8 @@ const showGenerateModal = ref(false)
 const showEditCDK = ref(false)
 const generating = ref(false)
 
-const cardKeyForm = ref({ productId: null, mode: 'auto', prefix: '', count: 10, cdkText: '', manualKeys: '' })
-const editingCDK = ref({ id: null, code: '', CDK: '', status: 'unused' })
+const cardKeyForm = ref({ productId: null, mode: 'auto', prefix: '', count: 10, cdkText: '', manualKeys: '', deliveryInfo: '' })
+const editingCDK = ref({ id: null, code: '', CDK: '', status: 'unused', deliveryInfo: '' })
 
 const allProducts = ref([])
 const productOptions = computed(() => allProducts.value.map(p => ({ label: p.name, value: p.id })))
@@ -272,7 +279,7 @@ function openGenerateModal() {
 }
 
 function openEditCDKModal(row) {
-  editingCDK.value = { id: row.id, code: row.code, CDK: row.CDK || '', status: row.status }
+  editingCDK.value = { id: row.id, code: row.code, CDK: row.CDK || '', status: row.status, deliveryInfo: row.deliveryInfo || '' }
   showEditCDK.value = true
 }
 
@@ -286,12 +293,14 @@ async function handleGenerate() {
       const keys = f.manualKeys.trim().split('\n').map(s => s.trim()).filter(Boolean)
       if (!keys.length) { message.warning('请输入至少一个卡密'); generating.value = false; return }
       const cdkList = f.cdkText.trim() ? f.cdkText.trim().split('\n').map(s => s.trim()).filter(Boolean) : []
-      const res = await adminStore.manualAddCardKeys({ productId: f.productId, keys, cdkList })
+      const deliveryInfoList = f.deliveryInfo.trim() ? f.deliveryInfo.trim().split('\n') : []
+      const res = await adminStore.manualAddCardKeys({ productId: f.productId, keys, cdkList, deliveryInfoList })
       message.success(`成功录入 ${res.count || res.length || keys.length} 个卡密`)
     } else {
       if (!f.count || f.count < 1 || f.count > 100) { message.warning('数量1-100'); generating.value = false; return }
       const cdkList = f.cdkText.trim() ? f.cdkText.trim().split('\n').map(s => s.trim()).filter(Boolean) : []
-      const res = await adminStore.generateCardKeys({ productId: f.productId, prefix: f.prefix, count: f.count, cdkList })
+      const deliveryInfoList = f.deliveryInfo.trim() ? f.deliveryInfo.trim().split('\n') : []
+      const res = await adminStore.generateCardKeys({ productId: f.productId, prefix: f.prefix, count: f.count, cdkList, deliveryInfoList })
       message.success(`成功生成 ${res.count || res.length || 0} 个卡密`)
     }
     showGenerateModal.value = false
@@ -306,7 +315,7 @@ async function handleGenerate() {
 async function handleSaveCDK() {
   generating.value = true
   try {
-    await adminApi.updateCardKey(editingCDK.value.id, { CDK: editingCDK.value.CDK, status: editingCDK.value.status })
+    await adminApi.updateCardKey(editingCDK.value.id, { CDK: editingCDK.value.CDK, status: editingCDK.value.status, deliveryInfo: editingCDK.value.deliveryInfo })
     message.success('保存成功')
     showEditCDK.value = false
     loadData()

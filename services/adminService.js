@@ -338,7 +338,7 @@ class AdminService {
   }
 
   // 批量生成卡密
-  async generateCardKeys(productId, prefix, count, cdkList) {
+  async generateCardKeys(productId, prefix, count, cdkList, deliveryInfoList) {
     const repo = dataSource.getRepository(CardKey);
     const entities = [];
 
@@ -355,6 +355,7 @@ class AdminService {
         code,
         productId: parseInt(productId),
         CDK: (cdkList && cdkList[i]) || null,
+        deliveryInfo: (deliveryInfoList && deliveryInfoList[i]) || null,
         status: 'unused',
       }));
     }
@@ -363,7 +364,7 @@ class AdminService {
   }
 
   // 手动录入卡密
-  async manualAddCardKeys(productId, keys, cdkList) {
+  async manualAddCardKeys(productId, keys, cdkList, deliveryInfoList) {
     const repo = dataSource.getRepository(CardKey);
     const entities = [];
 
@@ -381,6 +382,7 @@ class AdminService {
         code,
         productId: parseInt(productId),
         CDK: (cdkList && cdkList[i]) || null,
+        deliveryInfo: (deliveryInfoList && deliveryInfoList[i]) || null,
         status: 'unused',
       }));
     }
@@ -495,7 +497,7 @@ class AdminService {
     const ckIds = [...new Set(items.map(o => o.cardKeyId).filter(Boolean))];
     let ckMap = {};
     if (ckIds.length > 0) {
-      (await ckRepo.findByIds(ckIds)).forEach(ck => { ckMap[ck.id] = { code: ck.code, CDK: ck.CDK }; });
+      (await ckRepo.findByIds(ckIds)).forEach(ck => { ckMap[ck.id] = { code: ck.code, CDK: ck.CDK, deliveryInfo: ck.deliveryInfo || null }; });
     }
 
     // 关联用户名
@@ -529,6 +531,7 @@ class AdminService {
       isSms: (pMap[order.productId] || {}).isSms || false,
       cardCDK: (ckMap[order.cardKeyId] || {}).CDK || null,
       cardCode: (ckMap[order.cardKeyId] || {}).code || null,
+      deliveryInfo: (ckMap[order.cardKeyId] || {}).deliveryInfo || null,
       username: uMap[order.userId] || null,
       couponCode: (cpMap[order.couponId] || {}).code || null,
       couponDiscount: (cpMap[order.couponId] || {}).discount || null,
