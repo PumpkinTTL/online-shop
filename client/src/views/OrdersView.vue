@@ -1,53 +1,28 @@
 <template>
   <div class="orders-view">
-    <!-- 搜索筛选区 -->
+    <!-- 搜索区 -->
     <section class="filter-section">
       <div class="section-container">
-        <div class="filter-card">
-          <!-- 搜索框 + 按钮 -->
-          <div class="search-row">
-            <div class="search-box" :class="{ 'search-focused': searchFocused }">
-              <n-icon :size="15" color="#94A3B8"><search-outline></search-outline></n-icon>
-              <input
-                v-model="keyword"
-                type="text"
-                placeholder="输入联系方式、订单号或手机号"
-                class="search-input"
-                @focus="searchFocused = true"
-                @blur="searchFocused = false"
-                @keyup.enter="doSearch"
-                :disabled="orderStore.loading"
-              />
-              <transition name="clear-fade">
-                <button v-if="keyword" class="search-clear" @click="keyword = ''">
-                  <n-icon :size="11"><close-outline></close-outline></n-icon>
-                </button>
-              </transition>
-            </div>
-            <button class="search-btn" :disabled="!userStore.isLoggedIn && !keyword.trim()" @click="doSearch">
-              <n-icon :size="14"><search-outline></search-outline></n-icon>
-              <span>查询</span>
+        <div class="search-row">
+          <div class="search-box" :class="{ focused: searchFocused }">
+            <n-icon :size="15" color="#94A3B8"><search-outline></search-outline></n-icon>
+            <input
+              v-model="keyword"
+              type="text"
+              placeholder="输入联系方式、订单号或手机号"
+              class="search-input"
+              @focus="searchFocused = true"
+              @blur="searchFocused = false"
+              @keyup.enter="doSearch"
+              :disabled="orderStore.loading"
+            />
+            <button v-if="keyword" class="search-clear" @click="keyword = ''">
+              <n-icon :size="11"><close-outline></close-outline></n-icon>
             </button>
           </div>
-
-          <!-- 状态筛选 -->
-          <div class="status-scroll-wrap">
-            <div class="status-scroll">
-              <button
-                v-for="f in statusFilters"
-                :key="f.value"
-                :class="['status-chip', { active: statusFilter === f.value }]"
-                @click="statusFilter = f.value"
-              >
-                <span class="chip-dot" :class="f.value || 'all'"></span>
-                {{ f.label }}
-              </button>
-              <div v-if="userStore.isLoggedIn" class="login-chip">
-                <n-icon :size="11" color="#22C55E"><checkmark-circle-outline></checkmark-circle-outline></n-icon>
-                {{ userStore.user?.username }}
-              </div>
-            </div>
-          </div>
+          <button class="search-btn" :disabled="!userStore.isLoggedIn && !keyword.trim()" @click="doSearch">
+            查询
+          </button>
         </div>
       </div>
     </section>
@@ -55,103 +30,82 @@
     <!-- 订单列表 -->
     <section class="orders-section">
       <div class="section-container">
-        <!-- 标题栏 -->
         <div class="section-header">
-          <div class="section-title-group">
-            <span class="title-bar"></span>
-            <h2 class="section-title">我的订单</h2>
-          </div>
+          <h2 class="section-title">我的订单</h2>
           <span v-if="searched" class="order-count">{{ orderStore.total }} 条结果</span>
         </div>
 
-        <!-- 订单卡片 -->
         <template v-if="searched && orderStore.orders.length > 0">
-          <div class="orders-grid">
-            <div
-              v-for="order in orderStore.orders"
-              :key="order.id"
-              class="order-card"
-            >
-              <!-- 第1行：商品名 + 金额 + 状态 -->
-              <div class="card-row-top">
-                <h3 class="card-product-name">{{ order.productName || '未知商品' }}</h3>
-                <span v-if="order.productPrice" class="card-price">¥{{ order.productPrice }}</span>
+          <div class="orders-list">
+            <div v-for="order in orderStore.orders" :key="order.id" class="order-card">
+              <!-- 头部：商品 + 状态 -->
+              <div class="card-head">
+                <div class="card-head-left">
+                  <h3 class="card-name">{{ order.productName || '未知商品' }}</h3>
+                  <div class="card-meta">
+                    <span v-if="order.payMethod" class="meta-tag">
+                      <n-icon :size="9"><wallet-outline></wallet-outline></n-icon>
+                      {{ order.payMethod === 'alipay' ? '支付宝' : '兑换' }}
+                    </span>
+                    <span v-if="order.productPrice" class="meta-price">¥{{ order.productPrice }}</span>
+                  </div>
+                </div>
                 <span class="card-status" :class="order.status">
                   <i class="status-dot"></i>
                   {{ statusText(order.status) }}
                 </span>
               </div>
 
-              <!-- 第2行：标签 -->
-              <div v-if="order.cardKeyword || order.payMethod" class="card-row-tags">
-                <n-tag v-if="order.cardKeyword" size="tiny" :bordered="false" round class="card-kw-tag">
-                  <template #icon><n-icon :size="10"><pricetag-outline></pricetag-outline></n-icon></template>
-                  {{ order.cardKeyword }}
-                </n-tag>
-                <span v-if="order.payMethod" class="card-pay-tag">
-                  <n-icon :size="9"><wallet-outline></wallet-outline></n-icon>
-                  {{ order.payMethod === 'alipay' ? '支付宝' : '卡密兑换' }}
-                </span>
-              </div>
+              <!-- 信息区 -->
+              <div class="card-body">
+                <div v-if="order.contact || order.phone" class="field-row">
+                  <div v-if="order.contact" class="field">
+                    <span class="field-label">联系方式</span>
+                    <span class="field-value">{{ order.contact }}</span>
+                  </div>
+                  <div v-if="order.phone" class="field">
+                    <span class="field-label">手机号</span>
+                    <span class="field-value">{{ order.phone }}</span>
+                  </div>
+                </div>
 
-              <!-- 第3行：联系信息 -->
-              <div class="card-row-info" v-if="order.contact || order.phone">
-                <span v-if="order.contact" class="info-item">
-                  <n-icon :size="11" color="#94A3B8"><call-outline></call-outline></n-icon>
-                  <span class="info-key">联系方式</span>
-                  <span class="info-val">{{ order.contact }}</span>
-                </span>
-                <span v-if="order.phone" class="info-item">
-                  <n-icon :size="11" color="#94A3B8"><phone-portrait-outline></phone-portrait-outline></n-icon>
-                  <span class="info-key">手机号</span>
-                  <span class="info-val">{{ order.phone }}</span>
-                </span>
-              </div>
+                <div v-if="order.verifyCode" class="cred-row">
+                  <span class="cred-tag blue">验证码</span>
+                  <code class="cred-val">{{ order.verifyCode }}</code>
+                  <button class="cred-copy" :class="{ copied: copiedId === 'v-' + order.id }" @click="copyText(order.verifyCode, 'v-' + order.id)">
+                    <n-icon :size="12"><checkmark-outline v-if="copiedId === 'v-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
+                  </button>
+                </div>
 
-              <!-- 第4行：验证码 -->
-              <div v-if="order.verifyCode" class="card-row-code">
-                <n-icon :size="11" color="#3B82F6"><shield-checkmark-outline></shield-checkmark-outline></n-icon>
-                <span class="code-key">验证码</span>
-                <code class="code-val">{{ order.verifyCode }}</code>
-                <button class="copy-btn" :class="{ copied: copiedId === 'v-' + order.id }" @click="copyText(order.verifyCode, 'v-' + order.id)">
-                  <n-icon :size="11"><checkmark-outline v-if="copiedId === 'v-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
-                </button>
-              </div>
-
-              <!-- 第5行：凭证 -->
-              <div v-if="order.cardCDK || order.cardCode" class="card-row-creds">
-                <div v-if="order.cardCDK" class="cred-line cdk">
-                  <span class="cred-key"><n-icon :size="9"><key-outline></key-outline></n-icon> CDK</span>
+                <div v-if="order.cardCDK" class="cred-row">
+                  <span class="cred-tag purple">CDK</span>
                   <code class="cred-val">{{ order.cardCDK }}</code>
-                  <button class="copy-btn" :class="{ copied: copiedId === 'c-' + order.id }" @click="copyText(order.cardCDK, 'c-' + order.id)">
-                    <n-icon :size="11"><checkmark-outline v-if="copiedId === 'c-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
+                  <button class="cred-copy" :class="{ copied: copiedId === 'c-' + order.id }" @click="copyText(order.cardCDK, 'c-' + order.id)">
+                    <n-icon :size="12"><checkmark-outline v-if="copiedId === 'c-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
                   </button>
                 </div>
-                <div v-if="order.cardCode" class="cred-line card">
-                  <span class="cred-key"><n-icon :size="9"><wallet-outline></wallet-outline></n-icon> 卡密</span>
-                  <code class="cred-val">{{ order.cardCode }}</code>
-                  <button class="copy-btn" :class="{ copied: copiedId === 'k-' + order.id }" @click="copyText(order.cardCode, 'k-' + order.id)">
-                    <n-icon :size="11"><checkmark-outline v-if="copiedId === 'k-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
-                  </button>
-                </div>
-              </div>
 
-              <!-- 发货凭证 -->
-              <div v-if="order.deliveryInfo" class="card-row-creds">
-                <div class="cred-line custom">
-                  <span class="cred-key custom-key"><n-icon :size="9"><DocumentTextOutline /></n-icon></span>
-                  <span class="cred-key-label">发货凭证</span>
-                  <code class="cred-val" style="white-space:pre-wrap">{{ order.deliveryInfo }}</code>
-                  <button class="copy-btn" :class="{ copied: copiedId === 'd-' + order.id }" @click="copyText(order.deliveryInfo, 'd-' + order.id)">
-                    <n-icon :size="11"><checkmark-outline v-if="copiedId === 'd-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
+                <div v-if="order.cardCode" class="cred-row">
+                  <span class="cred-tag green">卡密</span>
+                  <code class="cred-val">{{ order.cardCode }}</code>
+                  <button class="cred-copy" :class="{ copied: copiedId === 'k-' + order.id }" @click="copyText(order.cardCode, 'k-' + order.id)">
+                    <n-icon :size="12"><checkmark-outline v-if="copiedId === 'k-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
+                  </button>
+                </div>
+
+                <div v-if="order.deliveryInfo" class="cred-row delivery">
+                  <span class="cred-tag orange">凭证</span>
+                  <span class="cred-delivery-text">{{ order.deliveryInfo }}</span>
+                  <button class="cred-copy" :class="{ copied: copiedId === 'd-' + order.id }" @click="copyText(order.deliveryInfo, 'd-' + order.id)">
+                    <n-icon :size="12"><checkmark-outline v-if="copiedId === 'd-' + order.id"></checkmark-outline><copy-outline v-else></copy-outline></n-icon>
                   </button>
                 </div>
               </div>
 
               <!-- 底部：订单号 + 时间 -->
-              <div class="card-row-bottom">
-                <span class="card-order-no">{{ order.orderNo }}</span>
-                <span class="card-time"><n-icon :size="10"><time-outline></time-outline></n-icon> {{ formatTime(order.createdAt) }}</span>
+              <div class="card-foot">
+                <code class="foot-no">{{ order.orderNo }}</code>
+                <span class="foot-time">{{ formatTime(order.createdAt) }}</span>
               </div>
             </div>
           </div>
@@ -193,15 +147,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { NIcon, NTag, NSpin, useMessage } from 'naive-ui'
+import { ref, computed, onMounted } from 'vue'
+import { NIcon, NSpin, useMessage } from 'naive-ui'
 import {
   SearchOutline, CloseOutline, ReceiptOutline,
-  CheckmarkCircleOutline, CheckmarkOutline,
-  CopyOutline, TimeOutline, CallOutline,
-  PhonePortraitOutline, KeyOutline, WalletOutline,
-  ShieldCheckmarkOutline, PricetagOutline,
-  ChevronBackOutline, ChevronForwardOutline, DocumentTextOutline
+  CheckmarkOutline, CopyOutline, WalletOutline,
+  ChevronBackOutline, ChevronForwardOutline
 } from '@vicons/ionicons5'
 import { useOrderStore } from '@/stores/order'
 import { useUserStore } from '@/stores/user'
@@ -214,21 +165,11 @@ const keyword = ref('')
 const searchFocused = ref(false)
 const searched = ref(false)
 const autoSearching = ref(false)
-const statusFilter = ref('')
 const copiedId = ref('')
 const currentPage = ref(1)
 const pageSize = 10
 
 const totalPages = computed(() => Math.max(1, Math.ceil(orderStore.total / pageSize)))
-
-const statusFilters = [
-  { label: '全部', value: '' },
-  { label: '已完成', value: 'completed' },
-  { label: '待处理', value: 'pending' },
-  { label: '失败', value: 'failed' },
-]
-
-watch(statusFilter, () => { if (searched.value) doSearch() })
 
 const statusText = (s) => ({ completed: '已完成', pending: '待处理', failed: '失败' }[s] || s)
 
@@ -253,7 +194,6 @@ async function loadOrders() {
   const params = { page: currentPage.value, pageSize }
   if (useUserId) params.userId = userStore.user.id
   else params.keyword = kw
-  if (statusFilter.value) params.status = statusFilter.value
   try {
     await orderStore.fetchOrders(params)
     searched.value = true
@@ -290,29 +230,17 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* ===== 版心 - 与 HomeView 一致 ===== */
+/* ===== Layout ===== */
 .section-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 16px;
 }
 
-/* ===== 搜索筛选区 ===== */
-.filter-section {
-  padding: 12px 0 0;
-}
+/* ===== Search ===== */
+.filter-section { padding: 12px 0 0; }
 
-.filter-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* 搜索行：输入框 + 按钮 */
-.search-row {
-  display: flex;
-  gap: 8px;
-}
+.search-row { display: flex; gap: 8px; }
 
 .search-box {
   flex: 1;
@@ -330,7 +258,7 @@ onMounted(async () => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.search-box.search-focused {
+.search-box.focused {
   background: rgba(255, 255, 255, 0.95);
   border-color: rgba(59, 130, 246, 0.35);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08), 0 2px 8px rgba(59, 130, 246, 0.06);
@@ -347,9 +275,7 @@ onMounted(async () => {
   line-height: 1;
 }
 
-.search-input::placeholder {
-  color: #94A3B8;
-}
+.search-input::placeholder { color: #94A3B8; }
 
 .search-clear {
   display: flex;
@@ -366,22 +292,8 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-.search-clear:hover {
-  background: #CBD5E1;
-  color: #475569;
-}
+.search-clear:hover { background: #CBD5E1; color: #475569; }
 
-.clear-fade-enter-active,
-.clear-fade-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
-.clear-fade-enter-from,
-.clear-fade-leave-to {
-  opacity: 0;
-  transform: scale(0.6);
-}
-
-/* 查询按钮 */
 .search-btn {
   display: flex;
   align-items: center;
@@ -408,100 +320,11 @@ onMounted(async () => {
   transform: translateY(-1px);
 }
 
-.search-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
-}
+.search-btn:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25); }
+.search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.search-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* 状态筛选 */
-.status-scroll-wrap {
-  position: relative;
-  margin: 0 -16px;
-}
-
-.status-scroll {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 16px 2px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.status-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.status-chip {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 14px;
-  border-radius: 20px;
-  border: 1.5px solid #E2E8F0;
-  background: white;
-  font-size: 12px;
-  font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
-  color: #64748B;
-  cursor: pointer;
-  transition: all 0.2s ease-out;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.status-chip:hover {
-  border-color: #93C5FD;
-  color: #3B82F6;
-}
-
-.status-chip.active {
-  background: linear-gradient(135deg, #3B82F6, #2563EB);
-  border-color: #2563EB;
-  color: white;
-  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
-}
-
-.chip-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.chip-dot.all { background: #94A3B8; }
-.chip-dot.completed { background: #22C55E; }
-.chip-dot.pending { background: #F59E0B; }
-.chip-dot.failed { background: #EF4444; }
-
-.status-chip.active .chip-dot { background: white; }
-
-/* 登录提示 */
-.login-chip {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  border-radius: 20px;
-  border: 1.5px solid #BBF7D0;
-  background: #F0FDF4;
-  font-size: 11px;
-  font-weight: 600;
-  color: #16A34A;
-  white-space: nowrap;
-}
-
-/* ===== 订单列表 ===== */
-.orders-section {
-  padding: 16px 0 0;
-}
+/* ===== Section Header ===== */
+.orders-section { padding: 16px 0 0; }
 
 .section-header {
   display: flex;
@@ -510,20 +333,6 @@ onMounted(async () => {
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid #F1F5F9;
-}
-
-.section-title-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.title-bar {
-  display: inline-block;
-  width: 3px;
-  height: 16px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, #3B82F6, #60A5FA);
 }
 
 .section-title {
@@ -545,55 +354,69 @@ onMounted(async () => {
   border-radius: 10px;
 }
 
-/* ===== 卡片网格 ===== */
-.orders-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
+/* ===== Orders List ===== */
+.orders-list { display: flex; flex-direction: column; gap: 10px; }
 
-/* ===== 订单卡片 - 干净白底 ===== */
+/* ===== Order Card ===== */
 .order-card {
   background: white;
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 14px;
   border: 1px solid #F1F5F9;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease-out;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
 }
 
 .order-card:hover {
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
   border-color: #E2E8F0;
 }
 
-/* 第1行：商品名 + 价格 + 状态 */
-.card-row-top {
+/* Card Head */
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px 10px;
+}
+
+.card-head-left { flex: 1; min-width: 0; }
+
+.card-name {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.card-meta {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.card-product-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: 'Poppins', sans-serif;
-  line-height: 1.4;
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 500;
+  font-family: 'Open Sans', sans-serif;
 }
 
-.card-price {
-  font-size: 15px;
+.meta-price {
+  font-size: 13px;
   font-weight: 700;
   color: #EF4444;
   font-family: 'Poppins', sans-serif;
-  flex-shrink: 0;
 }
 
 .card-status {
@@ -603,9 +426,10 @@ onMounted(async () => {
   font-size: 11px;
   font-weight: 600;
   font-family: 'Open Sans', sans-serif;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 10px;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .card-status .status-dot {
@@ -622,52 +446,36 @@ onMounted(async () => {
 .card-status.failed { background: #FEF2F2; color: #DC2626; }
 .card-status.failed .status-dot { background: #EF4444; }
 
-/* 第2行：标签 */
-.card-row-tags {
+/* Card Body */
+.card-body {
+  padding: 0 16px 10px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
-  margin-top: 6px;
 }
 
-.card-kw-tag {
-  background: #EFF6FF !important;
-  color: #3B82F6 !important;
-}
-
-.card-pay-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 10px;
-  color: #64748B;
-  font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
-}
-
-/* 第3行：联系信息 */
-.card-row-info {
+/* Field Rows (contact/phone) */
+.field-row {
   display: flex;
   gap: 16px;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #F8FAFC;
+  flex-wrap: wrap;
 }
 
-.info-item {
+.field {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  min-width: 0;
 }
 
-.info-key {
-  font-size: 10px;
+.field-label {
+  font-size: 11px;
   color: #94A3B8;
   font-weight: 500;
   flex-shrink: 0;
 }
 
-.info-val {
+.field-value {
   font-size: 12px;
   color: #475569;
   font-weight: 500;
@@ -675,71 +483,31 @@ onMounted(async () => {
   word-break: break-all;
 }
 
-/* 第4行：验证码 */
-.card-row-code {
+/* Credential Rows */
+.cred-row {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 8px;
-  padding: 6px 10px;
+  gap: 8px;
+  padding: 7px 10px;
   background: #F8FAFC;
   border-radius: 8px;
 }
 
-.code-key {
-  font-size: 10px;
-  font-weight: 600;
-  color: #64748B;
-  flex-shrink: 0;
-}
-
-.code-val {
-  flex: 1;
-  font-family: 'Poppins', monospace;
-  font-size: 13px;
-  font-weight: 600;
-  color: #1E293B;
-  letter-spacing: 0.5px;
-  word-break: break-all;
-}
-
-/* 第5行：凭证 */
-.card-row-creds {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.cred-line {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  background: #F8FAFC;
-  border-radius: 8px;
-}
-
-.cred-key {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
+.cred-tag {
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.5px;
-  padding: 2px 5px;
-  border-radius: 3px;
-  background: #E2E8F0;
-  color: #475569;
+  padding: 2px 6px;
+  border-radius: 4px;
   flex-shrink: 0;
   text-transform: uppercase;
   font-family: 'Poppins', sans-serif;
 }
 
-.cdk .cred-key { background: #DBEAFE; color: #2563EB; }
-.card .cred-key { background: #DCFCE7; color: #16A34A; }
-.custom .cred-key { background: #FEF3C7; color: #D97706; }
-.custom .cred-key-label { font-size: 9px; font-weight: 800; letter-spacing: 0.5px; color: #D97706; flex-shrink: 0; }
+.cred-tag.blue { background: #DBEAFE; color: #2563EB; }
+.cred-tag.purple { background: #EDE9FE; color: #7C3AED; }
+.cred-tag.green { background: #DCFCE7; color: #16A34A; }
+.cred-tag.orange { background: #FEF3C7; color: #D97706; }
 
 .cred-val {
   flex: 1;
@@ -748,60 +516,60 @@ onMounted(async () => {
   font-weight: 500;
   color: #334155;
   word-break: break-all;
+  min-width: 0;
 }
 
-/* 复制按钮 */
-.copy-btn {
+.cred-delivery-text {
+  flex: 1;
+  font-size: 12px;
+  color: #334155;
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-width: 0;
+  line-height: 1.5;
+}
+
+.cred-copy {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   background: transparent;
   color: #94A3B8;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
-.copy-btn:hover {
-  background: #EFF6FF;
-  color: #3B82F6;
-}
+.cred-copy:hover { background: #EFF6FF; color: #3B82F6; }
+.cred-copy.copied { background: #F0FDF4; color: #22C55E; }
 
-.copy-btn.copied {
-  background: #F0FDF4;
-  color: #22C55E;
-}
-
-/* 底部行 */
-.card-row-bottom {
+/* Card Foot */
+.card-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #F8FAFC;
+  padding: 8px 16px;
+  background: #FAFBFC;
+  border-top: 1px solid #F1F5F9;
 }
 
-.card-order-no {
+.foot-no {
   font-size: 11px;
   font-family: 'Poppins', monospace;
   color: #CBD5E1;
   font-weight: 500;
 }
 
-.card-time {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
+.foot-time {
   font-size: 11px;
   color: #CBD5E1;
 }
 
-/* ===== 空状态 ===== */
+/* ===== Empty / Loading States ===== */
 .state-block {
   display: flex;
   flex-direction: column;
@@ -812,7 +580,7 @@ onMounted(async () => {
   font-size: 13px;
 }
 
-/* ===== 分页 ===== */
+/* ===== Pagination ===== */
 .pagination {
   display: flex;
   align-items: center;
@@ -835,15 +603,8 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 
-.page-btn:hover:not(:disabled) {
-  border-color: #3B82F6;
-  color: #3B82F6;
-}
-
-.page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.page-btn:hover:not(:disabled) { border-color: #3B82F6; color: #3B82F6; }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .page-info {
   font-size: 13px;
@@ -852,79 +613,30 @@ onMounted(async () => {
   font-family: 'Poppins', sans-serif;
 }
 
-.bottom-spacer {
-  height: 68px;
-}
+.bottom-spacer { height: 68px; }
 
-/* ===== 桌面端 ===== */
+/* ===== Desktop ===== */
 @media (min-width: 768px) {
-  .section-container {
-    padding: 0 24px;
-  }
-
-  .filter-section {
-    padding: 16px 0 0;
-  }
-
-  .search-box {
-    height: 44px;
-  }
-
-  .search-btn {
-    height: 44px;
-    padding: 0 20px;
-  }
-
-  .search-input {
-    font-size: 14px;
-  }
-
-  .orders-section {
-    padding: 20px 0 0;
-  }
-
-  .orders-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .section-title {
-    font-size: 16px;
-  }
-
-  .card-product-name {
-    font-size: 15px;
-  }
-
-  .card-price {
-    font-size: 16px;
-  }
-
-  .bottom-spacer {
-    height: 32px;
-  }
+  .section-container { padding: 0 24px; }
+  .filter-section { padding: 16px 0 0; }
+  .search-box { height: 44px; }
+  .search-btn { height: 44px; padding: 0 20px; }
+  .search-input { font-size: 14px; }
+  .orders-section { padding: 20px 0 0; }
+  .orders-list { flex-direction: row; flex-wrap: wrap; gap: 12px; }
+  .order-card { width: calc(50% - 6px); }
+  .section-title { font-size: 16px; }
+  .card-name { font-size: 15px; }
+  .bottom-spacer { height: 32px; }
 }
 
 @media (min-width: 1024px) {
-  .section-title {
-    font-size: 17px;
-  }
+  .section-title { font-size: 17px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .order-card,
-  .status-chip,
-  .search-box,
-  .search-btn,
-  .copy-btn,
-  .page-btn {
-    transition: none;
-  }
-  .order-card:hover {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-  }
-  .search-btn:hover:not(:disabled) {
-    transform: none;
-  }
+  .order-card, .search-box, .search-btn, .cred-copy, .page-btn { transition: none; }
+  .order-card:hover { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); }
+  .search-btn:hover:not(:disabled) { transform: none; }
 }
 </style>
