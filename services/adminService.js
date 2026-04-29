@@ -152,6 +152,33 @@ class AdminService {
       .where('o.createdAt >= :date', { date: sevenDaysAgo })
       .getCount();
 
+    // 今日订单数 + 今日收入
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayOrders = await orderRepo
+      .createQueryBuilder('o')
+      .where('o.createdAt >= :date', { date: todayStart })
+      .getMany();
+    const todayOrderCount = todayOrders.length;
+    const todayRevenue = todayOrders
+      .filter(o => o.status === 'completed' && o.amount != null)
+      .reduce((sum, o) => sum + parseFloat(o.amount), 0);
+
+    // 待处理订单（最近20条）
+    const pendingOrders = await orderRepo.find({
+      where: { status: 'pending' },
+      order: { id: 'DESC' },
+      take: 20,
+    });
+
+    // 库存不足商品（库存 <= 3）
+    const products = await productRepo.find();
+    const lowStockProducts = [];
+    for (const p of products) {
+      const stock = await cardKeyRepo.count({ where: { productId: p.id, status: 'unused' } });
+      if (stock < 5) lowStockProducts.push({ name: p.name, stock });
+    }
+
     return {
       productCount,
       userCount,
@@ -161,6 +188,10 @@ class AdminService {
       orderCompleted,
       recentOrders,
       smsRecordCount,
+      todayOrderCount,
+      todayRevenue: todayRevenue.toFixed(2),
+      pendingOrders,
+      lowStockProducts,
     };
   }
 
