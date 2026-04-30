@@ -209,6 +209,24 @@ onMounted(async () => {
   font-size: 12px;
 }
 
+/* ===== 浅色主题 ===== */
+.light-theme .log-stat-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+}
+
+.light-theme .log-stat-card.active {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.light-theme .log-stat-label {
+  color: #1E293B;
+}
+
+.light-theme .log-stat-info {
+  color: #64748B;
+}
+
 @media (max-width: 767px) {
   .log-stats-grid {
     grid-template-columns: repeat(2, 1fr);
