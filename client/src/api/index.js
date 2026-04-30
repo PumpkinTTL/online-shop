@@ -98,7 +98,7 @@ export const productApi = {
 // ===== 卡密/提货 API =====
 export const pickupApi = {
   verifyCard: (code) => http.post('/pickup/verify-card', { code }),
-  redeem: (code, productId, contact) => http.post('/pickup/redeem', { code, productId, contact }),
+  redeem: (code, productId, contact, turnstileToken) => http.post('/pickup/redeem', { code, productId, contact, turnstileToken }),
   getOrders: (params) => http.get('/pickup/orders', { params }),
   getPhone: (data) => http.post('/pickup/get-phone', data),
   getVerifyCode: (data) => http.post('/pickup/get-verify-code', data),
@@ -140,7 +140,7 @@ export const captchaApi = {
 // ===== Admin API =====
 export const adminApi = {
   // 认证
-  login: (username, password) => http.post('/admin/login', { username, password }),
+  login: (username, password, turnstileToken) => http.post('/admin/login', { username, password, turnstileToken }),
   check: () => http.get('/admin/check'),
   logout: () => http.post('/admin/logout'),
   changePassword: (oldPassword, newPassword) => http.post('/admin/change-password', { oldPassword, newPassword }),

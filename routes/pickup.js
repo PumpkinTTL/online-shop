@@ -1,6 +1,7 @@
 const express = require('express');
 const pickupService = require('../services/pickupService');
 const couponService = require('../services/couponService');
+const captchaService = require('../services/captchaService');
 const dataSource = require('../config/database');
 const Product = require('../entities/Product');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
@@ -29,7 +30,7 @@ router.post('/verify-card', pickupVerify, async (req, res) => {
 });
 
 // 兑换卡密 — 验证卡密后返回CDK，并写入订单（严格限速：3次/分钟，防止批量盗刷）
-router.post('/redeem', pickupRedeem, optionalAuth, async (req, res) => {
+router.post('/redeem', pickupRedeem, captchaService.requireTurnstile(), optionalAuth, async (req, res) => {
   try {
     const { code, productId, contact } = req.body;
     if (!code || !code.trim()) {

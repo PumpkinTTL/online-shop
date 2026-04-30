@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const adminService = require('../services/adminService');
 const couponService = require('../services/couponService');
 const pickupService = require('../services/pickupService');
+const captchaService = require('../services/captchaService');
 const { login: loginLimiter } = require('../middleware/rateLimiter');
 const { requireAdminAuth } = require('../middleware/auth');
 const { action, system } = require('../logger');
@@ -33,7 +34,7 @@ const auth = requireAdminAuth;
 
 // ==================== 登录（不需要鉴权） ====================
 
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', loginLimiter, captchaService.requireTurnstile(), async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {

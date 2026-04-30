@@ -26,6 +26,12 @@
             <template #prefix><n-icon><LockClosedOutline /></n-icon></template>
           </n-input>
         </n-form-item>
+
+        <!-- Cloudflare Turnstile 验证码 -->
+        <n-form-item>
+          <div ref="turnstileRef" class="turnstile-container"></div>
+        </n-form-item>
+
         <n-button type="primary" block size="large" :loading="loading" @click="handleLogin">
           登录
         </n-button>
@@ -35,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
 import { FlashOutline, PersonOutline, LockClosedOutline, SunnyOutline, MoonOutline } from '@vicons/ionicons5'
@@ -51,25 +57,68 @@ const { isDark, toggleTheme } = useTheme()
 const formRef = ref(null)
 const loading = ref(false)
 const form = ref({ username: '', password: '' })
+const turnstileRef = ref(null)
+const turnstileToken = ref(null)
+const turnstileWidgetId = ref(null)
 
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 
+// Turnstile Site Key
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'
+
+// 初始化 Turnstile
+onMounted(() => {
+  if (window.turnstile && turnstileRef.value) {
+    turnstileWidgetId.value = window.turnstile.render(turnstileRef.value, {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: (token) => {
+        turnstileToken.value = token
+      },
+      'error-callback': () => {
+        turnstileToken.value = null
+        message.warning('人机验证加载失败，请刷新页面重试')
+      },
+      'expired-callback': () => {
+        turnstileToken.value = null
+        message.warning('验证已过期，请重新验证')
+      },
+    })
+  }
+})
+
+// 清理 Turnstile
+onUnmounted(() => {
+  if (turnstileWidgetId.value && window.turnstile) {
+    window.turnstile.remove(turnstileWidgetId.value)
+  }
+})
+
 async function handleLogin() {
   try {
     await formRef.value?.validate()
   } catch { return }
 
+  if (!turnstileToken.value) {
+    message.warning('请完成人机验证')
+    return
+  }
+
   loading.value = true
   try {
-    await adminStore.login(form.value.username, form.value.password)
+    await adminStore.login(form.value.username, form.value.password, turnstileToken.value)
     message.success('登录成功')
     const redirect = route.query.redirect || '/admin'
     router.push(redirect)
   } catch (error) {
     message.error(error.response?.data?.error || '登录失败')
+    // 登录失败，重置 Turnstile
+    if (window.turnstile && turnstileWidgetId.value) {
+      window.turnstile.reset(turnstileWidgetId.value)
+      turnstileToken.value = null
+    }
   } finally {
     loading.value = false
   }
@@ -123,6 +172,12 @@ async function handleLogin() {
 .login-header p {
   color: #94A3B8;
   font-size: 14px;
+}
+
+.turnstile-container {
+  display: flex;
+  justify-content: center;
+  min-height: 65px;
 }
 
 /* ===== 浅色主题 ===== */

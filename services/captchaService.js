@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const axios = require('axios');
 
 // 内存存储验证码（captchaId → { answer, expiresAt }）
 const captchaStore = new Map();
@@ -60,6 +61,84 @@ class CaptchaService {
     captchaStore.delete(captchaId);
     if (data.expiresAt < Date.now()) return false;
     return data.answer === String(answer).trim();
+  }
+
+  /**
+   * 验证 Cloudflare Turnstile token
+   * @param {string} token - 前端 Turnstile 验证成功后返回的 token
+   * @returns {Promise<{valid: boolean, reason?: string}>}
+   */
+  async verifyTurnstileToken(token) {
+    if (!token) {
+      return { valid: false, reason: 'missing_token' };
+    }
+
+    const secretKey = process.env.TURNSTILE_SECRET_KEY;
+    if (!secretKey) {
+      return { valid: false, reason: 'missing_secret_key' };
+    }
+
+    try {
+      const params = new URLSearchParams();
+      params.append('secret', secretKey);
+      params.append('response', token);
+
+      const response = await axios.post(
+        'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        params.toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        return { valid: true };
+      } else {
+        console.error('[Turnstile] Cloudflare rejected:', response.data);
+        return { valid: false, reason: 'cloudflare_rejected', errors: response.data['error-codes'] };
+      }
+    } catch (error) {
+      console.error('[Turnstile] Verification error:', error.message);
+      return { valid: false, reason: 'network_error' };
+    }
+  }
+
+  /**
+   * 中间件：验证 Turnstile token
+   */
+  requireTurnstile(options = {}) {
+    const { tokenParam = 'turnstileToken' } = options;
+
+    return async (req, res, next) => {
+      const token = req.body[tokenParam] || req.query[tokenParam];
+
+      if (!token) {
+        return res.status(400).json({
+          error: '请完成人机验证',
+          turnstileRequired: true,
+        });
+      }
+
+      const result = await this.verifyTurnstileToken(token);
+
+      if (!result.valid) {
+        const messages = {
+          missing_token: '请完成人机验证',
+          missing_secret_key: '服务配置错误',
+          cloudflare_rejected: '人机验证失败，请重试',
+          network_error: '验证服务暂时不可用，请稍后重试',
+        };
+
+        return res.status(400).json({
+          error: messages[result.reason] || '人机验证失败',
+          turnstileRequired: true,
+        });
+      }
+
+      next();
+    };
   }
 }
 

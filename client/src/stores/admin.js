@@ -7,8 +7,8 @@ export const useAdminStore = defineStore('admin', () => {
   const isLoggedIn = ref(false)
 
   // ===== 认证 =====
-  async function login(username, password) {
-    const res = await adminApi.login(username, password)
+  async function login(username, password, turnstileToken) {
+    const res = await adminApi.login(username, password, turnstileToken)
     adminInfo.value = res.admin
     isLoggedIn.value = true
     return res

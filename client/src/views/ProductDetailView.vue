@@ -226,6 +226,8 @@
                   :input-props="{ autocomplete: 'off' }"
                   @keyup.enter="handleRedeem"
                 />
+                <!-- Cloudflare Turnstile 验证码 -->
+                <div v-if="payMethod === 'card'" ref="redeemTurnstileRef" class="turnstile-container"></div>
                 <n-button
                   type="primary"
                   size="large"
@@ -519,7 +521,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import {
@@ -553,6 +555,12 @@ const payMethod = ref('alipay')
 const redeemCode = ref('')
 const redeeming = ref(false)
 const actionResult = ref(null)
+
+// Turnstile 验证码（兑换）
+const redeemTurnstileRef = ref(null)
+const redeemTurnstileWidgetId = ref(null)
+const redeemTurnstileToken = ref(null)
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'
 
 // 计算属性
 const isSmsProduct = computed(() => product.value?.category?.smsEnabled === 1)
@@ -719,14 +727,23 @@ const handleRedeem = async () => {
     message.warning('请输入卡密')
     return
   }
+  if (!redeemTurnstileToken.value) {
+    message.warning('请完成人机验证')
+    return
+  }
   redeeming.value = true
   try {
-    const response = await pickupApi.redeem(redeemCode.value.trim(), product.value.id, contact.value.trim())
+    const response = await pickupApi.redeem(redeemCode.value.trim(), product.value.id, contact.value.trim(), redeemTurnstileToken.value)
     localStorage.setItem('lastContact', contact.value.trim())
     actionResult.value = { type: 'redeem', CDK: response.CDK, deliveryInfo: response.deliveryInfo, orderNo: response.orderNo, cardCode: response.cardCode, cardKeyId: response.id }
     message.success('兑换成功！')
   } catch (err) {
     message.error(err.response?.data?.error || '兑换失败')
+    // 兑换失败，重置 Turnstile
+    if (window.turnstile && redeemTurnstileWidgetId.value) {
+      window.turnstile.reset(redeemTurnstileWidgetId.value)
+      redeemTurnstileToken.value = null
+    }
   } finally {
     redeeming.value = false
   }
@@ -1031,12 +1048,52 @@ const goHome = () => {
 onMounted(async () => {
   await loadProduct()
   await checkAndPrefillContact()
+
+  // 初始化 Turnstile（兑换）
+  if (window.turnstile && payMethod.value === 'card') {
+    initRedeemTurnstile()
+  }
 })
 
 onUnmounted(() => {
   stopPolling()
   stopSmsPolling()
   if (countdownTimer) clearInterval(countdownTimer)
+
+  // 清理 Turnstile
+  if (redeemTurnstileWidgetId.value && window.turnstile) {
+    window.turnstile.remove(redeemTurnstileWidgetId.value)
+  }
+})
+
+// 初始化兑换 Turnstile
+function initRedeemTurnstile() {
+  if (!redeemTurnstileRef.value || !window.turnstile) return
+
+  redeemTurnstileWidgetId.value = window.turnstile.render(redeemTurnstileRef.value, {
+    sitekey: TURNSTILE_SITE_KEY,
+    callback: (token) => {
+      redeemTurnstileToken.value = token
+    },
+    'error-callback': () => {
+      redeemTurnstileToken.value = null
+      message.warning('人机验证加载失败')
+    },
+    'expired-callback': () => {
+      redeemTurnstileToken.value = null
+      message.warning('验证已过期')
+    },
+  })
+}
+
+// 监听支付方式切换，初始化 Turnstile
+watch(payMethod, (newMethod) => {
+  if (newMethod === 'card') {
+    // 等待 DOM 更新后初始化
+    setTimeout(() => {
+      initRedeemTurnstile()
+    }, 100)
+  }
 })
 </script>
 
@@ -1899,6 +1956,14 @@ onUnmounted(() => {
   .cover-img {
     max-height: 460px;
   }
+}
+
+/* Turnstile 验证码容器 */
+.turnstile-container {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+  min-height: 65px;
 }
 </style>
  
