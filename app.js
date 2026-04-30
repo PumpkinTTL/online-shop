@@ -63,7 +63,7 @@ app.use('/api/captcha', captchaRouter);
 app.use('/api', limiters.global);
 
 // 静态文件
-app.use('/assets', express.static(path.join(__dirname, 'asset')));
+app.use('/api-static', express.static(path.join(__dirname, 'asset')));
 
 // 路由
 app.use('/api/products', productsRouter);
@@ -77,26 +77,17 @@ app.use('/api/admin/activation-codes', adminActivationCodesRouter);
 
 // Vue SPA 客户端（生产环境：指向 vite build 产物）
 const spaDistPath = path.join(__dirname, 'dist', 'spa');
-app.use('/app', express.static(spaDistPath));
-app.get('/app', (req, res) => {
-  res.sendFile(path.join(spaDistPath, 'index.html'));
-});
-// SPA 内部路由回退（history 模式）
-// Express 5 path-to-regexp 不再支持 *，需用 {*name} 语法
+app.use(express.static(spaDistPath));
+
+// SPA 路由回退（history 模式，需放在所有 API 路由之后）
 app.get('/app/{*path}', (req, res) => {
   res.sendFile(path.join(spaDistPath, 'index.html'));
 });
-
-// 根路径重定向到 Vue SPA
-app.get('/', (req, res) => {
-  res.sendFile(path.join(spaDistPath, 'index.html'));
-});
-
-// Admin 后台也由 Vue SPA 托管（/admin/* 路由）
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(spaDistPath, 'index.html'));
-});
 app.get('/admin/{*path}', (req, res) => {
+  res.sendFile(path.join(spaDistPath, 'index.html'));
+});
+// 根路径 SPA 回退（匹配所有未命中的 GET 请求）
+app.get('{*path}', (req, res) => {
   res.sendFile(path.join(spaDistPath, 'index.html'));
 });
 
