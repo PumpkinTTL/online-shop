@@ -22,29 +22,14 @@ online-shop/
 
 ## 首次部署
 
-### 1. 上传代码
+### 1. 克隆项目
 
 ```bash
-# 本地打包（排除 node_modules 等）
-tar czf online-shop-deploy.tar.gz \
-  --exclude='node_modules' \
-  --exclude='client/node_modules' \
-  --exclude='.git' \
-  --exclude='dist' \
-  --exclude='client/dist' \
-  --exclude='logs' \
-  --exclude='.env' \
-  --exclude='payment-center' \
-  .
-
-# 上传到服务器
-scp online-shop-deploy.tar.gz root@<服务器IP>:/opt/
-
-# 服务器上解压
-mkdir -p /opt/online-shop
+git clone git@github.com:PumpkinTTL/online-shop.git /opt/online-shop
 cd /opt/online-shop
-tar xzf /opt/online-shop-deploy.tar.gz
 ```
+
+> 需要服务器上已配置 GitHub SSH Key。如无 SSH Key，可用 HTTPS：`git clone https://github.com/PumpkinTTL/online-shop.git`
 
 ### 2. 配置环境变量
 
@@ -140,17 +125,18 @@ docker logs --tail 50 online-shop-app   # 最近50行
 
 ### 更新部署
 
-```bash
-# 1. 本地打包上传（同首次部署的打包步骤）
-scp online-shop-deploy.tar.gz root@<服务器IP>:/opt/
+项目已连接 GitHub 仓库，本地推送后服务器拉取即可：
 
-# 2. 服务器上解压并重建
+```bash
+# 服务器上执行
 cd /opt/online-shop
-tar xzf /opt/online-shop-deploy.tar.gz
+git pull
 docker compose up -d --build
 ```
 
-> `.env` 文件不会被覆盖（在 `.gitignore` 和 `.dockerignore` 中）。
+> `.env` 和 `client/.env` 不会被覆盖（在 `.gitignore` 中）。
+
+如果 `.env.example` 有新增变量，对照着在服务器的 `.env` 中补充即可。
 
 ### 新增环境变量
 
@@ -175,6 +161,45 @@ docker compose up -d              # 启动
 |------|------|--------|
 | 5100（默认） | 应用服务（Nginx 反代） | `.env` 中的 `PORT` |
 | 3306 | MariaDB（已有容器） |
+
+## 迁移服务器
+
+### 1. 旧服务器备份数据库
+
+```bash
+# 导出 online_shop 数据库
+docker exec <数据库容器名> mysqldump -u root -p<密码> online_shop > online_shop_backup.sql
+
+# 传输到新服务器
+scp online-shop-deploy.tar.gz root@<新服务器IP>:/opt/
+```
+
+### 2. 新服务器部署
+
+```bash
+# 克隆项目
+git clone git@github.com:PumpkinTTL/online-shop.git /opt/online-shop
+cd /opt/online-shop
+
+# 配置环境变量
+cp .env.example .env
+nano .env                        # 填写真实配置
+echo "VITE_TURNSTILE_SITE_KEY=你的密钥" > client/.env
+
+# 初始化空表结构
+# （在 MariaDB 容器中执行 init-db.sql）
+
+# 恢复数据（覆盖空表，导入真实数据）
+docker exec -i <数据库容器名> mysql -u root -p<密码> online_shop < /opt/online_shop_backup.sql
+
+# 构建启动
+docker compose up -d --build
+
+# 配置 Nginx 反向代理（参考首次部署第6步）
+```
+
+> 迁移时需重新配置：`.env`、`client/.env`、Nginx 反代、SSL 证书。
+> 数据库先 `init-db.sql` 建表，再 `mysqldump` 恢复数据。
 
 ## 注意事项
 
