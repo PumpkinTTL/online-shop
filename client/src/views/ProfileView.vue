@@ -256,7 +256,6 @@ function handleLogout() {
 /* ===== 页面容器 ===== */
 .profile-view {
   min-height: 100vh;
-  background: #F8FAFC;
 }
 
 .profile-section {

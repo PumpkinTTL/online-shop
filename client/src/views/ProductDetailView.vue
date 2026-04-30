@@ -1044,7 +1044,6 @@ onUnmounted(() => {
 /* ===== 基础容器 ===== */
 .product-detail-view {
   min-height: 100vh;
-  background: #F8FAFC;
   padding-bottom: 24px;
 }
 

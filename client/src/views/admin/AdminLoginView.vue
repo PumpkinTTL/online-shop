@@ -83,7 +83,6 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0F172A;
   padding: 16px;
   position: relative;
 }

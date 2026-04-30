@@ -1,12 +1,15 @@
 <template>
   <n-config-provider :theme="naiveTheme" :theme-overrides="themeOverrides" :locale="zhCN" :date-locale="dateZhCN">
-    <n-message-provider>
-      <n-dialog-provider>
-        <n-notification-provider>
-          <router-view></router-view>
-        </n-notification-provider>
-      </n-dialog-provider>
-    </n-message-provider>
+    <TechBg :theme="bgTheme" />
+    <div class="app-content">
+      <n-message-provider>
+        <n-dialog-provider>
+          <n-notification-provider>
+            <router-view></router-view>
+          </n-notification-provider>
+        </n-dialog-provider>
+      </n-message-provider>
+    </div>
   </n-config-provider>
 </template>
 
@@ -15,9 +18,16 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvider, darkTheme, zhCN, dateZhCN } from 'naive-ui'
 import { useTheme } from '@/composables/useTheme'
+import TechBg from '@/components/TechBg.vue'
 
 const route = useRoute()
 const { isDark } = useTheme()
+
+// 灵动背景主题：前台始终浅色，Admin 跟随 isDark
+const bgTheme = computed(() => {
+  if (route.path.startsWith('/admin')) return isDark.value ? 'dark' : 'light'
+  return 'light'
+})
 
 // Admin 路由根据 isDark 切换主题，前台始终浅色
 const naiveTheme = computed(() => {
@@ -35,6 +45,7 @@ const themeOverrides = computed(() => {
       primaryColorSuppl: '#3B82F6',
       borderRadius: '8px',
       fontFamily: 'Open Sans, Poppins, sans-serif',
+      bodyColor: 'transparent',
     },
     Button: {
       borderRadiusSmall: '8px',
@@ -50,7 +61,7 @@ const themeOverrides = computed(() => {
   if (isDark.value && route.path.startsWith('/admin')) {
     base.common = {
       ...base.common,
-      bodyColor: '#1E293B',          // 页面/弹窗背景 → Slate-800
+      bodyColor: 'transparent',
       cardColor: '#0F172A',          // 卡片/表格容器背景 → Slate-900
       modalColor: '#1E293B',         // 弹窗背景
       popoverColor: '#0F172A',       // 下拉弹出层背景
@@ -130,3 +141,11 @@ const themeOverrides = computed(() => {
   return base
 })
 </script>
+
+<style scoped>
+.app-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+</style>

@@ -210,7 +210,6 @@ const isProductDetail = computed(() => /^\/product\/\w+/.test(route.path))
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
 }
 
 .client-main {
