@@ -71,10 +71,8 @@ import {
 } from 'naive-ui'
 import { AddOutline, TrashOutline, CreateOutline } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
-import { useTheme } from '@/composables/useTheme'
 
 const adminStore = useAdminStore()
-const { adminInfo } = adminStore
 const message = useMessage()
 const dialog = useDialog()
 

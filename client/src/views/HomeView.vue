@@ -143,7 +143,7 @@ import { NSpin, NIcon } from 'naive-ui'
 import {
   SearchOutline, CloseOutline, CubeOutline,
   WalletOutline, ShieldCheckmarkOutline, PhonePortraitOutline,
-  BanOutline, TrendingUpOutline, CheckmarkCircleOutline,
+  TrendingUpOutline, CheckmarkCircleOutline,
   AppsOutline
 } from '@vicons/ionicons5'
 import { useProductStore } from '@/stores/product'

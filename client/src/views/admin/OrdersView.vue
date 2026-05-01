@@ -3,7 +3,15 @@
     <div class="admin-page-header">
       <h2 class="admin-page-title">订单管理</h2>
       <div class="admin-page-actions">
-        <n-select v-model:value="filterStatus" :options="statusOptions" placeholder="按状态筛选" clearable style="width:140px" @update:value="handleFilter" />
+        <n-input v-model:value="filterOrderNo" placeholder="订单号" clearable size="small" style="width:160px" />
+        <n-input v-model:value="filterCardCode" placeholder="卡密" clearable size="small" style="width:140px" />
+        <n-input-number v-model:value="filterUserId" placeholder="用户ID" clearable size="small" style="width:100px" :show-button="false" />
+        <n-select v-model:value="filterStatus" :options="statusOptions" placeholder="状态" clearable size="small" style="width:100px" />
+        <n-select v-model:value="filterPayMethod" :options="payMethodOptions" placeholder="支付方式" clearable size="small" style="width:110px" />
+        <n-button type="primary" size="small" @click="handleFilter">
+          <template #icon><n-icon><SearchOutline /></n-icon></template>
+          筛选
+        </n-button>
         <n-button type="error" size="small" :disabled="!selectedKeys.length" @click="handleBatchDelete">
           <template #icon><n-icon><TrashOutline /></n-icon></template>
           批量删除 ({{ selectedKeys.length }})
@@ -38,11 +46,11 @@
 <script setup>
 import { ref, h, onMounted } from 'vue'
 import {
-  NButton, NDataTable, NPagination, NSelect,
+  NButton, NDataTable, NPagination, NSelect, NInput, NInputNumber,
   NSpace, NTag, NPopover, NTooltip, NIcon,
   useMessage, useDialog
 } from 'naive-ui'
-import { CopyOutline, PhonePortraitOutline, WalletOutline, SwapHorizontalOutline, TrashOutline, EyeOutline, EyeOffOutline } from '@vicons/ionicons5'
+import { SearchOutline, CopyOutline, PhonePortraitOutline, WalletOutline, SwapHorizontalOutline, TrashOutline, EyeOutline, EyeOffOutline } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
 
 const adminStore = useAdminStore()
@@ -55,11 +63,20 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedKeys = ref([])
 const filterStatus = ref(null)
+const filterUserId = ref(null)
+const filterPayMethod = ref(null)
+const filterOrderNo = ref(null)
+const filterCardCode = ref(null)
 
 const statusOptions = [
   { label: '待处理', value: 'pending' },
   { label: '已完成', value: 'completed' },
   { label: '失败', value: 'failed' },
+]
+
+const payMethodOptions = [
+  { label: '支付宝', value: 'alipay' },
+  { label: '兑换', value: '兑换' },
 ]
 
 const statusMap = { pending: 'warning', completed: 'success', failed: 'error' }
@@ -254,6 +271,10 @@ async function loadData() {
   try {
     const params = { page: currentPage.value, pageSize: pageSize.value }
     if (filterStatus.value) params.status = filterStatus.value
+    if (filterUserId.value) params.userId = filterUserId.value
+    if (filterPayMethod.value) params.payMethod = filterPayMethod.value
+    if (filterOrderNo.value) params.orderNo = filterOrderNo.value
+    if (filterCardCode.value) params.cardCode = filterCardCode.value
     await adminStore.fetchOrders(params)
   } finally { loading.value = false }
 }

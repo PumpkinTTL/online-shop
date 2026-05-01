@@ -24,6 +24,10 @@ class PickupService {
     return dataSource.getRepository(SmsRecord);
   }
 
+  getProductRepo() {
+    return dataSource.getRepository(Product);
+  }
+
   // 验证卡密 — 返回卡密信息
   async verifyCardKey(code) {
     const repo = this.getCardKeyRepo();
@@ -44,6 +48,7 @@ class PickupService {
       });
 
       if (!cardKey) throw new Error('卡密不存在');
+      if (cardKey.status === 'used') throw new Error('卡密已被使用');
       if (cardKey.status === 'expired') throw new Error('卡密已过期');
       if (!cardKey.CDK && !cardKey.deliveryInfo) throw new Error('该卡密暂无可用的兑换信息，请联系客服');
       // 如果卡密绑定了商品ID，验证是否匹配
@@ -358,13 +363,14 @@ class PickupService {
     let query = orderRepo.createQueryBuilder('o')
       .orderBy('o.createdAt', 'DESC');
 
-    // keyword OR 条件
+    // keyword OR 条件（含卡密code搜索）
     if (hasKeyword) {
       const kw = `%${filter.keyword}%`;
-      query = query.where(
-        '(o.contact LIKE :kw OR o.orderNo LIKE :kw OR o.phone LIKE :kw)',
-        { kw }
-      );
+      query = query.leftJoin('CardKey', 'ck', 'o.cardKeyId = ck.id')
+        .where(
+          '(o.contact LIKE :kw OR o.orderNo LIKE :kw OR o.phone LIKE :kw OR ck.code LIKE :kw)',
+          { kw }
+        );
       // 其他条件 AND
       if (filter.userId) query = query.andWhere('o.userId = :uid', { uid: parseInt(filter.userId) });
       if (filter.status) query = query.andWhere('o.status = :st', { st: filter.status });

@@ -231,14 +231,36 @@ router.get('/balance', requireAuth, async (req, res) => {
   }
 });
 
-// 查询订单（需登录，只能查自己的；管理员不受限制）
+// 查询订单（用户查自己的；管理员可查任意用户）
 router.get('/orders', optionalAuth, async (req, res) => {
   try {
-    const { keyword, contact, orderNo, phone, status, productId, page, pageSize } = req.query;
+    const { keyword, contact, orderNo, phone, status, productId, userId, page, pageSize } = req.query;
     const filter = {};
 
-    // 已登录用户只能查自己的订单（防 IDOR）
-    if (req.userId) {
+    // 检查是否为管理员
+    let isAdmin = false;
+    const adminToken = req.cookies?.admin_token || (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.substring(7) : null);
+    if (adminToken) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(adminToken, process.env.ADMIN_JWT_SECRET);
+        if (decoded.type === 'admin') isAdmin = true;
+      } catch {}
+    }
+
+    // userId 参数权限校验
+    if (userId) {
+      if (isAdmin) {
+        filter.userId = userId;
+      } else if (req.userId) {
+        if (String(req.userId) !== String(userId)) {
+          return res.status(403).json({ error: '非法请求' });
+        }
+        filter.userId = req.userId;
+      } else {
+        return res.status(403).json({ error: '请先登录' });
+      }
+    } else if (req.userId) {
       filter.userId = req.userId;
     }
 

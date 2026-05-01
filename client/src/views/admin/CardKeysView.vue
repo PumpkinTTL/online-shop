@@ -274,7 +274,7 @@ function formatDate(dateStr) {
 }
 
 function openGenerateModal() {
-  cardKeyForm.value = { productId: null, mode: 'auto', prefix: '', count: 10, cdkText: '', manualKeys: '' }
+  cardKeyForm.value = { productId: null, mode: 'auto', prefix: '', count: 10, cdkText: '', manualKeys: '', deliveryInfo: '' }
   showGenerateModal.value = true
 }
 

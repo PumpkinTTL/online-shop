@@ -114,7 +114,7 @@ import {
 } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
 import { useTheme } from '@/composables/useTheme'
-import api from '@/api'
+import { adminApi } from '@/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -302,7 +302,7 @@ async function handleChangePassword() {
   } catch { return }
   passwordLoading.value = true
   try {
-    await api.changePassword(passwordForm.value.oldPassword, passwordForm.value.newPassword)
+    await adminApi.changePassword(passwordForm.value.oldPassword, passwordForm.value.newPassword)
     message.success('密码修改成功，请重新登录')
     showPasswordModal.value = false
     passwordForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' }

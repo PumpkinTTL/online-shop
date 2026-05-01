@@ -131,28 +131,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 账号统计 -->
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-icon-wrap">
-              <n-icon :size="20" color="#3B82F6"><receipt-outline></receipt-outline></n-icon>
-            </div>
-            <div class="stat-info">
-              <span class="stat-value">0</span>
-              <span class="stat-label">订单总数</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon-wrap">
-              <n-icon :size="20" color="#22C55E"><wallet-outline></wallet-outline></n-icon>
-            </div>
-            <div class="stat-info">
-              <span class="stat-value">0</span>
-              <span class="stat-label">积分余额</span>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -169,7 +147,7 @@ import {
 } from 'naive-ui'
 import {
   LockClosedOutline, KeyOutline, LogOutOutline,
-  CameraOutline, ReceiptOutline, WalletOutline, ChevronDownOutline
+  CameraOutline, ChevronDownOutline
 } from '@vicons/ionicons5'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api'
@@ -500,55 +478,6 @@ function handleLogout() {
   margin: 8px 0;
 }
 
-/* ===== 统计卡片 ===== */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: white;
-  border-radius: 14px;
-  border: 1px solid #F1F5F9;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.stat-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: rgba(59, 130, 246, 0.08);
-  flex-shrink: 0;
-}
-
-.stat-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: #0F172A;
-  font-family: 'Poppins', sans-serif;
-  line-height: 1.2;
-}
-
-.stat-label {
-  font-size: 11px;
-  color: #94A3B8;
-  font-weight: 500;
-}
-
 /* ===== 底部间距 ===== */
 .bottom-spacer {
   height: 68px;
@@ -613,14 +542,6 @@ function handleLogout() {
 
   .setting-form {
     padding: 0 20px 20px;
-  }
-
-  .stats-row {
-    gap: 16px;
-  }
-
-  .stat-card {
-    padding: 20px;
   }
 
   .bottom-spacer {

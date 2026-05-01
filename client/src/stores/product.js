@@ -24,10 +24,5 @@ export const useProductStore = defineStore('product', () => {
     }
   }
 
-  async function fetchProductDetail(id) {
-    const res = await productApi.getProduct(id)
-    return res
-  }
-
-  return { products, categories, loading, fetchCategories, fetchProducts, fetchProductDetail }
+  return { products, categories, loading, fetchCategories, fetchProducts }
 })

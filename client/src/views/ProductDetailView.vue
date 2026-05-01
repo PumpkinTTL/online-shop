@@ -114,6 +114,9 @@
                   size="large"
                   :input-props="{ autocomplete: 'off', inputmode: 'tel' }"
                 />
+                <div v-if="userStore.isLoggedIn" class="contact-logged-in">
+                  已登录，默认使用账号名作为联系方式，也可修改
+                </div>
               </div>
 
               <!-- 方式切换 -->
@@ -296,6 +299,10 @@
                   前往兑换
                 </n-button>
               </n-space>
+              <n-button size="large" block @click="resetAction" style="margin-top:12px">
+                <template #icon><n-icon><cart-outline></cart-outline></n-icon></template>
+                重新购买
+              </n-button>
             </div>
 
             <!-- 接码产品：成功 + 获取验证码 -->
@@ -364,6 +371,10 @@
                   </n-alert>
                 </div>
               </div>
+              <n-button size="large" block @click="resetAction" style="margin-top:12px">
+                <template #icon><n-icon><cart-outline></cart-outline></n-icon></template>
+                重新购买
+              </n-button>
             </div>
           </div>
 
@@ -529,13 +540,12 @@ import {
 } from 'naive-ui'
 import {
   ArrowBackOutline, AlertCircleOutline, CubeOutline, PhonePortraitOutline,
-  ShieldCheckmarkOutline, WalletOutline, WarningOutline, DocumentTextOutline,
-  SparklesOutline, PricetagOutline, FlashOutline, BagHandleOutline, CallOutline,
+  ShieldCheckmarkOutline, WalletOutline, WarningOutline,
+  PricetagOutline, FlashOutline, CallOutline,
   LogoAlipay, KeyOutline, CartOutline, CopyOutline, OpenOutline,
   CheckmarkCircleOutline, ChatbubblesOutline, PaperPlaneOutline,
   TimeOutline, CloseCircleOutline, InformationCircleOutline,
-  ChatbubbleEllipsesOutline, LogInOutline, DiamondOutline, RocketOutline,
-  ScanOutline
+  ChatbubbleEllipsesOutline, LogInOutline, DiamondOutline, RocketOutline
 } from '@vicons/ionicons5'
 import { productApi, pickupApi, paymentApi, couponApi } from '@/api'
 import { useUserStore } from '@/stores/user'
@@ -702,17 +712,10 @@ const loadProduct = async () => {
 }
 
 // 自动填充联系方式
-const checkAndPrefillContact = async () => {
-  if (userStore.isLoggedIn && !contact.value.trim()) {
-    try {
-      await userStore.fetchMe()
-      if (userStore.user) {
-        contact.value = userStore.user.username
-        localStorage.setItem('lastContact', userStore.user.username)
-      }
-    } catch (e) {
-      // 未登录，不影响
-    }
+const checkAndPrefillContact = () => {
+  if (userStore.isLoggedIn && userStore.user?.username) {
+    contact.value = userStore.user.username
+    localStorage.setItem('lastContact', userStore.user.username)
   }
 }
 
@@ -1043,9 +1046,23 @@ const goHome = () => {
   router.push({ name: 'Home' })
 }
 
+function resetAction() {
+  actionResult.value = null
+  smsCode.value = ''
+  smsError.value = ''
+  smsLoading.value = false
+  needSmsPayment.value = false
+  stopPolling()
+  stopSmsPolling()
+  if (window.turnstile && redeemTurnstileWidgetId.value) {
+    window.turnstile.reset(redeemTurnstileWidgetId.value)
+    redeemTurnstileToken.value = null
+  }
+}
+
 onMounted(async () => {
   await loadProduct()
-  await checkAndPrefillContact()
+  checkAndPrefillContact()
 
   // 初始化 Turnstile（兑换）
   if (window.turnstile && payMethod.value === 'card') {
@@ -1319,6 +1336,15 @@ watch(payMethod, (newMethod) => {
   font-size: 12px;
   color: #94A3B8;
   margin-left: 4px;
+}
+
+.contact-logged-in {
+  font-size: 11px;
+  color: #64748B;
+  background: #F1F5F9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-top: 4px;
 }
 
 /* ===== 方式切换 ===== */

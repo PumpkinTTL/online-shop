@@ -9,7 +9,7 @@
             <input
               v-model="keyword"
               type="text"
-              placeholder="输入联系方式、订单号或手机号"
+              placeholder="输入联系方式、订单号、手机号或卡密"
               class="search-input"
               @focus="searchFocused = true"
               @blur="searchFocused = false"
@@ -182,18 +182,15 @@ const formatTime = (t) => {
 
 async function doSearch() {
   const kw = keyword.value.trim()
-  const useUserId = userStore.isLoggedIn && !kw && userStore.user?.id
-  if (!useUserId && !kw) { message.warning('请输入查询关键词'); return }
+  if (!userStore.isLoggedIn && !kw) { message.warning('请输入查询关键词'); return }
   currentPage.value = 1
   await loadOrders()
 }
 
 async function loadOrders() {
   const kw = keyword.value.trim()
-  const useUserId = userStore.isLoggedIn && !kw && userStore.user?.id
   const params = { page: currentPage.value, pageSize }
-  if (useUserId) params.userId = userStore.user.id
-  else params.keyword = kw
+  if (kw) params.keyword = kw
   try {
     await orderStore.fetchOrders(params)
     searched.value = true

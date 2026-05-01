@@ -331,7 +331,7 @@ router.put('/users/:id/reset-password', auth, async (req, res) => {
 
     action.success('admin.resetUserPassword', {
       targetUserId: userId,
-      adminId: req.adminId,
+      adminId: req.admin.id,
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -485,9 +485,13 @@ router.post('/card-keys/batch-delete', auth, async (req, res) => {
 
 router.get('/orders', auth, async (req, res) => {
   try {
-    const { status, page = 1, pageSize = 20 } = req.query;
+    const { status, userId, payMethod, orderNo, cardCode, page = 1, pageSize = 20 } = req.query;
     const result = await adminService.getOrders({
       status: status || '',
+      userId: userId ? parseInt(userId) : null,
+      payMethod: payMethod || '',
+      orderNo: (orderNo || '').trim() || null,
+      cardCode: (cardCode || '').trim() || null,
       page: parseInt(page),
       pageSize: parseInt(pageSize),
     });
@@ -682,6 +686,3 @@ router.delete('/admins/:id', auth, async (req, res) => {
 });
 
 module.exports = router;
-module.exports.auth = auth;
-module.exports.ADMIN_COOKIE_NAME = ADMIN_COOKIE_NAME;
-module.exports.ADMIN_COOKIE_OPTIONS = ADMIN_COOKIE_OPTIONS;

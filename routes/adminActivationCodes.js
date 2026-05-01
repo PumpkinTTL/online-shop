@@ -1,4 +1,5 @@
 const express = require('express');
+const dataSource = require('../config/database');
 const activationCodeService = require('../services/ActivationCodeService');
 const { requireAdminAuth } = require('../middleware/auth');
 

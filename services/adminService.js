@@ -7,6 +7,7 @@ const ProductCategory = require('../entities/ProductCategory');
 const User = require('../entities/User');
 const CardKey = require('../entities/CardKey');
 const Order = require('../entities/Order');
+const Coupon = require('../entities/Coupon');
 const SmsRecord = require('../entities/SmsRecord');
 
 const SALT_ROUNDS = 10;
@@ -470,18 +471,52 @@ class AdminService {
 
   // ==================== 订单管理 ====================
 
-  async getOrders({ status, page, pageSize }) {
+  async getOrders({ status, userId, payMethod, orderNo, cardCode, page, pageSize }) {
     const repo = dataSource.getRepository(Order);
+
+    // 卡密搜索需要 JOIN，其他用简单 where
+    if (cardCode) {
+      const qb = repo.createQueryBuilder('o')
+        .leftJoin(CardKey, 'ck', 'o.cardKeyId = ck.id')
+        .orderBy('o.id', 'DESC')
+        .offset((page - 1) * pageSize)
+        .limit(pageSize);
+
+      if (status) qb.andWhere('o.status = :status', { status });
+      if (userId) qb.andWhere('o.userId = :userId', { userId });
+      if (payMethod) qb.andWhere('o.payMethod = :payMethod', { payMethod });
+      if (orderNo) qb.andWhere('o.orderNo LIKE :orderNo', { orderNo: `%${orderNo}%` });
+      qb.andWhere('ck.code LIKE :cardCode', { cardCode: `%${cardCode}%` });
+
+      const [items, total] = await qb.getManyAndCount();
+      return await this._enrichOrders(items, total, page, pageSize);
+    }
+
+    // 无卡密搜索，用 findAndCount
     const where = {};
     if (status) where.status = status;
+    if (userId) where.userId = userId;
+    if (payMethod) where.payMethod = payMethod;
 
-    // 后台订单查询允许无条件全表（管理需要）
-    const [items, total] = await repo.findAndCount({
-      where,
-      order: { id: 'DESC' },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    });
+    let query = { where, order: { id: 'DESC' }, skip: (page - 1) * pageSize, take: pageSize };
+    if (orderNo) {
+      const qb = repo.createQueryBuilder('o')
+        .orderBy('o.id', 'DESC')
+        .offset((page - 1) * pageSize)
+        .limit(pageSize);
+      if (status) qb.andWhere('o.status = :status', { status });
+      if (userId) qb.andWhere('o.userId = :userId', { userId });
+      if (payMethod) qb.andWhere('o.payMethod = :payMethod', { payMethod });
+      qb.andWhere('o.orderNo LIKE :orderNo', { orderNo: `%${orderNo}%` });
+      const [items, total] = await qb.getManyAndCount();
+      return await this._enrichOrders(items, total, page, pageSize);
+    }
+
+    const [items, total] = await repo.findAndCount(query);
+    return await this._enrichOrders(items, total, page, pageSize);
+  }
+
+  async _enrichOrders(items, total, page, pageSize) {
 
     // 关联商品信息（名称+价格+是否接码产品）
     const productRepo = dataSource.getRepository(Product);
@@ -570,7 +605,6 @@ class AdminService {
 
   async createCategory(data) {
     const repo = dataSource.getRepository(ProductCategory);
-    delete data.credit;
     const category = repo.create(data);
     return await repo.save(category);
   }
@@ -579,7 +613,6 @@ class AdminService {
     const repo = dataSource.getRepository(ProductCategory);
     const category = await repo.findOne({ where: { id } });
     if (!category) throw new Error('类别不存在');
-    delete data.credit;
     Object.assign(category, data);
     return await repo.save(category);
   }

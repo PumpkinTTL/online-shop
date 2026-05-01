@@ -58,13 +58,14 @@
 
 <script setup>
 import { ref, h, onMounted } from 'vue'
-import { NIcon, NDataTable, NEmpty, NTag } from 'naive-ui'
+import { NIcon, NDataTable, NEmpty, NTag, useMessage } from 'naive-ui'
 import { GridOutline, ReceiptOutline, PeopleOutline, WalletOutline } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
 import { useTheme } from '@/composables/useTheme'
 
 const adminStore = useAdminStore()
 const { isDark } = useTheme()
+const message = useMessage()
 const stats = ref(null)
 const pendingOrders = ref([])
 const lowStockProducts = ref([])
@@ -86,7 +87,7 @@ onMounted(async () => {
     pendingOrders.value = stats.value?.pendingOrders || []
     lowStockProducts.value = stats.value?.lowStockProducts || []
   } catch (e) {
-    // 静默处理
+    message.error('仪表盘数据加载失败')
   }
 })
 </script>
