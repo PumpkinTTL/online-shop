@@ -7,7 +7,7 @@
           <!-- 搜索框 -->
           <div class="search-box" :class="{ 'search-focused': searchFocused }">
             <div class="search-icon-wrap">
-              <n-icon :size="16" color="#94A3B8"><search-outline></search-outline></n-icon>
+              <n-icon :size="16"><search-outline></search-outline></n-icon>
             </div>
             <input
               v-model="searchQuery"
@@ -25,26 +25,24 @@
           </div>
 
           <!-- 分类标签 -->
-          <div class="category-scroll-wrap">
-            <div class="category-scroll">
-              <button
-                class="category-chip"
-                :class="{ active: activeCategory === null }"
-                @click="activeCategory = null"
-              >
-                <n-icon :size="13"><apps-outline></apps-outline></n-icon>
-                全部
-              </button>
-              <button
-                v-for="cat in productStore.categories"
-                :key="cat.id"
-                class="category-chip"
-                :class="{ active: activeCategory === cat.id }"
-                @click="activeCategory = cat.id"
-              >
-                {{ cat.name }}
-              </button>
-            </div>
+          <div class="category-row">
+            <button
+              class="category-chip"
+              :class="{ active: activeCategory === null }"
+              @click="activeCategory = null"
+            >
+              <n-icon :size="13"><apps-outline></apps-outline></n-icon>
+              全部
+            </button>
+            <button
+              v-for="cat in productStore.categories"
+              :key="cat.id"
+              class="category-chip"
+              :class="{ active: activeCategory === cat.id }"
+              @click="activeCategory = cat.id"
+            >
+              {{ cat.name }}
+            </button>
           </div>
         </div>
       </div>
@@ -208,7 +206,7 @@ onMounted(async () => {
 <style scoped>
 /* ===== 搜索筛选区 ===== */
 .filter-section {
-  padding: 12px 0 0;
+  padding: 16px 0;
 }
 
 .section-container {
@@ -221,6 +219,11 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 /* ===== 搜索框 ===== */
@@ -230,30 +233,27 @@ onMounted(async () => {
   gap: 8px;
   padding: 0 14px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 12px;
-  border: 1.5px solid transparent;
-  transition: all 0.25s ease-out;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  background: white;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .search-box.search-focused {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(59, 130, 246, 0.35);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08), 0 2px 8px rgba(59, 130, 246, 0.06);
+  border-color: #93C5FD;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
+
+.search-focused .search-icon-wrap {
+  color: #3B82F6;
 }
 
 .search-icon-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease;
-}
-
-.search-focused .search-icon-wrap {
-  color: #3B82F6;
+  color: #94A3B8;
+  transition: color 0.2s;
 }
 
 .search-input {
@@ -292,7 +292,6 @@ onMounted(async () => {
   color: #475569;
 }
 
-/* 清除按钮淡入淡出 */
 .clear-fade-enter-active,
 .clear-fade-leave-active {
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -304,21 +303,16 @@ onMounted(async () => {
 }
 
 /* ===== 分类标签 ===== */
-.category-scroll-wrap {
-  position: relative;
-  margin: 0 -16px;
-}
-
-.category-scroll {
+.category-row {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 4px 16px 4px;
+  padding-bottom: 2px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 
-.category-scroll::-webkit-scrollbar {
+.category-row::-webkit-scrollbar {
   display: none;
 }
 
@@ -327,8 +321,8 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 16px;
-  border-radius: 20px;
+  padding: 6px 14px;
+  border-radius: 8px;
   border: 1.5px solid #E2E8F0;
   background: white;
   font-size: 12px;
@@ -336,7 +330,7 @@ onMounted(async () => {
   font-family: 'Open Sans', sans-serif;
   color: #64748B;
   cursor: pointer;
-  transition: all 0.2s ease-out;
+  transition: all 0.2s;
   white-space: nowrap;
   line-height: 1.4;
   -webkit-tap-highlight-color: transparent;
@@ -346,18 +340,17 @@ onMounted(async () => {
   border-color: #93C5FD;
   color: #3B82F6;
   background: #EFF6FF;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
 .category-chip.active {
-  background: linear-gradient(135deg, #3B82F6, #2563EB);
-  border-color: #2563EB;
+  background: #3B82F6;
+  border-color: #3B82F6;
   color: white;
-  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
 }
 
 .category-chip.active:hover {
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  background: #2563EB;
+  border-color: #2563EB;
 }
 
 /* ===== 商品列表 ===== */
@@ -639,29 +632,36 @@ onMounted(async () => {
 /* ===== 桌面端响应式 ===== */
 @media (min-width: 768px) {
   .filter-section {
-    padding: 20px 0 0;
+    padding: 20px 0;
   }
 
   .section-container {
     padding: 0 24px;
   }
 
+  .filter-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+
   .search-box {
-    max-width: 420px;
-    height: 44px;
-    padding: 0 16px;
+    width: 280px;
+    flex-shrink: 0;
+    height: 40px;
   }
 
   .search-input {
-    font-size: 14px;
+    font-size: 13px;
   }
 
-  .search-input::placeholder {
-    font-size: 14px;
+  .category-row {
+    flex: 1;
+    min-width: 0;
   }
 
   .category-chip {
-    padding: 7px 20px;
+    padding: 6px 16px;
     font-size: 13px;
   }
 
