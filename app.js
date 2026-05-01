@@ -16,6 +16,7 @@ const adminRateLimitsRouter = require('./routes/adminRateLimits');
 const logsRouter = require('./routes/logs');
 const captchaRouter = require('./routes/captcha');
 const adminActivationCodesRouter = require('./routes/adminActivationCodes');
+const announcementsRouter = require('./routes/announcements');
 const adminService = require('./services/adminService');
 const rateLimitService = require('./services/rateLimitService');
 const limiters = require('./middleware/rateLimiter');
@@ -74,6 +75,7 @@ app.use('/api/admin/rate-limits', adminRateLimitsRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/admin/logs', logsRouter);
 app.use('/api/admin/activation-codes', adminActivationCodesRouter);
+app.use('/api/announcements', announcementsRouter);
 
 // Vue SPA 客户端（仅生产环境：指向 vite build 产物）
 if (process.env.NODE_ENV === 'production') {

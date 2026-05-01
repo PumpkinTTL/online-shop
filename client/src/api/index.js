@@ -126,6 +126,11 @@ export const couponApi = {
   validate: (code, productId) => http.post('/pickup/validate-coupon', { code, productId }),
 }
 
+// ===== 公告 API（前台） =====
+export const announcementApi = {
+  getActive: () => http.get('/announcements'),
+}
+
 // ===== 激活码 API（前台） =====
 export const activationCodeApi = {
   validate: (code) => http.post('/users/validate-invite-code', { code }),
@@ -221,6 +226,13 @@ export const adminApi = {
   updateCoupon: (id, data) => http.put(`/admin/coupons/${id}`, data),
   deleteCoupon: (id) => http.delete(`/admin/coupons/${id}`),
   batchDeleteCoupons: (ids) => http.post('/admin/coupons/batch-delete', { ids }),
+
+  // 公告管理
+  getAnnouncements: (params) => http.get('/admin/announcements', { params }),
+  createAnnouncement: (data) => http.post('/admin/announcements', data),
+  updateAnnouncement: (id, data) => http.put(`/admin/announcements/${id}`, data),
+  deleteAnnouncement: (id) => http.delete(`/admin/announcements/${id}`),
+  batchDeleteAnnouncements: (ids) => http.post('/admin/announcements/batch-delete', { ids }),
 }
 
 export default http

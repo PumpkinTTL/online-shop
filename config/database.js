@@ -10,6 +10,7 @@ const PaymentOrder = require('../entities/PaymentOrder');
 const RateLimitConfig = require('../entities/RateLimitConfig');
 const ActivationCode = require('../entities/ActivationCode');
 const Coupon = require('../entities/Coupon');
+const Announcement = require('../entities/Announcement');
 
 const dataSource = new DataSource({
   type: 'mysql',
@@ -18,7 +19,7 @@ const dataSource = new DataSource({
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || 'root',
   database: process.env.DB_DATABASE || 'online_shop',
-  entities: [Product, ProductCategory, User, CardKey, Order, Admin, SmsRecord, PaymentOrder, RateLimitConfig, ActivationCode, Coupon],
+  entities: [Product, ProductCategory, User, CardKey, Order, Admin, SmsRecord, PaymentOrder, RateLimitConfig, ActivationCode, Coupon, Announcement],
   synchronize: process.env.NODE_ENV === 'development' ? true : false,
   logging: false,
 });

@@ -1,6 +1,7 @@
 <template>
   <div class="client-layout">
     <!-- 统一 Header（响应式适配） -->
+    <AnnouncementBanner />
     <AppHeader />
 
     <main class="client-main">
@@ -127,6 +128,7 @@ import {
   PersonOutline, LockClosedOutline, KeyOutline, ShieldCheckmarkOutline
 } from '@vicons/ionicons5'
 import AppHeader from '@/components/AppHeader.vue'
+import AnnouncementBanner from '@/components/AnnouncementBanner.vue'
 import CaptchaModal from '@/components/CaptchaModal.vue'
 import { useUserStore } from '@/stores/user'
 

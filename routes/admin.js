@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const adminService = require('../services/adminService');
 const couponService = require('../services/couponService');
 const pickupService = require('../services/pickupService');
+const announcementService = require('../services/announcementService');
 const captchaService = require('../services/captchaService');
 const { login: loginLimiter } = require('../middleware/rateLimiter');
 const { requireAdminAuth } = require('../middleware/auth');
@@ -680,6 +681,69 @@ router.delete('/admins/:id', auth, async (req, res) => {
     }
     await adminService.deleteAdmin(targetId);
     res.json({ message: '删除成功' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ==================== 公告管理 ====================
+
+router.get('/announcements', auth, async (req, res) => {
+  try {
+    const { type, isActive, page = 1, pageSize = 20 } = req.query;
+    const result = await announcementService.getAnnouncements({
+      type: type || '',
+      isActive: isActive || '',
+      page: parseInt(page),
+      pageSize: parseInt(pageSize),
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/announcements', auth, async (req, res) => {
+  try {
+    const announcement = await announcementService.createAnnouncement(req.body);
+    res.status(201).json(announcement);
+
+    action.success('admin.announcement.create', {
+      adminId: req.admin.id,
+      announcementId: announcement.id,
+      ip: req.ip,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put('/announcements/:id', auth, async (req, res) => {
+  try {
+    const announcement = await announcementService.updateAnnouncement(parseInt(req.params.id), req.body);
+    res.json(announcement);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.delete('/announcements/:id', auth, async (req, res) => {
+  try {
+    await announcementService.deleteAnnouncement(parseInt(req.params.id));
+    res.json({ message: '删除成功' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.post('/announcements/batch-delete', auth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请选择要删除的公告' });
+    }
+    const result = await announcementService.batchDeleteAnnouncements(ids);
+    res.json({ message: `成功删除 ${result} 条公告`, count: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

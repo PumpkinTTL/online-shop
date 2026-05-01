@@ -110,7 +110,7 @@ import {
   TicketOutline, PricetagOutline,
   AppsOutline, MenuOutline, PersonOutline,
   SunnyOutline, MoonOutline, RefreshOutline,
-  BusinessOutline, LockClosedOutline, SettingsOutline
+  BusinessOutline, LockClosedOutline, SettingsOutline, MegaphoneOutline
 } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
 import { useTheme } from '@/composables/useTheme'
@@ -157,6 +157,7 @@ const menuMap = {
   logs: { label: '日志管理', icon: DocumentTextOutline },
   rateLimits: { label: '速率限制', icon: SpeedometerOutline },
   activationCodes: { label: '激活码管理', icon: TicketOutline },
+  announcements: { label: '公告管理', icon: MegaphoneOutline },
 }
 
 function makeItem(key) {
@@ -198,6 +199,7 @@ const menuOptions = computed(() => {
     ]},
     { type: 'divider', key: 'd3' },
     { ...makeGroup('系统', 'g-system', SettingsOutline), children: [
+      makeItem('announcements'),
       makeItem('logs'),
       makeItem('rateLimits'),
       makeItem('activationCodes'),
@@ -218,6 +220,7 @@ const activeKey = computed(() => {
   if (path.includes('/admin/logs')) return 'logs'
   if (path.includes('/admin/rate-limits')) return 'rateLimits'
   if (path.includes('/admin/activation-codes')) return 'activationCodes'
+  if (path.includes('/admin/announcements')) return 'announcements'
   return 'dashboard'
 })
 
@@ -237,6 +240,7 @@ function handleMenuClick(key) {
     logs: '/admin/logs',
     rateLimits: '/admin/rate-limits',
     activationCodes: '/admin/activation-codes',
+    announcements: '/admin/announcements',
   }
   router.push(routeMap[key] || '/admin')
   // 移动端点击菜单后关闭侧边栏

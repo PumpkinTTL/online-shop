@@ -256,6 +256,37 @@ export const useAdminStore = defineStore('admin', () => {
     return await adminApi.resetRateLimits()
   }
 
+  // ===== 公告 =====
+  const announcements = ref([])
+  const announcementsTotal = ref(0)
+  async function fetchAnnouncements(params = {}) {
+    const res = await adminApi.getAnnouncements(params)
+    if (Array.isArray(res)) {
+      announcements.value = res
+      announcementsTotal.value = res.length
+    } else {
+      announcements.value = res.items || res
+      announcementsTotal.value = res.total || res.length
+    }
+    return res
+  }
+
+  async function createAnnouncement(data) {
+    return await adminApi.createAnnouncement(data)
+  }
+
+  async function updateAnnouncement(id, data) {
+    return await adminApi.updateAnnouncement(id, data)
+  }
+
+  async function deleteAnnouncement(id) {
+    return await adminApi.deleteAnnouncement(id)
+  }
+
+  async function batchDeleteAnnouncements(ids) {
+    return await adminApi.batchDeleteAnnouncements(ids)
+  }
+
   return {
     // 认证
     adminInfo, isLoggedIn,
@@ -280,5 +311,7 @@ export const useAdminStore = defineStore('admin', () => {
     logStats, logFiles, logContent, fetchLogStats, fetchLogFiles, fetchLogContent, cleanupLogs,
     // 速率限制
     rateLimits, fetchRateLimits, updateRateLimit, resetRateLimits,
+    // 公告
+    announcements, announcementsTotal, fetchAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement, batchDeleteAnnouncements,
   }
 })

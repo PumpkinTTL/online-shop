@@ -129,6 +129,12 @@ const routes = [
         component: () => import('@/views/admin/ActivationCodesView.vue'),
         meta: { title: '激活码管理' },
       },
+      {
+        path: 'announcements',
+        name: 'AdminAnnouncements',
+        component: () => import('@/views/admin/AnnouncementsView.vue'),
+        meta: { title: '公告管理' },
+      },
     ],
   },
   // 404
