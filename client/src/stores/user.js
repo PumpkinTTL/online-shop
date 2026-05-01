@@ -25,7 +25,8 @@ export const useUserStore = defineStore('user', () => {
       const res = await userApi.getMe()
       user.value = res
       localStorage.setItem('user', JSON.stringify(res))
-    } catch {
+    } catch (e) {
+      console.warn('获取用户信息失败:', e?.message)
       user.value = null
       localStorage.removeItem('user')
     }
@@ -34,7 +35,9 @@ export const useUserStore = defineStore('user', () => {
   async function logout() {
     try {
       await userApi.logout()
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.warn('退出登录请求失败:', e?.message)
+    }
     user.value = null
     localStorage.removeItem('user')
   }

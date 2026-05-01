@@ -91,9 +91,9 @@ router.get('/content', auth, async (req, res) => {
     const allFiltered = [...logs].reverse();
     const total = allFiltered.length;
 
-    // 分页
+    // 分页（最大500条，防止一次加载过多）
     const pageNum = parseInt(page) || 1;
-    const size = parseInt(pageSize) || parseInt(limit) || 50;
+    const size = Math.min(parseInt(pageSize) || parseInt(limit) || 50, 500);
     const startIdx = (pageNum - 1) * size;
     const pagedLogs = allFiltered.slice(startIdx, startIdx + size);
 

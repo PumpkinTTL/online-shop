@@ -28,7 +28,7 @@
         </n-form-item>
 
         <!-- Cloudflare Turnstile 验证码 -->
-        <n-form-item>
+        <n-form-item :show-label="false">
           <div ref="turnstileRef" class="turnstile-container"></div>
         </n-form-item>
 
@@ -177,6 +177,8 @@ async function handleLogin() {
 .turnstile-container {
   display: flex;
   justify-content: center;
+  width: 100%;
+  margin-top: 4px;
   min-height: 65px;
 }
 

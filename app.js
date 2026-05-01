@@ -75,21 +75,23 @@ app.use('/api/payment', paymentRouter);
 app.use('/api/admin/logs', logsRouter);
 app.use('/api/admin/activation-codes', adminActivationCodesRouter);
 
-// Vue SPA 客户端（生产环境：指向 vite build 产物）
-const spaDistPath = path.join(__dirname, 'dist', 'spa');
-app.use(express.static(spaDistPath));
+// Vue SPA 客户端（仅生产环境：指向 vite build 产物）
+if (process.env.NODE_ENV === 'production') {
+  const spaDistPath = path.join(__dirname, 'dist', 'spa');
+  app.use(express.static(spaDistPath));
 
-// SPA 路由回退（history 模式，需放在所有 API 路由之后）
-app.get('/app/{*path}', (req, res) => {
-  res.sendFile(path.join(spaDistPath, 'index.html'));
-});
-app.get('/admin/{*path}', (req, res) => {
-  res.sendFile(path.join(spaDistPath, 'index.html'));
-});
-// 根路径 SPA 回退（匹配所有未命中的 GET 请求）
-app.get('{*path}', (req, res) => {
-  res.sendFile(path.join(spaDistPath, 'index.html'));
-});
+  // SPA 路由回退（history 模式，需放在所有 API 路由之后）
+  app.get('/app/{*path}', (req, res) => {
+    res.sendFile(path.join(spaDistPath, 'index.html'));
+  });
+  app.get('/admin/{*path}', (req, res) => {
+    res.sendFile(path.join(spaDistPath, 'index.html'));
+  });
+  // 根路径 SPA 回退（匹配所有未命中的 GET 请求）
+  app.get('{*path}', (req, res) => {
+    res.sendFile(path.join(spaDistPath, 'index.html'));
+  });
+}
 
 
 // 错误日志中间件（必须在所有路由之后）

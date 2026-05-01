@@ -1,19 +1,24 @@
 const crypto = require('crypto');
 const axios = require('axios');
 
+const MAX_STORE_SIZE = 5000;
+const CLEANUP_INTERVAL = 5 * 60 * 1000;
+const CAPTCHA_TTL = 5 * 60 * 1000;
+
 // 内存存储验证码（captchaId → { answer, expiresAt }）
 const captchaStore = new Map();
-
-// 清理过期验证码（每5分钟）
-const CLEANUP_INTERVAL = 5 * 60 * 1000;
-const CAPTCHA_TTL = 5 * 60 * 1000; // 验证码5分钟有效
 
 setInterval(() => {
   const now = Date.now();
   for (const [id, data] of captchaStore) {
-    if (data.expiresAt < now) {
-      captchaStore.delete(id);
-    }
+    if (data.expiresAt < now) captchaStore.delete(id);
+  }
+  // 超过上限时清理最旧的一半
+  if (captchaStore.size > MAX_STORE_SIZE) {
+    const entries = [...captchaStore.entries()]
+      .sort((a, b) => a[1].expiresAt - b[1].expiresAt);
+    const toDelete = entries.slice(0, Math.ceil(entries.length / 2));
+    toDelete.forEach(([id]) => captchaStore.delete(id));
   }
 }, CLEANUP_INTERVAL);
 

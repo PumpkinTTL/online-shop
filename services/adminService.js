@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { In } = require('typeorm');
 const dataSource = require('../config/database');
 const Admin = require('../entities/Admin');
 const Product = require('../entities/Product');
@@ -9,6 +10,7 @@ const Order = require('../entities/Order');
 const SmsRecord = require('../entities/SmsRecord');
 
 const SALT_ROUNDS = 10;
+const LOW_STOCK_THRESHOLD = 5;
 
 // 卡密前缀预设
 const CODE_PREFIXES = {
@@ -171,13 +173,20 @@ class AdminService {
       take: 20,
     });
 
-    // 库存不足商品（库存 <= 3）
-    const products = await productRepo.find();
-    const lowStockProducts = [];
-    for (const p of products) {
-      const stock = await cardKeyRepo.count({ where: { productId: p.id, status: 'unused' } });
-      if (stock < 5) lowStockProducts.push({ name: p.name, stock });
-    }
+    // 库存不足商品（批量聚合查询，避免 N+1）
+    const stockCounts = await cardKeyRepo
+      .createQueryBuilder('ck')
+      .select('ck.productId', 'productId')
+      .addSelect('COUNT(*)', 'stock')
+      .where('ck.status = :status', { status: 'unused' })
+      .groupBy('ck.productId')
+      .getRawMany();
+    const stockMap = {};
+    stockCounts.forEach(r => { stockMap[r.productId] = parseInt(r.stock); });
+    const allProducts = await productRepo.find();
+    const lowStockProducts = allProducts
+      .filter(p => (stockMap[p.id] || 0) < LOW_STOCK_THRESHOLD)
+      .map(p => ({ name: p.name, stock: stockMap[p.id] || 0 }));
 
     return {
       productCount,
@@ -210,19 +219,31 @@ class AdminService {
     return product;
   }
 
+  // 批量查询库存（避免 N+1）
+  async batchGetStock(productIds) {
+    if (productIds.length === 0) return {};
+    const cardKeyRepo = dataSource.getRepository(CardKey);
+    const rows = await cardKeyRepo
+      .createQueryBuilder('ck')
+      .select('ck.productId', 'productId')
+      .addSelect('COUNT(*)', 'stock')
+      .where('ck.status = :status AND ck.productId IN (:...ids)', { status: 'unused', ids: productIds })
+      .groupBy('ck.productId')
+      .getRawMany();
+    const map = {};
+    rows.forEach(r => { map[r.productId] = parseInt(r.stock); });
+    return map;
+  }
+
   async getProducts({ page = 1, pageSize = 0 } = {}) {
     const repo = dataSource.getRepository(Product);
-    // pageSize=0 表示不分页，返回全部（兼容旧调用）
     if (!pageSize) {
       const products = await repo.find({
         relations: ['category'],
         order: { id: 'DESC' },
       });
-      const cardKeyRepo = dataSource.getRepository(CardKey);
-      for (const p of products) {
-        p.stock = await cardKeyRepo.count({ where: { productId: p.id, status: 'unused' } });
-        this.normalizeProduct(p);
-      }
+      const stockMap = await this.batchGetStock(products.map(p => p.id));
+      products.forEach(p => { p.stock = stockMap[p.id] || 0; this.normalizeProduct(p); });
       return products;
     }
     const [items, total] = await repo.findAndCount({
@@ -231,11 +252,8 @@ class AdminService {
       skip: (page - 1) * pageSize,
       take: pageSize,
     });
-    const cardKeyRepo = dataSource.getRepository(CardKey);
-    for (const p of items) {
-      p.stock = await cardKeyRepo.count({ where: { productId: p.id, status: 'unused' } });
-      this.normalizeProduct(p);
-    }
+    const stockMap = await this.batchGetStock(items.map(p => p.id));
+    items.forEach(p => { p.stock = stockMap[p.id] || 0; this.normalizeProduct(p); });
     return { items, total, page, pageSize };
   }
 
@@ -466,56 +484,45 @@ class AdminService {
     });
 
     // 关联商品信息（名称+价格+是否接码产品）
-    const Product = require('../entities/Product');
-    const ProductCategory = require('../entities/ProductCategory');
     const productRepo = dataSource.getRepository(Product);
-    const categoryRepo = dataSource.getRepository(ProductCategory);
     const pIds = [...new Set(items.map(o => o.productId).filter(Boolean))];
     let pMap = {};
     if (pIds.length > 0) {
       const products = await productRepo.find({
-        where: pIds.map(id => ({ id })),
+        where: { id: In(pIds) },
         relations: ['category'],
       });
-      const cIds = [...new Set(products.map(p => p.categoryId).filter(Boolean))];
-      let cMap = {};
-      if (cIds.length > 0) {
-        (await categoryRepo.findByIds(cIds)).forEach(c => { cMap[c.id] = c; });
-      }
       products.forEach(p => {
         pMap[p.id] = {
           name: p.name,
           price: p.price,
-          isSms: (cMap[p.categoryId] || {}).smsEnabled === 1,
+          isSms: p.category?.smsEnabled === 1,
         };
       });
     }
 
     // 关联卡密信息（CDK兑换码 + code）
-    const CardKey = require('../entities/CardKey');
     const ckRepo = dataSource.getRepository(CardKey);
     const ckIds = [...new Set(items.map(o => o.cardKeyId).filter(Boolean))];
     let ckMap = {};
     if (ckIds.length > 0) {
-      (await ckRepo.findByIds(ckIds)).forEach(ck => { ckMap[ck.id] = { code: ck.code, CDK: ck.CDK, deliveryInfo: ck.deliveryInfo || null }; });
+      (await ckRepo.findBy({ id: In(ckIds) })).forEach(ck => { ckMap[ck.id] = { code: ck.code, CDK: ck.CDK, deliveryInfo: ck.deliveryInfo || null }; });
     }
 
     // 关联用户名
-    const User = require('../entities/User');
     const userRepo = dataSource.getRepository(User);
     const uIds = [...new Set(items.map(o => o.userId).filter(Boolean))];
     let uMap = {};
     if (uIds.length > 0) {
-      (await userRepo.findByIds(uIds)).forEach(u => { uMap[u.id] = u.nickname || u.username; });
+      (await userRepo.findBy({ id: In(uIds) })).forEach(u => { uMap[u.id] = u.nickname || u.username; });
     }
 
     // 关联优惠码信息
-    const Coupon = require('../entities/Coupon');
     const couponRepo = dataSource.getRepository(Coupon);
     const cpIds = [...new Set(items.map(o => o.couponId).filter(Boolean))];
     let cpMap = {};
     if (cpIds.length > 0) {
-      (await couponRepo.findByIds(cpIds)).forEach(c => {
+      (await couponRepo.findBy({ id: In(cpIds) })).forEach(c => {
         cpMap[c.id] = {
           code: c.code,
           discount: c.discount ? parseFloat(c.discount) : null,

@@ -137,7 +137,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { NSpin, NIcon } from 'naive-ui'
 import {
@@ -154,15 +154,21 @@ const productStore = useProductStore()
 const searchQuery = ref('')
 const searchFocused = ref(false)
 const activeCategory = ref(null)
-const categoryScrollRef = ref(null)
+
+const debouncedQuery = ref('')
+let debounceTimer = null
+watch(searchQuery, (val) => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => { debouncedQuery.value = val }, 200)
+})
 
 const filteredProducts = computed(() => {
   let list = productStore.products
   if (activeCategory.value) {
     list = list.filter(p => p.categoryId === activeCategory.value)
   }
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.trim().toLowerCase()
+  if (debouncedQuery.value.trim()) {
+    const q = debouncedQuery.value.trim().toLowerCase()
     list = list.filter(p =>
       p.name?.toLowerCase().includes(q) ||
       p.description?.toLowerCase().includes(q)

@@ -35,8 +35,8 @@ const auth = requireAdminAuth;
 // ==================== 登录（不需要鉴权） ====================
 
 router.post('/login', loginLimiter, captchaService.requireTurnstile(), async (req, res) => {
+  const { username, password } = req.body;
   try {
-    const { username, password } = req.body;
     if (!username || !password) {
       return res.status(400).json({ error: '请输入用户名和密码' });
     }

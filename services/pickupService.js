@@ -1,4 +1,5 @@
 const dataSource = require('../config/database');
+const { In } = require('typeorm');
 const CardKey = require('../entities/CardKey');
 const Order = require('../entities/Order');
 const Product = require('../entities/Product');
@@ -208,7 +209,9 @@ class PickupService {
       if (record) {
         await smsRecordRepo.update(record.id, { status: 'released' });
       }
-    } catch (e) {}
+    } catch (e) {
+      system.warn('释放号码更新记录失败', { phone, error: e.message });
+    }
   }
 
   // 拉黑号码（同时更新接码记录状态）
@@ -231,7 +234,9 @@ class PickupService {
       if (record) {
         await smsRecordRepo.update(record.id, { status: 'blocked' });
       }
-    } catch (e) {}
+    } catch (e) {
+      system.warn('拉黑号码更新记录失败', { phone, error: e.message });
+    }
   }
 
   // 查询余额
@@ -383,7 +388,7 @@ class PickupService {
     const productIds = [...new Set(items.map(o => o.productId).filter(Boolean))];
     let productMap = {};
     if (productIds.length > 0) {
-      const products = await productRepo.findByIds(productIds);
+      const products = await productRepo.findBy({ id: In(productIds) });
       products.forEach(p => { productMap[p.id] = { name: p.name, price: p.price, image: p.image }; });
     }
 
@@ -392,7 +397,7 @@ class PickupService {
     const cardKeyIds = [...new Set(items.map(o => o.cardKeyId).filter(Boolean))];
     let cardKeyMap = {};
     if (cardKeyIds.length > 0) {
-      const cardKeys = await cardKeyRepo.findByIds(cardKeyIds);
+      const cardKeys = await cardKeyRepo.findBy({ id: In(cardKeyIds) });
       cardKeys.forEach(ck => { cardKeyMap[ck.id] = { code: ck.code, CDK: ck.CDK, keyword: ck.keyword, deliveryInfo: ck.deliveryInfo || null }; });
     }
 
@@ -402,7 +407,7 @@ class PickupService {
     const couponIds = [...new Set(items.map(o => o.couponId).filter(Boolean))];
     let couponMap = {};
     if (couponIds.length > 0) {
-      const coupons = await couponRepo.findByIds(couponIds);
+      const coupons = await couponRepo.findBy({ id: In(couponIds) });
       coupons.forEach(c => {
         couponMap[c.id] = {
           code: c.code,

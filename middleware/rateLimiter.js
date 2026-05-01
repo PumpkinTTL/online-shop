@@ -94,10 +94,18 @@ async function refreshConfigs() {
 }
 
 // 定期清理过期的计数器（每分钟）
+const MAX_COUNTERS = 10000;
 setInterval(() => {
   const now = Date.now();
   for (const [ck, rec] of counters) {
     if (now >= rec.resetTime) counters.delete(ck);
+  }
+  // 超过上限时强制清理最旧的一半
+  if (counters.size > MAX_COUNTERS) {
+    const entries = [...counters.entries()]
+      .sort((a, b) => a[1].resetTime - b[1].resetTime);
+    const toDelete = entries.slice(0, Math.ceil(entries.length / 2));
+    toDelete.forEach(([ck]) => counters.delete(ck));
   }
 }, 60000);
 

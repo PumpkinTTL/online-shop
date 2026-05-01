@@ -29,7 +29,9 @@ export const useAdminStore = defineStore('admin', () => {
   async function logout() {
     try {
       await adminApi.logout()
-    } catch {}
+    } catch (e) {
+      console.warn('管理员退出请求失败:', e?.message)
+    }
     adminInfo.value = null
     isLoggedIn.value = false
   }

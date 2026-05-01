@@ -696,7 +696,6 @@ const loadProduct = async () => {
     }
   } catch (err) {
     error.value = '加载失败'
-    console.error(err)
   } finally {
     loading.value = false
   }
@@ -777,7 +776,6 @@ const startAlipayPay = async () => {
     startCountdown()
     startPolling()
   } catch (err) {
-    console.error('[Payment/Create] Error:', err)
     message.error(err.response?.data?.error || err.message || '创建支付订单失败')
   } finally {
     payLoading.value = false
