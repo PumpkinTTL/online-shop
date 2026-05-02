@@ -39,48 +39,71 @@
     </div>
 
     <!-- 生成/录入卡密弹窗（合并，用 radio 切换模式） -->
-    <n-modal v-model:show="showGenerateModal" preset="card" title="添加卡密" style="max-width:560px;">
-      <n-form :model="cardKeyForm" label-placement="left" label-width="100">
-        <n-form-item label="选择商品" required>
-          <n-select v-model:value="cardKeyForm.productId" :options="productOptions" placeholder="请选择商品" />
-        </n-form-item>
-        <n-form-item label="录入方式">
-          <n-radio-group v-model:value="cardKeyForm.mode">
-            <n-radio-button value="auto">自动生成</n-radio-button>
-            <n-radio-button value="manual">手动录入</n-radio-button>
-          </n-radio-group>
-        </n-form-item>
-        <template v-if="cardKeyForm.mode === 'auto'">
-          <n-form-item label="卡密前缀">
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;width:100%">
-              <n-button v-for="item in prefixList" :key="item.key" size="small"
-                :type="cardKeyForm.prefix === item.key ? 'primary' : 'default'"
-                @click="cardKeyForm.prefix = item.key">
-                {{ item.label + ' (' + item.key + ')' }}
-              </n-button>
-            </div>
-            <n-input v-model:value="cardKeyForm.prefix" placeholder="或自定义前缀" style="width:100%" />
-            <span style="color:var(--text-light);font-size:12px;">生成格式：前缀 + XXXXX-XXXXX（10位）</span>
+    <n-modal v-model:show="showGenerateModal" preset="card" title="添加卡密" style="width:600px;max-height:85vh;">
+      <div style="max-height:calc(85vh - 140px);overflow-y:auto;padding-right:8px;">
+        <n-form :model="cardKeyForm" label-placement="left" label-width="90">
+          <n-form-item label="选择商品" required>
+            <n-select v-model:value="cardKeyForm.productId" :options="productOptions" placeholder="请选择商品" />
           </n-form-item>
-          <n-form-item label="生成数量">
-            <n-input-number v-model:value="cardKeyForm.count" :min="1" :max="100" style="width:100%" />
+          <n-form-item label="录入方式">
+            <n-radio-group v-model:value="cardKeyForm.mode">
+              <n-radio-button value="auto">自动生成</n-radio-button>
+              <n-radio-button value="manual">手动录入</n-radio-button>
+            </n-radio-group>
           </n-form-item>
-        </template>
-        <template v-if="cardKeyForm.mode === 'manual'">
-          <n-form-item label="卡密列表">
-            <n-input v-model:value="cardKeyForm.manualKeys" type="textarea" :rows="4" placeholder="每行输入一个卡密" />
-            <span style="color:var(--text-light);font-size:12px;">已输入 <strong>{{ manualKeyCount }}</strong> 个卡密</span>
-          </n-form-item>
-        </template>
-        <n-form-item label="CDK 列表">
-          <n-input v-model:value="cardKeyForm.cdkText" type="textarea" :rows="3" placeholder="每行输入一个CDK（可选）" />
-          <span style="color:var(--text-light);font-size:12px;">留空则不关联CDK，行数应与卡密数量一致</span>
-        </n-form-item>
-        <n-form-item label="发货凭证">
-          <n-input v-model:value="cardKeyForm.deliveryInfo" type="textarea" :rows="3" placeholder="如：邮箱、密码、2FA密钥等（可选，每行对应一个卡密）" />
-          <span style="color:var(--text-light);font-size:12px;">留空则无凭证，行数应与卡密数量一致</span>
-        </n-form-item>
-      </n-form>
+
+          <n-divider style="margin: 8px 0 16px;">卡密信息</n-divider>
+
+          <template v-if="cardKeyForm.mode === 'auto'">
+            <n-form-item label="卡密前缀">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                <n-button v-for="item in prefixList" :key="item.key" size="small"
+                  :type="cardKeyForm.prefix === item.key ? 'primary' : 'default'"
+                  @click="cardKeyForm.prefix = item.key">
+                  {{ item.label + ' (' + item.key + ')' }}
+                </n-button>
+              </div>
+              <n-input v-model:value="cardKeyForm.prefix" placeholder="或自定义前缀" />
+              <template #feedback>
+                <span class="form-tip">生成格式：前缀 + XXXXX-XXXXX（10位）</span>
+              </template>
+            </n-form-item>
+            <n-form-item label="生成数量">
+              <n-input-number v-model:value="cardKeyForm.count" :min="1" :max="100" style="width:100%" />
+            </n-form-item>
+          </template>
+
+          <template v-if="cardKeyForm.mode === 'manual'">
+            <n-form-item label="卡密列表">
+              <n-input v-model:value="cardKeyForm.manualKeys" type="textarea" :rows="4" placeholder="每行输入一个卡密" />
+              <template #feedback>
+                <span class="form-tip">已输入 <strong>{{ manualKeyCount }}</strong> 个卡密</span>
+              </template>
+            </n-form-item>
+          </template>
+
+          <n-divider style="margin: 12px 0 16px;">扩展信息</n-divider>
+
+          <n-grid :cols="1" :x-gap="12">
+            <n-gi>
+              <n-form-item label="CDK 列表">
+                <n-input v-model:value="cardKeyForm.cdkText" type="textarea" :rows="2" placeholder="每行输入一个CDK（可选）" />
+                <template #feedback>
+                  <span class="form-tip">留空则不关联CDK，行数应与卡密数量一致</span>
+                </template>
+              </n-form-item>
+            </n-gi>
+            <n-gi>
+              <n-form-item label="发货凭证">
+                <n-input v-model:value="cardKeyForm.deliveryInfo" type="textarea" :rows="2" placeholder="邮箱/密码/2FA等（可选）" />
+                <template #feedback>
+                  <span class="form-tip">1行应用到所有卡密，多行需与卡密数量一致</span>
+                </template>
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+        </n-form>
+      </div>
       <template #footer>
         <n-space justify="end">
           <n-button @click="showGenerateModal = false">取消</n-button>
@@ -90,8 +113,8 @@
     </n-modal>
 
     <!-- 编辑CDK弹窗 -->
-    <n-modal v-model:show="showEditCDK" preset="card" title="编辑 CDK" style="max-width:450px;">
-      <n-form label-placement="left" label-width="100">
+    <n-modal v-model:show="showEditCDK" preset="card" title="编辑 CDK" style="width:480px;">
+      <n-form label-placement="left" label-width="80">
         <n-form-item label="卡密">
           <n-input :value="editingCDK.code" disabled />
         </n-form-item>
@@ -120,7 +143,7 @@ import { ref, h, onMounted, computed } from 'vue'
 import {
   NButton, NIcon, NDataTable, NPagination,
   NModal, NForm, NFormItem, NInput, NInputNumber, NSelect,
-  NSpace, NTag, NRadioButton, NRadioGroup,
+  NSpace, NTag, NRadioButton, NRadioGroup, NGrid, NGi, NDivider,
   useMessage, useDialog
 } from 'naive-ui'
 import { AddOutline, TrashOutline, CreateOutline, EyeOffOutline, EyeOutline } from '@vicons/ionicons5'
@@ -292,14 +315,54 @@ async function handleGenerate() {
     if (f.mode === 'manual') {
       const keys = f.manualKeys.trim().split('\n').map(s => s.trim()).filter(Boolean)
       if (!keys.length) { message.warning('请输入至少一个卡密'); generating.value = false; return }
+
       const cdkList = f.cdkText.trim() ? f.cdkText.trim().split('\n').map(s => s.trim()).filter(Boolean) : []
-      const deliveryInfoList = f.deliveryInfo.trim() ? f.deliveryInfo.trim().split('\n') : []
+      let deliveryInfoList = f.deliveryInfo.trim() ? f.deliveryInfo.trim().split('\n').map(s => s.trim()).filter(Boolean) : []
+
+      // CDK数量检查
+      if (cdkList.length > 0 && cdkList.length !== keys.length) {
+        message.warning(`CDK有${cdkList.length}个，但卡密有${keys.length}个，请确保数量一致`)
+        generating.value = false
+        return
+      }
+
+      // 发货凭证数量检查
+      if (deliveryInfoList.length > 1 && deliveryInfoList.length !== keys.length) {
+        message.warning(`发货凭证有${deliveryInfoList.length}行，但卡密有${keys.length}个，请确保数量一致`)
+        generating.value = false
+        return
+      }
+      // 如果只有1行发货凭证，应用到所有卡密
+      if (deliveryInfoList.length === 1 && keys.length > 1) {
+        deliveryInfoList = Array(keys.length).fill(deliveryInfoList[0])
+      }
+
       const res = await adminStore.manualAddCardKeys({ productId: f.productId, keys, cdkList, deliveryInfoList })
       message.success(`成功录入 ${res.count || res.length || keys.length} 个卡密`)
     } else {
       if (!f.count || f.count < 1 || f.count > 100) { message.warning('数量1-100'); generating.value = false; return }
+
       const cdkList = f.cdkText.trim() ? f.cdkText.trim().split('\n').map(s => s.trim()).filter(Boolean) : []
-      const deliveryInfoList = f.deliveryInfo.trim() ? f.deliveryInfo.trim().split('\n') : []
+      let deliveryInfoList = f.deliveryInfo.trim() ? f.deliveryInfo.trim().split('\n').map(s => s.trim()).filter(Boolean) : []
+
+      // CDK数量检查
+      if (cdkList.length > 0 && cdkList.length !== f.count) {
+        message.warning(`CDK有${cdkList.length}个，但要生成${f.count}个卡密，请确保数量一致`)
+        generating.value = false
+        return
+      }
+
+      // 发货凭证数量检查
+      if (deliveryInfoList.length > 1 && deliveryInfoList.length !== f.count) {
+        message.warning(`发货凭证有${deliveryInfoList.length}行，但要生成${f.count}个卡密，请确保数量一致`)
+        generating.value = false
+        return
+      }
+      // 如果只有1行发货凭证，应用到所有卡密
+      if (deliveryInfoList.length === 1 && f.count > 1) {
+        deliveryInfoList = Array(f.count).fill(deliveryInfoList[0])
+      }
+
       const res = await adminStore.generateCardKeys({ productId: f.productId, prefix: f.prefix, count: f.count, cdkList, deliveryInfoList })
       message.success(`成功生成 ${res.count || res.length || 0} 个卡密`)
     }
@@ -390,3 +453,10 @@ onMounted(async () => {
   await loadData()
 })
 </script>
+
+<style scoped>
+.form-tip {
+  font-size: 12px;
+  color: #94A3B8;
+}
+</style>
