@@ -103,9 +103,6 @@
             </div>
           </div>
 
-          <!-- 使用教程（如果有） -->
-          <ProductTutorial v-if="product.tutorial" :content="product.tutorial" />
-
           <div class="info-divider"></div>
 
           <!-- 购买操作区 -->
@@ -229,10 +226,6 @@
 
               <!-- 卡密兑换 -->
               <div v-else class="method-content">
-                <p class="method-hint">
-                  <n-icon :size="14" color="#64748B"><information-circle-outline></information-circle-outline></n-icon>
-                  旧卡密也可以在这里查询兑换
-                </p>
                 <n-input
                   v-model:value="redeemCode"
                   placeholder="请输入卡密"
@@ -240,6 +233,7 @@
                   :input-props="{ autocomplete: 'off' }"
                   @keyup.enter="handleRedeem"
                 />
+                <a href="https://68n.cn/xZSmW" target="_blank" class="buy-link-simple">没有卡密？点击购买</a>
                 <!-- Cloudflare Turnstile 验证码 -->
                 <div v-if="payMethod === 'card'" ref="redeemTurnstileRef" class="turnstile-container"></div>
                 <n-button
@@ -251,10 +245,6 @@
                 >
                   兑换
                 </n-button>
-                <a href="https://68n.cn/xZSmW" target="_blank" class="buy-link">
-                  <n-icon :size="14"><cart-outline></cart-outline></n-icon>
-                  没有卡密？点击购买
-                </a>
               </div>
             </div>
 
@@ -413,6 +403,9 @@
               <span>客服联系：bitlesu</span>
             </div>
           </div>
+
+          <!-- 使用教程（如果有） -->
+          <ProductTutorial v-if="product.tutorial" :content="product.tutorial" />
         </div>
 
         <!-- 底部安全区 -->
@@ -1533,6 +1526,19 @@ watch(payMethod, (newMethod) => {
 
 .buy-link:hover {
   background: #EFF6FF;
+}
+
+.buy-link-simple {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: normal;
+  color: #3B82F6;
+  text-decoration: none;
+}
+
+.buy-link-simple:hover {
+  text-decoration: underline;
 }
 
 /* ===== 成功状态 ===== */

@@ -22,6 +22,10 @@ const dataSource = new DataSource({
   entities: [Product, ProductCategory, User, CardKey, Order, Admin, SmsRecord, PaymentOrder, RateLimitConfig, ActivationCode, Coupon, Announcement],
   synchronize: process.env.NODE_ENV === 'development' ? true : false,
   logging: false,
+  charset: 'utf8mb4',
+  extra: {
+    connectionLimit: 10,
+  },
 });
 
 module.exports = dataSource;

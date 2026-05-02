@@ -41,88 +41,100 @@
     </div>
 
     <!-- 新增/编辑弹窗 -->
-    <n-modal v-model:show="showForm" preset="card" :title="editingProduct ? '编辑商品' : '新增商品'" style="max-width:720px;">
-      <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="80">
-        <n-form-item label="商品名称" path="name">
-          <n-input v-model:value="form.name" placeholder="请输入商品名称" />
-        </n-form-item>
-        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
-          <n-gi span="2 m:1">
-            <n-form-item label="价格" path="price">
-              <n-input-number v-model:value="form.price" :min="0" :precision="2" :step="0.01" style="width:100%" placeholder="0.00" />
-            </n-form-item>
-          </n-gi>
-          <n-gi span="2 m:1">
-            <n-form-item label="类别" path="categoryId">
-              <n-select v-model:value="form.categoryId" :options="categoryOptions" placeholder="选择类别" />
-            </n-form-item>
-          </n-gi>
-        </n-grid>
-        <n-form-item label="商品代号" path="code">
-          <n-input v-model:value="form.code" placeholder="支付订单显示（可选）" />
-        </n-form-item>
-        <n-form-item label="描述">
-          <n-input v-model:value="form.description" type="textarea" :rows="2" placeholder="商品描述（可选）" />
-        </n-form-item>
-        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
-          <n-gi span="2 m:1">
-            <n-form-item label="库存">
-              <n-input :value="String(form.stock || 0)" disabled />
-            </n-form-item>
-          </n-gi>
-          <n-gi span="2 m:1">
-            <n-form-item label="销量">
-              <n-input-number v-model:value="form.sales" :min="0" style="width:100%" />
-            </n-form-item>
-          </n-gi>
-        </n-grid>
-        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
-          <n-gi span="2 m:1">
-            <n-form-item label="质保时间">
-              <n-input v-model:value="form.warranty" placeholder="如30天、永久" />
-            </n-form-item>
-          </n-gi>
-          <n-gi span="2 m:1">
-            <n-form-item label="上架">
-              <n-switch v-model:value="form.show" />
-            </n-form-item>
-          </n-gi>
-        </n-grid>
-        <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
-          <n-gi span="2 m:1">
-            <n-form-item label="积分额度">
-              <n-input-number v-model:value="form.credit" :min="0" style="width:100%" placeholder="0" />
-            </n-form-item>
-          </n-gi>
-          <n-gi span="2 m:1">
-            <n-form-item label="排序">
-              <n-input-number v-model:value="form.sort" :min="0" style="width:100%" />
-            </n-form-item>
-          </n-gi>
-        </n-grid>
-        <n-form-item label="注意事项">
-          <n-input v-model:value="form.tips" type="textarea" :rows="2" placeholder="可选，购买页以红色警告展示" />
-        </n-form-item>
-        <n-form-item label="兑换地址">
-          <n-input v-model:value="form.addr" placeholder="CDK兑换网址，留空则不显示兑换按钮" />
-        </n-form-item>
-        <n-divider style="margin: 8px 0 16px;">扩展功能</n-divider>
-        <n-form-item label="弹窗通知">
-          <n-input v-model:value="form.popupNotice" type="textarea" :rows="2" placeholder="进入商品详情页时弹出的重要提醒（可选）" />
-          <template #feedback>
-            <span class="text-tip">💡 用户首次进入商品页时弹出，支持"不再提示"选项</span>
-          </template>
-        </n-form-item>
-        <n-form-item label="使用教程">
-          <n-input v-model:value="form.tutorial" type="textarea" :rows="6" placeholder="支持HTML格式的使用教程（可选）" />
-          <template #feedback>
-            <span class="text-tip">💡 支持HTML：&lt;p&gt;段落&lt;/p&gt;、&lt;br&gt;换行、&lt;img&gt;图片、&lt;a&gt;链接、视频URL自动识别</span>
-          </template>
-        </n-form-item>
-        <n-form-item label="封面图">
-          <n-input v-model:value="form.image" placeholder="图片URL，支持远程地址或本地文件名" />
-        </n-form-item>
-      </n-form>
+    <n-modal v-model:show="showForm" preset="card" :title="editingProduct ? '编辑商品' : '新增商品'" style="width:680px;max-height:85vh;">
+      <div style="max-height:calc(85vh - 140px);overflow-y:auto;padding-right:8px;">
+        <n-form ref="formRef" :model="form" :rules="formRules" label-placement="left" label-width="80">
+          <n-form-item label="商品名称" path="name">
+            <n-input v-model:value="form.name" placeholder="请输入商品名称" />
+          </n-form-item>
+          <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+            <n-gi span="2 m:1">
+              <n-form-item label="价格" path="price">
+                <n-input-number v-model:value="form.price" :min="0" :precision="2" :step="0.01" style="width:100%" placeholder="0.00" />
+              </n-form-item>
+            </n-gi>
+            <n-gi span="2 m:1">
+              <n-form-item label="类别" path="categoryId">
+                <n-select v-model:value="form.categoryId" :options="categoryOptions" placeholder="选择类别" />
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+          <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+            <n-gi span="2 m:1">
+              <n-form-item label="商品代号" path="code">
+                <n-input v-model:value="form.code" placeholder="支付订单显示（可选）" />
+              </n-form-item>
+            </n-gi>
+            <n-gi span="2 m:1">
+              <n-form-item label="兑换地址">
+                <n-input v-model:value="form.addr" placeholder="CDK兑换网址（可选）" />
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+          <n-form-item label="描述">
+            <n-input v-model:value="form.description" type="textarea" :rows="1" placeholder="商品描述（可选）" />
+          </n-form-item>
+          <n-grid :cols="3" :x-gap="16" responsive="screen" item-responsive>
+            <n-gi span="2 s:1">
+              <n-form-item label="库存">
+                <n-input :value="String(form.stock || 0)" disabled />
+              </n-form-item>
+            </n-gi>
+            <n-gi span="2 s:1">
+              <n-form-item label="销量">
+                <n-input-number v-model:value="form.sales" :min="0" style="width:100%" />
+              </n-form-item>
+            </n-gi>
+            <n-gi span="2 s:1">
+              <n-form-item label="排序">
+                <n-input-number v-model:value="form.sort" :min="0" style="width:100%" />
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+          <n-grid :cols="3" :x-gap="16" responsive="screen" item-responsive>
+            <n-gi span="2 s:1">
+              <n-form-item label="质保时间">
+                <n-input v-model:value="form.warranty" placeholder="如30天、永久" />
+              </n-form-item>
+            </n-gi>
+            <n-gi span="2 s:1">
+              <n-form-item label="积分额度">
+                <n-input-number v-model:value="form.credit" :min="0" style="width:100%" placeholder="0" />
+              </n-form-item>
+            </n-gi>
+            <n-gi span="2 s:1">
+              <n-form-item label="上架">
+                <n-switch v-model:value="form.show" />
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+          <n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+            <n-gi span="2 m:1">
+              <n-form-item label="注意事项">
+                <n-input v-model:value="form.tips" type="textarea" :rows="1" placeholder="购买页红色警告（可选）" />
+              </n-form-item>
+            </n-gi>
+            <n-gi span="2 m:1">
+              <n-form-item label="封面图">
+                <n-input v-model:value="form.image" placeholder="图片URL（可选）" />
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+          <n-divider style="margin: 12px 0 8px;">扩展功能</n-divider>
+          <n-form-item label="弹窗通知">
+            <n-input v-model:value="form.popupNotice" type="textarea" :rows="2" placeholder="进入商品详情页时弹出的重要提醒（可选）" />
+            <template #feedback>
+              <span class="text-tip">💡 用户首次进入商品页时弹出，支持"不再提示"选项</span>
+            </template>
+          </n-form-item>
+          <n-form-item label="使用教程">
+            <n-input v-model:value="form.tutorial" type="textarea" :rows="4" placeholder="支持HTML格式的使用教程（可选）" />
+            <template #feedback>
+              <span class="text-tip">💡 支持HTML：&lt;p&gt;段落&lt;/p&gt;、&lt;br&gt;换行、&lt;img&gt;图片、&lt;a&gt;链接、视频URL自动识别</span>
+            </template>
+          </n-form-item>
+        </n-form>
+      </div>
       <template #footer>
         <n-space justify="end">
           <n-button @click="showForm = false">取消</n-button>
@@ -162,6 +174,7 @@ const defaultForm = {
   name: '', code: '', price: 0, categoryId: null, description: '',
   stock: 0, sales: 0, warranty: '', credit: null, tips: '',
   addr: '', image: '', sort: 0, show: true,
+  popupNotice: '', tutorial: '',
 }
 const form = ref({ ...defaultForm })
 
@@ -287,6 +300,8 @@ function openForm(row) {
       image: row.image || '',
       sort: Number(row.sort) || 0,
       show: row.show !== 0 && row.show !== false,
+      popupNotice: row.popupNotice || '',
+      tutorial: row.tutorial || '',
     }
   } else {
     editingProduct.value = null
