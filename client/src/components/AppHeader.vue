@@ -316,7 +316,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 .brand-name {
   font-weight: 700;
   font-size: 15px;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #0F172A;
   letter-spacing: -0.01em;
 }
@@ -324,7 +324,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 .brand-tagline {
   font-size: 9px;
   font-weight: 500;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #94A3B8;
   letter-spacing: 0.05em;
   margin-top: 2px;
@@ -355,7 +355,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #64748B;
   text-decoration: none;
   transition: all 0.2s ease-out;
@@ -428,7 +428,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   color: white;
   font-size: 12px;
   font-weight: 600;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   cursor: pointer;
   transition: all 0.2s ease-out;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -496,7 +496,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
 }
 
@@ -504,7 +504,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   font-size: 12px;
   font-weight: 500;
   color: #1E293B;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -544,7 +544,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   justify-content: center;
   font-size: 14px;
   font-weight: 700;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   flex-shrink: 0;
 }
 
@@ -589,7 +589,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   cursor: pointer;
   transition: all 0.15s ease-out;
   text-decoration: none;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -857,6 +857,6 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   font-size: 15px;
   font-weight: 600;
   color: #1E293B;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 </style>

@@ -266,7 +266,7 @@ onMounted(async () => {
   border: none;
   outline: none;
   font-size: 13px;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #1E293B;
   background: transparent;
   line-height: 1;
@@ -304,7 +304,7 @@ onMounted(async () => {
   color: white;
   font-size: 13px;
   font-weight: 600;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   cursor: pointer;
   transition: all 0.2s ease-out;
   white-space: nowrap;
@@ -333,7 +333,7 @@ onMounted(async () => {
 }
 
 .section-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 15px;
   font-weight: 700;
   color: #0F172A;
@@ -345,7 +345,7 @@ onMounted(async () => {
   font-size: 11px;
   color: #94A3B8;
   font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #F1F5F9;
   padding: 3px 10px;
   border-radius: 10px;
@@ -382,7 +382,7 @@ onMounted(async () => {
 .card-head-left { flex: 1; min-width: 0; }
 
 .card-name {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 14px;
   font-weight: 700;
   color: #0F172A;
@@ -406,14 +406,14 @@ onMounted(async () => {
   font-size: 11px;
   color: #64748B;
   font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .meta-price {
   font-size: 13px;
   font-weight: 700;
   color: #EF4444;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .card-status {
@@ -422,7 +422,7 @@ onMounted(async () => {
   gap: 4px;
   font-size: 11px;
   font-weight: 600;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   padding: 3px 10px;
   border-radius: 10px;
   flex-shrink: 0;
@@ -476,7 +476,7 @@ onMounted(async () => {
   font-size: 12px;
   color: #475569;
   font-weight: 500;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   word-break: break-all;
 }
 
@@ -498,7 +498,7 @@ onMounted(async () => {
   border-radius: 4px;
   flex-shrink: 0;
   text-transform: uppercase;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .cred-tag.blue { background: #DBEAFE; color: #2563EB; }
@@ -508,7 +508,7 @@ onMounted(async () => {
 
 .cred-val {
   flex: 1;
-  font-family: 'Poppins', monospace;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
   font-size: 12px;
   font-weight: 500;
   color: #334155;
@@ -556,7 +556,7 @@ onMounted(async () => {
 
 .foot-no {
   font-size: 11px;
-  font-family: 'Poppins', monospace;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
   color: #CBD5E1;
   font-weight: 500;
 }
@@ -607,7 +607,7 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 600;
   color: #334155;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .bottom-spacer { height: 68px; }

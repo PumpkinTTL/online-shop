@@ -1239,7 +1239,7 @@ watch(payMethod, (newMethod) => {
 }
 
 .product-name {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 22px;
   font-weight: 700;
   color: #1E293B;
@@ -1260,7 +1260,7 @@ watch(payMethod, (newMethod) => {
 }
 
 .price-amount {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 32px;
   font-weight: 700;
   color: #F59E0B;
@@ -1450,7 +1450,7 @@ watch(payMethod, (newMethod) => {
 }
 
 .coupon-success-card__right {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 700;
   color: #EF4444;
   white-space: nowrap;
@@ -1488,7 +1488,7 @@ watch(payMethod, (newMethod) => {
 }
 
 .price-final {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 24px;
   font-weight: 700;
   color: #F59E0B;
@@ -1564,7 +1564,7 @@ watch(payMethod, (newMethod) => {
 }
 
 .success-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: #0F172A;
@@ -1638,7 +1638,7 @@ watch(payMethod, (newMethod) => {
   flex-shrink: 0;
   min-width: 40px;
   text-transform: uppercase;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .info-val {
@@ -1650,7 +1650,7 @@ watch(payMethod, (newMethod) => {
 }
 
 .info-val.mono {
-  font-family: 'Poppins', monospace;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
   font-size: 12.5px;
   letter-spacing: 0.2px;
 }
@@ -1822,7 +1822,7 @@ watch(payMethod, (newMethod) => {
 }
 
 .cashier-num {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 36px;
   font-weight: 700;
   color: #1E293B;

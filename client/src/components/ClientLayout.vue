@@ -272,7 +272,7 @@ const isProductDetail = computed(() => /^\/product\/\w+/.test(route.path))
 .tabbar-label {
   font-size: 10px;
   font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: font-weight 0.15s ease-out;
 }
 
@@ -391,6 +391,6 @@ const isProductDetail = computed(() => /^\/product\/\w+/.test(route.path))
   font-size: 15px;
   font-weight: 600;
   color: #1E293B;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 </style>

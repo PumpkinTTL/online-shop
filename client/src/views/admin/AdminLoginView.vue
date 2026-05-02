@@ -166,7 +166,7 @@ async function handleLogin() {
   font-size: 24px;
   font-weight: 700;
   color: #F1F5F9;
-  font-family: Poppins, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .login-header p {

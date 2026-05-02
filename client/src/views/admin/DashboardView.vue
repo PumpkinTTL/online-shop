@@ -146,7 +146,7 @@ onMounted(async () => {
   color: #F1F5F9;
   font-size: 24px;
   font-weight: 700;
-  font-family: Poppins, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* ===== 数据卡片网格 ===== */
@@ -168,7 +168,7 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 16px 0;
-  font-family: Poppins, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* ===== 浅色主题 ===== */

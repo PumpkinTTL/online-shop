@@ -44,7 +44,7 @@ const themeOverrides = computed(() => {
       primaryColorPressed: '#2563EB',
       primaryColorSuppl: '#3B82F6',
       borderRadius: '8px',
-      fontFamily: 'Open Sans, Poppins, sans-serif',
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       bodyColor: 'transparent',
     },
     Button: {

@@ -352,7 +352,7 @@ function handleRefresh() {
   color: #F1F5F9;
   font-weight: 700;
   font-size: 16px;
-  font-family: Poppins, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .admin-main {
@@ -379,7 +379,7 @@ function handleRefresh() {
   color: #F1F5F9;
   font-size: 16px;
   font-weight: 600;
-  font-family: Poppins, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .header-right {

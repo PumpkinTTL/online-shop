@@ -261,7 +261,7 @@ onMounted(async () => {
   border: none;
   outline: none;
   font-size: 13px;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #1E293B;
   background: transparent;
   line-height: 1;
@@ -327,7 +327,7 @@ onMounted(async () => {
   background: white;
   font-size: 12px;
   font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #64748B;
   cursor: pointer;
   transition: all 0.2s;
@@ -382,7 +382,7 @@ onMounted(async () => {
 }
 
 .section-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 15px;
   font-weight: 700;
   color: #0F172A;
@@ -393,7 +393,7 @@ onMounted(async () => {
   font-size: 11px;
   color: #94A3B8;
   font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #F1F5F9;
   padding: 3px 10px;
   border-radius: 10px;
@@ -566,7 +566,7 @@ onMounted(async () => {
 }
 
 .card-price {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 16px;
   font-weight: 700;
   color: #EF4444;

@@ -269,7 +269,7 @@ function handleLogout() {
 }
 
 .page-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: #0F172A;
@@ -311,7 +311,7 @@ function handleLogout() {
   justify-content: center;
   font-size: 24px;
   font-weight: 700;
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
 }
 
