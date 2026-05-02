@@ -106,6 +106,19 @@
         <n-form-item label="兑换地址">
           <n-input v-model:value="form.addr" placeholder="CDK兑换网址，留空则不显示兑换按钮" />
         </n-form-item>
+        <n-divider style="margin: 8px 0 16px;">扩展功能</n-divider>
+        <n-form-item label="弹窗通知">
+          <n-input v-model:value="form.popupNotice" type="textarea" :rows="2" placeholder="进入商品详情页时弹出的重要提醒（可选）" />
+          <template #feedback>
+            <span class="text-tip">💡 用户首次进入商品页时弹出，支持"不再提示"选项</span>
+          </template>
+        </n-form-item>
+        <n-form-item label="使用教程">
+          <n-input v-model:value="form.tutorial" type="textarea" :rows="6" placeholder="支持HTML格式的使用教程（可选）" />
+          <template #feedback>
+            <span class="text-tip">💡 支持HTML：&lt;p&gt;段落&lt;/p&gt;、&lt;br&gt;换行、&lt;img&gt;图片、&lt;a&gt;链接、视频URL自动识别</span>
+          </template>
+        </n-form-item>
         <n-form-item label="封面图">
           <n-input v-model:value="form.image" placeholder="图片URL，支持远程地址或本地文件名" />
         </n-form-item>

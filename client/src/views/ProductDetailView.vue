@@ -7,6 +7,14 @@
       </template>
     </n-button>
 
+    <!-- 弹窗通知（进入商品详情页时弹出） -->
+    <ProductPopupNotice
+      v-if="product"
+      :content="product.popupNotice"
+      :product-id="product.id"
+      type="warning"
+    />
+
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-state">
       <n-spin size="large" />
@@ -94,6 +102,9 @@
               </div>
             </div>
           </div>
+
+          <!-- 使用教程（如果有） -->
+          <ProductTutorial v-if="product.tutorial" :content="product.tutorial" />
 
           <div class="info-divider"></div>
 
@@ -550,6 +561,8 @@ import {
 import { productApi, pickupApi, paymentApi, couponApi } from '@/api'
 import { useUserStore } from '@/stores/user'
 import QRCode from 'qrcode'
+import ProductTutorial from '@/components/ProductTutorial.vue'
+import ProductPopupNotice from '@/components/ProductPopupNotice.vue'
 
 const route = useRoute()
 const router = useRouter()

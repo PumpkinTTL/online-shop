@@ -16,6 +16,8 @@ module.exports = new EntitySchema({
     credit: { type: 'int', nullable: true, comment: '积分额度（商品级别）' },
     tips: { type: 'varchar', length: 500, nullable: true },
     addr: { type: 'varchar', length: 500, nullable: true, comment: '兑换地址（CDK使用地址）' },
+    tutorial: { type: 'text', nullable: true, comment: '使用教程（支持HTML富文本）' },
+    popupNotice: { type: 'varchar', length: 500, nullable: true, comment: '商品详情页弹窗通知' },
     show: { type: 'int', default: 1, comment: '是否在首页显示: 1显示 0隐藏' },
     createdAt: { type: 'datetime', createDate: true },
     updatedAt: { type: 'datetime', updateDate: true },
