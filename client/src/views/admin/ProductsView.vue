@@ -120,17 +120,23 @@
               </n-form-item>
             </n-gi>
           </n-grid>
-          <n-divider style="margin: 12px 0 8px;">扩展功能</n-divider>
+          <n-divider style="margin: 12px 0 16px;">扩展功能</n-divider>
           <n-form-item label="弹窗通知">
             <n-input v-model:value="form.popupNotice" type="textarea" :rows="2" placeholder="进入商品详情页时弹出的重要提醒（可选）" />
             <template #feedback>
-              <span class="text-tip">💡 用户首次进入商品页时弹出，支持"不再提示"选项</span>
+              <span class="text-tip">
+                <n-icon :size="13" color="#94A3B8" style="vertical-align: middle; margin-right: 4px;"><InformationCircleOutline /></n-icon>
+                用户首次进入商品页时弹出，支持"不再提示"选项
+              </span>
             </template>
           </n-form-item>
           <n-form-item label="使用教程">
             <n-input v-model:value="form.tutorial" type="textarea" :rows="4" placeholder="支持HTML格式的使用教程（可选）" />
             <template #feedback>
-              <span class="text-tip">💡 支持HTML：&lt;p&gt;段落&lt;/p&gt;、&lt;br&gt;换行、&lt;img&gt;图片、&lt;a&gt;链接、视频URL自动识别</span>
+              <span class="text-tip">
+                <n-icon :size="13" color="#94A3B8" style="vertical-align: middle; margin-right: 4px;"><InformationCircleOutline /></n-icon>
+                支持HTML：&lt;p&gt;段落&lt;/p&gt;、&lt;br&gt;换行、&lt;img&gt;图片、&lt;a&gt;链接、视频URL自动识别
+              </span>
             </template>
           </n-form-item>
         </n-form>
@@ -152,7 +158,7 @@ import {
   NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch,
   NSpace, NTag, NTooltip, NGrid, NGi, useMessage, useDialog
 } from 'naive-ui'
-import { AddOutline, TrashOutline, CreateOutline } from '@vicons/ionicons5'
+import { AddOutline, TrashOutline, CreateOutline, InformationCircleOutline } from '@vicons/ionicons5'
 import { useAdminStore } from '@/stores/admin'
 
 const adminStore = useAdminStore()
